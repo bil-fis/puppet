@@ -185,5 +185,20 @@ namespace puppet.Controllers
                 (screen.Height - _form.Height) / 2
             );
         }
+
+        /// <summary>
+        /// 设置窗口是否在任务栏中显示
+        /// </summary>
+        public void ShowInTaskbar(bool show)
+        {
+            if (_form is Form1 form1)
+            {
+                form1.SetShowInTaskbar(show);
+            }
+            else
+            {
+                _form.ShowInTaskbar = show;
+            }
+        }
     }
 }

@@ -101,15 +101,16 @@ namespace puppet.Controllers
         }
 
         /// <summary>
-        /// 获取可用物理内存
+        /// 获取可用物理内存（单位：KB）
+        /// 参考：Microsoft Learn - WMI Tasks: Computer Hardware
         /// </summary>
         private long GetAvailablePhysicalMemory()
         {
-            using (var searcher = new ManagementObjectSearcher("SELECT AvailablePhysicalMemory FROM Win32_OperatingSystem"))
+            using (var searcher = new ManagementObjectSearcher("SELECT FreePhysicalMemory FROM Win32_OperatingSystem"))
             {
                 foreach (ManagementObject obj in searcher.Get())
                 {
-                    return Convert.ToInt64(obj["AvailablePhysicalMemory"]);
+                    return Convert.ToInt64(obj["FreePhysicalMemory"]);
                 }
             }
             return 0;
