@@ -1,0 +1,49 @@
+（以下所有方法前面可以加window也可以不加）
+puppet.window.setBorderless(boolean)    // 是否启用无边框
+puppet.window.setDraggable(Boolean)    // 窗口是否可拖动
+puppet.window.setResizable(Boolean) //窗口是否可缩放
+
+puppet.window.setTransparent(Boolean) // 开启或关闭全局透明
+puppet.window.setOpacity(0.85) // 设定窗口透明度 0-1
+puppet.window.setMouseThroughTransparency(Boolean) // 开启或关闭透明区域鼠标点击穿透
+puppet.window.setMouseThrough(Boolean) // 开启或关闭整个窗口鼠标点击穿透
+puppet.window.setTransparentColor('#xxxx') // 设定某种颜色为透明色（可选，默认使用background:transparent）
+
+puppet.window.setTopmost(Boolean) // 置顶或取消置顶
+puppet.window.moveWindow(x,y) //移动窗口到坐标位置
+puppet.window.resizeWindow(w,h) // 设置窗口宽高
+puppet.window.centerWindow() // 居中窗口
+
+puppet.Application.close() // 关闭程序
+puppet.Application.restart() // 重启程序
+puppet.Application.getWindowInfo() // 获取当前窗口句柄或调试信息
+puppet.Application.execute('cmd')   // 执行外部程序
+
+puppet.Application.setConfig('key','value') // 修改配置文件 puppet.json
+
+puppet.fs.openFileDialog({filter:["name.file","*.png","*"], multiSelect: true}) // 弹出系统原生文件选择框，返回值为目标路径地址，如果多个返回数组
+puppet.fs.openFolderDialog()
+puppet.fs.readFileAsByte(path) // 读取文件字节数据
+puppet.fs.readFileAsJson(path) // 读取文件以json格式，这里要求后台处理json然后直接向前端返回json array
+puppet.fs.writeByteToFile(path) // 向文件写入字节
+puppet.fs.writeTextToFile(path) // 向文件写入文本
+puppet.fs.appendByteToFile(path) // 向文件追加字节
+puppet.fs.appendTextToFile(path) // 向文件追加文本
+puppet.fs.exists(path) // 路径，文件是否存在
+puppet.fs.delete(path) // 删除文件或文件夹
+// 所有fs的io操作，需要排除掉所有的Windows、System32、SysWOW64等系统文件夹，就是排除 任意盘符:\Windows文件夹以及任何的子文件夹，包括匹配这种 任意盘符:\文件夹\..\Windows，就是任何形式的向Windows系统文件夹或者对系统文件的操作全部拒绝（返回错误），无论使用任何方式（包括直接路径或者使用各种..回到上级目录这种也要拒绝。只要最终指向了系统真正的Windows文件夹就拒绝）
+
+puppet.log.info("") // 日志
+puppet.log.warn("")
+puppet.log.error("")
+
+puppet.Application.getAssemblyDirectory() // 获取程序自身目录
+puppet.Application.getAppDataDirectoy() // 获取Appdata目录
+pupper.Application.getCurrentUser() // 获取当前用户
+
+puppet.System.getSystemInfo() // 获取系统信息，返回cpu、内存、系统版本、架构、显卡等信息
+puppet.System.takeScreenShot() // 截图
+puppet.System.getDesktopWallpaper() // 获取系统背景图
+puppet.System.sendKey('Key1','key2') // 模拟按键
+puppet.System.sendMouseClick(x,y) // 模拟鼠标点击
+puppet.System.getMousePosition() // 获取鼠标坐标
