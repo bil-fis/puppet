@@ -21,13 +21,28 @@ namespace puppet
         // 鼠标穿透相关
         private bool _mouseThrough = false;
 
+        // 重写 CreateParams 以使用 WS_EX_NOREDIRECTIONBITMAP
+        // 根据 Microsoft 文档，这样可以避免不透明的重定向表面
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                // 使用 WS_EX_NOREDIRECTIONBITMAP 创建无重定向表面的窗口
+                // 这允许 DirectComposition 直接控制窗口渲染
+                cp.ExStyle |= 0x00200000; // WS_EX_NOREDIRECTIONBITMAP
+                return cp;
+            }
+        }
+
         public Form1()
         {
             InitializeComponent();
 
-            // 使用 Layered Window 实现透明
+            // 使用 DirectComposition 实现透明窗口
+            // 根据 Microsoft 官方文档，使用 WS_EX_NOREDIRECTIONBITMAP
             this.BackColor = Color.Black;
-            this.FormBorderStyle = FormBorderStyle.Sizable; // 恢复窗口边框
+            this.FormBorderStyle = FormBorderStyle.None; // 无边框窗口
 
             Environment.SetEnvironmentVariable("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "0x00000000");
 
@@ -509,53 +524,41 @@ namespace puppet
 
             if (transparent)
             {
-                // 启用 Layered Window
-                NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE,
-                    NativeMethods.GetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE) | (int)WindowExStyle.Layered);
-
-                // 设置透明度（使用当前的 opacity）
-                UpdateLayeredWindowAttributes();
+                // 使用 Form.Opacity 实现透明度
+                // 结合 WS_EX_NOREDIRECTIONBITMAP，可以实现真正的透明窗口
+                // 且不会导致鼠标穿透
+                this.Opacity = 0.9; // 默认透明度
+                
+                // 设置背景为黑色，配合透明度
+                this.BackColor = Color.Black;
+                
+                // 确保 WebView2 背景是透明的
+                if (webView21.IsHandleCreated)
+                {
+                    webView21.DefaultBackgroundColor = Color.Transparent;
+                }
             }
             else
             {
-                // 禁用 Layered Window
-                int currentStyle = NativeMethods.GetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE,
-                    currentStyle & ~(int)WindowExStyle.Layered);
-
+                // 恢复正常
+                this.BackColor = SystemColors.Control;
                 this.Opacity = 1.0;
+                
+                // 强制刷新
+                this.Invalidate();
+                this.Update();
+                webView21.Invalidate();
+                webView21.Update();
             }
-
-            this.Invalidate();
-            this.Update();
         }
 
         public void SetOpacity(double opacity)
         {
             _windowOpacity = Math.Max(0.1, Math.Min(1.0, opacity));
-
-            if (_isTransparent)
-            {
-                UpdateLayeredWindowAttributes();
-            }
-            else
-            {
-                this.Opacity = _windowOpacity;
-            }
-        }
-
-        private void UpdateLayeredWindowAttributes()
-        {
-            if (_isTransparent)
-            {
-                byte alpha = (byte)(_windowOpacity * 255);
-                NativeMethods.SetLayeredWindowAttributes(
-                    this.Handle,
-                    0, // crKey = 0 表示不使用颜色键
-                    alpha, // alpha 值
-                    (uint)LayeredWindowAttributes.LWA_ALPHA // 只使用 alpha
-                );
-            }
+            
+            // 直接使用 Form.Opacity 属性
+            // 配合 WS_EX_NOREDIRECTIONBITMAP，可以实现真正的透明效果
+            this.Opacity = _windowOpacity;
         }
 
         private bool _isTransparent = false;
