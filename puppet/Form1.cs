@@ -1,6 +1,9 @@
 ﻿using Microsoft.Web.WebView2.Core;
 using puppet.Controllers;
 using System.Runtime.InteropServices;
+using System.Net.Http;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace puppet
 {
@@ -99,6 +102,12 @@ namespace puppet
                 // 注册 WebMessage 接收（用于接收透明区域数据）
                 webView21.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
 
+                // 订阅导航完成事件（用于获取 favicon）
+                webView21.CoreWebView2.NavigationCompleted += WebView_NavigationCompleted;
+
+                // 订阅文档标题改变事件（用于更新窗口标题）
+                webView21.CoreWebView2.DocumentTitleChanged += WebView_DocumentTitleChanged;
+
                 // 加载 HTML 内容（包含初始化脚本）
                 string htmlContent = GetHtmlContent();
                 await webView21.EnsureCoreWebView2Async();
@@ -168,6 +177,105 @@ namespace puppet
         private void WebView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
         {
             // 在导航开始前，确保新页面的背景也是透明的
+        }
+
+        /// <summary>
+        /// 导航完成后获取网页的 favicon
+        /// </summary>
+        private async void WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            if (e.IsSuccess && webView21.CoreWebView2 != null)
+            {
+                try
+                {
+                    // 执行 JavaScript 获取 favicon URL
+                    string script = @"
+                        (function() {
+                            // 尝试从多种位置获取 favicon
+                            var links = document.querySelectorAll('link[rel=""icon""], link[rel=""shortcut icon""]');
+                            if (links.length > 0) {
+                                return links[0].href;
+                            }
+                            // 尝试从 /favicon.ico 获取
+                            var url = window.location.href;
+                            var baseUrl = url.substring(0, url.lastIndexOf('/'));
+                            return baseUrl + '/favicon.ico';
+                        })();
+                    ";
+                    
+                    string faviconUrl = await webView21.CoreWebView2.ExecuteScriptAsync(script);
+                    
+                    // 去除 JSON 格式的引号
+                    if (!string.IsNullOrEmpty(faviconUrl) && faviconUrl.Length >= 2)
+                    {
+                        faviconUrl = faviconUrl.Substring(1, faviconUrl.Length - 2);
+                    }
+                    
+                    if (!string.IsNullOrEmpty(faviconUrl) && Uri.TryCreate(faviconUrl, UriKind.Absolute, out Uri? uri))
+                    {
+                        await DownloadAndSetFavicon(uri);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"获取 favicon 失败: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 网页标题改变时更新窗口标题
+        /// </summary>
+        private void WebView_DocumentTitleChanged(object sender, object e)
+        {
+            if (webView21.CoreWebView2 != null && !string.IsNullOrEmpty(webView21.CoreWebView2.DocumentTitle))
+            {
+                // 使用 Invoke 确保在 UI 线程上更新
+                this.Invoke((MethodInvoker)delegate {
+                    this.Text = webView21.CoreWebView2.DocumentTitle;
+                });
+            }
+        }
+
+        /// <summary>
+        /// 下载 favicon 并设置为窗口图标
+        /// </summary>
+        private async System.Threading.Tasks.Task DownloadAndSetFavicon(Uri faviconUrl)
+        {
+            try
+            {
+                using (var httpClient = new System.Net.Http.HttpClient())
+                {
+                    httpClient.Timeout = TimeSpan.FromSeconds(10);
+                    var response = await httpClient.GetAsync(faviconUrl);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+                        
+                        // 使用 Invoke 确保在 UI 线程上更新图标
+                        this.Invoke((MethodInvoker)delegate {
+                            try
+                            {
+                                using (var stream = new System.IO.MemoryStream(imageBytes))
+                                {
+                                    // 尝试从流创建图标
+                                    var icon = Icon.FromHandle(((Bitmap)Bitmap.FromStream(stream)).GetHicon());
+                                    this.Icon = icon;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"设置图标失败: {ex.Message}");
+                            }
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"下载 favicon 失败: {ex.Message}");
+            }
         }
 
         // 重写 WndProc 处理智能点击穿透
