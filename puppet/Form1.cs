@@ -58,7 +58,7 @@ namespace puppet
             // 初始化控制器
             _windowController = new WindowController(this);
             _applicationController = new ApplicationController(this);
-            _fileSystemController = new FileSystemController();
+            _fileSystemController = new FileSystemController(this);
             _logController = new LogController();
             _systemController = new SystemController();
             _trayController = null; // 将在 WebView2 初始化完成后创建

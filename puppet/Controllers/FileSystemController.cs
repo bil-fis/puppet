@@ -1,9 +1,5 @@
 ﻿using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using System.Runtime.InteropServices;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,6 +9,17 @@ namespace puppet.Controllers
     [ComVisible(true)]
     public class FileSystemController
     {
+        private Form _mainForm;
+
+        public FileSystemController()
+        {
+        }
+
+        public FileSystemController(Form mainForm)
+        {
+            _mainForm = mainForm;
+        }
+
         /// <summary>
         /// 检查路径是否安全（不指向 Windows 系统文件夹）
         /// </summary>
@@ -55,8 +62,30 @@ namespace puppet.Controllers
 
         /// <summary>
         /// 弹出系统原生文件选择框
+        /// 必须在 UI 线程上执行，否则会出现 SEHException
         /// </summary>
         public object OpenFileDialog(string? filterJson, bool multiSelect)
+        {
+            if (_mainForm == null || _mainForm.IsDisposed)
+            {
+                throw new InvalidOperationException("Main form is not available");
+            }
+
+            // 使用 Invoke 确保在 UI 线程上执行
+            if (_mainForm.InvokeRequired)
+            {
+                return _mainForm.Invoke(new Func<object>(() => OpenFileDialogInternal(filterJson, multiSelect)));
+            }
+            else
+            {
+                return OpenFileDialogInternal(filterJson, multiSelect);
+            }
+        }
+
+        /// <summary>
+        /// OpenFileDialog 内部实现（在 UI 线程上执行）
+        /// </summary>
+        private object OpenFileDialogInternal(string? filterJson, bool multiSelect)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -103,8 +132,30 @@ namespace puppet.Controllers
 
         /// <summary>
         /// 弹出系统原生文件夹选择框
+        /// 必须在 UI 线程上执行
         /// </summary>
         public string? OpenFolderDialog()
+        {
+            if (_mainForm == null || _mainForm.IsDisposed)
+            {
+                throw new InvalidOperationException("Main form is not available");
+            }
+
+            // 使用 Invoke 确保在 UI 线程上执行
+            if (_mainForm.InvokeRequired)
+            {
+                return (string?)_mainForm.Invoke(new Func<string?>(OpenFolderDialogInternal));
+            }
+            else
+            {
+                return OpenFolderDialogInternal();
+            }
+        }
+
+        /// <summary>
+        /// OpenFolderDialog 内部实现（在 UI 线程上执行）
+        /// </summary>
+        private string? OpenFolderDialogInternal()
         {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
