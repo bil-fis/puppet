@@ -1,7 +1,10 @@
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace puppet.Controllers
 {
+    [ClassInterface(ClassInterfaceType.AutoDual)]
+    [ComVisible(true)]
     public class LogController
     {
         private string _logFilePath;

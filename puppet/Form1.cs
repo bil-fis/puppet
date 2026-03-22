@@ -20,14 +20,14 @@ namespace puppet
 
         // 鼠标穿透相关
         private bool _mouseThrough = false;
-        private bool _mouseThroughTransparency = false;
 
         public Form1()
         {
             InitializeComponent();
 
-            this.BackColor = Color.LimeGreen;
-            this.TransparencyKey = Color.LimeGreen;
+            // 使用 Layered Window 实现透明
+            this.BackColor = Color.Black;
+            this.FormBorderStyle = FormBorderStyle.Sizable; // 恢复窗口边框
 
             Environment.SetEnvironmentVariable("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "0x00000000");
 
@@ -47,6 +47,10 @@ namespace puppet
             this.MouseDown += Form1_MouseDown;
             this.MouseMove += Form1_MouseMove;
             this.MouseUp += Form1_MouseUp;
+
+            // 设置窗口为分层窗口
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
+            this.UpdateStyles();
         }
 
         private async void WebView_CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e)
@@ -63,11 +67,7 @@ namespace puppet
                 webView21.CoreWebView2.AddHostObjectToScript("log", _logController);
                 webView21.CoreWebView2.AddHostObjectToScript("system", _systemController);
 
-                // 注入 JavaScript 辅助函数，创建 puppet 命名空间
-                string initScript = GetInitScript();
-                await webView21.CoreWebView2.ExecuteScriptAsync(initScript);
-
-                // 加载 HTML 内容
+                // 加载 HTML 内容（包含初始化脚本）
                 string htmlContent = GetHtmlContent();
                 await webView21.EnsureCoreWebView2Async();
                 webView21.CoreWebView2.NavigateToString(htmlContent);
@@ -83,75 +83,134 @@ namespace puppet
             // 在导航开始前，确保新页面的背景也是透明的
         }
 
+        // 重写 WndProc 处理智能点击穿透
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_NCHITTEST = 0x84;
+            const int HTTRANSPARENT = -1;
+            const int HTCLIENT = 1;
+
+            base.WndProc(ref m);
+
+            // 如果启用了透明模式且不是完全穿透模式，实现智能点击穿透
+            if (m.Msg == WM_NCHITTEST && _isTransparent && !_mouseThrough)
+            {
+                // 获取鼠标位置
+                Point cursorPos = new Point(m.LParam.ToInt32() & 0xFFFF, (m.LParam.ToInt32() >> 16) & 0xFFFF);
+                Point clientPos = this.PointToClient(cursorPos);
+
+                // 检查点击是否在 WebView2 控件区域内
+                if (!IsPointInWebView(clientPos))
+                {
+                    // 点击不在 WebView2 区域内，穿透到下层窗口
+                    m.Result = (IntPtr)HTTRANSPARENT;
+                }
+            }
+        }
+
+        // 检查点是否在 WebView2 控件内
+        private bool IsPointInWebView(Point point)
+        {
+            return webView2Bounds.Contains(point);
+        }
+
+        // WebView2 控件的边界
+        private Rectangle webView2Bounds
+        {
+            get
+            {
+                return new Rectangle(webView21.Location, webView21.Size);
+            }
+        }
+
         private string GetInitScript()
         {
             return @"
-                // 创建 puppet 命名空间
+                // 创建 puppet 命名空间，使用包装函数确保方法名不区分大小写
                 window.puppet = {
-                    window: chrome.webview.hostObjects.window,
-                    Application: chrome.webview.hostObjects.application,
-                    fs: chrome.webview.hostObjects.fs,
-                    log: chrome.webview.hostObjects.log,
-                    System: chrome.webview.hostObjects.system
+                    window: chrome.webview.hostObjects.sync.window,
+                    Application: chrome.webview.hostObjects.sync.application,
+                    fs: chrome.webview.hostObjects.sync.fs,
+                    log: chrome.webview.hostObjects.sync.log,
+                    System: chrome.webview.hostObjects.sync.system
                 };
 
-                // 添加错误处理包装器
-                window.puppet.wrapFunction = async function(obj, methodName, ...args) {
-                    try {
-                        const result = await obj[methodName](...args);
-                        return result;
-                    } catch (error) {
-                        console.error('Error calling', methodName, ':', error);
-                        throw error;
-                    }
+                // 设置选项
+                chrome.webview.hostObjects.options.defaultSyncProxy = true;
+                chrome.webview.hostObjects.options.shouldSerializeDates = true;
+
+                // 创建全局 puppet 对象，方法名不区分大小写
+                window.puppet.window = {
+                    setBorderless: async function(v) { return await chrome.webview.hostObjects.sync.window.SetBorderless(!!v); },
+                    setDraggable: async function(v) { return await chrome.webview.hostObjects.sync.window.SetDraggable(!!v); },
+                    setResizable: async function(v) { return await chrome.webview.hostObjects.sync.window.SetResizable(!!v); },
+                    setTransparent: async function(v) { return await chrome.webview.hostObjects.sync.window.SetTransparent(!!v); },
+                    setOpacity: async function(v) { return await chrome.webview.hostObjects.sync.window.SetOpacity(Number(v)); },
+                    setMouseThroughTransparency: async function(v) { return await chrome.webview.hostObjects.sync.window.SetMouseThroughTransparency(!!v); },
+                    setMouseThrough: async function(v) { return await chrome.webview.hostObjects.sync.window.SetMouseThrough(!!v); },
+                    setTransparentColor: async function(c) { return await chrome.webview.hostObjects.sync.window.SetTransparentColor(String(c)); },
+                    setTopmost: async function(v) { return await chrome.webview.hostObjects.sync.window.SetTopmost(!!v); },
+                    moveWindow: async function(x, y) { return await chrome.webview.hostObjects.sync.window.MoveWindow(Number(x), Number(y)); },
+                    resizeWindow: async function(w, h) { return await chrome.webview.hostObjects.sync.window.ResizeWindow(Number(w), Number(h)); },
+                    centerWindow: async function() { return await chrome.webview.hostObjects.sync.window.CenterWindow(); }
                 };
 
-                // 包装所有方法
-                ['setBorderless', 'setDraggable', 'setResizable', 'setTransparent', 
-                 'setOpacity', 'setMouseThroughTransparency', 'setMouseThrough', 
-                 'setTransparentColor', 'setTopmost', 'moveWindow', 'resizeWindow', 'centerWindow'].forEach(method => {
-                    window.puppet.window[method] = async function(...args) {
-                        return await window.puppet.wrapFunction(window.puppet.window, method, ...args);
-                    };
-                });
+                window.puppet.Application = {
+                    close: async function() { return await chrome.webview.hostObjects.sync.application.Close(); },
+                    restart: async function() { return await chrome.webview.hostObjects.sync.application.Restart(); },
+                    getWindowInfo: async function() { return await chrome.webview.hostObjects.sync.application.GetWindowInfo(); },
+                    execute: async function(cmd) { return await chrome.webview.hostObjects.sync.application.Execute(String(cmd)); },
+                    setConfig: async function(k, v) { return await chrome.webview.hostObjects.sync.application.SetConfig(String(k), String(v)); },
+                    getAssemblyDirectory: async function() { return await chrome.webview.hostObjects.sync.application.GetAssemblyDirectory(); },
+                    getAppDataDirectory: async function() { return await chrome.webview.hostObjects.sync.application.GetAppDataDirectory(); },
+                    getCurrentUser: async function() { return await chrome.webview.hostObjects.sync.application.GetCurrentUser(); }
+                };
 
-                ['close', 'restart', 'getWindowInfo', 'execute', 'setConfig', 
-                 'getAssemblyDirectory', 'getAppDataDirectory', 'getCurrentUser'].forEach(method => {
-                    window.puppet.Application[method] = async function(...args) {
-                        return await window.puppet.wrapFunction(window.puppet.Application, method, ...args);
-                    };
-                });
+                window.puppet.fs = {
+                    openFileDialog: async function(f, m) { 
+                        var filter = typeof f === 'string' ? f : JSON.stringify(f);
+                        return await chrome.webview.hostObjects.sync.fs.OpenFileDialog(filter, !!m); 
+                    },
+                    openFolderDialog: async function() { return await chrome.webview.hostObjects.sync.fs.OpenFolderDialog(); },
+                    readFileAsByte: async function(p) { return await chrome.webview.hostObjects.sync.fs.ReadFileAsByte(String(p)); },
+                    readFileAsJson: async function(p) { return await chrome.webview.hostObjects.sync.fs.ReadFileAsJson(String(p)); },
+                    writeByteToFile: async function(p, d) { return await chrome.webview.hostObjects.sync.fs.WriteByteToFile(String(p), d); },
+                    writeTextToFile: async function(p, t) { return await chrome.webview.hostObjects.sync.fs.WriteTextToFile(String(p), String(t)); },
+                    appendByteToFile: async function(p, d) { return await chrome.webview.hostObjects.sync.fs.AppendByteToFile(String(p), d); },
+                    appendTextToFile: async function(p, t) { return await chrome.webview.hostObjects.sync.fs.AppendTextToFile(String(p), String(t)); },
+                    exists: async function(p) { return await chrome.webview.hostObjects.sync.fs.Exists(String(p)); },
+                    delete: async function(p) { return await chrome.webview.hostObjects.sync.fs.Delete(String(p)); }
+                };
 
-                ['openFileDialog', 'openFolderDialog', 'readFileAsByte', 'readFileAsJson', 
-                 'writeByteToFile', 'writeTextToFile', 'appendByteToFile', 'appendTextToFile', 
-                 'exists', 'delete'].forEach(method => {
-                    window.puppet.fs[method] = async function(...args) {
-                        return await window.puppet.wrapFunction(window.puppet.fs, method, ...args);
-                    };
-                });
+                window.puppet.log = {
+                    info: async function(m) { return await chrome.webview.hostObjects.sync.log.Info('[info]: ' + String(m)); },
+                    warn: async function(m) { return await chrome.webview.hostObjects.sync.log.Warn('[warn]: ' + String(m)); },
+                    error: async function(m) { return await chrome.webview.hostObjects.sync.log.Error('[error]: ' + String(m)); }
+                };
 
-                ['info', 'warn', 'error'].forEach(method => {
-                    window.puppet.log[method] = async function(...args) {
-                        return await window.puppet.wrapFunction(window.puppet.log, method, ...args);
-                    };
-                });
-
-                ['getSystemInfo', 'takeScreenShot', 'getDesktopWallpaper', 
-                 'sendKey', 'sendMouseClick', 'getMousePosition'].forEach(method => {
-                    window.puppet.System[method] = async function(...args) {
-                        return await window.puppet.wrapFunction(window.puppet.System, method, ...args);
-                    };
-                });
+                window.puppet.System = {
+                    getSystemInfo: async function() { return await chrome.webview.hostObjects.sync.system.GetSystemInfo(); },
+                    takeScreenShot: async function() { return await chrome.webview.hostObjects.sync.system.TakeScreenShot(); },
+                    getDesktopWallpaper: async function() { return await chrome.webview.hostObjects.sync.system.GetDesktopWallpaper(); },
+                    sendKey: async function() { 
+                        const args = Array.from(arguments).map(a => String(a));
+                        return await chrome.webview.hostObjects.sync.system.SendKey.apply(null, args);
+                    },
+                    sendMouseClick: async function(x, y, b) { return await chrome.webview.hostObjects.sync.system.SendMouseClick(Number(x), Number(y), String(b || 'left')); },
+                    getMousePosition: async function() { return await chrome.webview.hostObjects.sync.system.GetMousePosition(); }
+                };
             ";
         }
 
         private string GetHtmlContent()
         {
+            string initScript = GetInitScript();
             return @"
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset='UTF-8'>
+                <script>" + initScript + @"</script>
                 <style>
                     html, body {
                         margin: 0;
@@ -241,9 +300,13 @@ namespace puppet
                     
                     <div class='buttons'>
                         <button onclick='testBorderless()'>无边框切换</button>
+                        <button onclick='testTransparent()'>启用透明</button>
                         <button onclick='testOpacity()'>透明度 0.7</button>
+                        <button onclick='testOpacityFull()'>透明度 1.0</button>
                         <button onclick='testTopmost()'>置顶切换</button>
                         <button onclick='testCenter()'>居中窗口</button>
+                        <button onclick='testFullThrough()'>完全穿透</button>
+                        <button onclick='testNormalMode()'>正常模式</button>
                         <button onclick='testLog()'>测试日志</button>
                         <button onclick='testGetWindowInfo()'>获取窗口信息</button>
                         <button onclick='testScreenshot()'>截图</button>
@@ -345,6 +408,42 @@ namespace puppet
                             log('错误: ' + e.message);
                         }
                     }
+
+                    async function testFullThrough() {
+                        try {
+                            await puppet.window.setMouseThrough(true);
+                            log('完全穿透模式已启用：整个窗口都会穿透到下层窗口');
+                        } catch(e) {
+                            log('错误: ' + e.message);
+                        }
+                    }
+
+                    async function testNormalMode() {
+                        try {
+                            await puppet.window.setMouseThrough(false);
+                            log('正常模式已启用：窗口正常响应所有鼠标点击');
+                        } catch(e) {
+                            log('错误: ' + e.message);
+                        }
+                    }
+
+                    async function testTransparent() {
+                        try {
+                            await puppet.window.setTransparent(true);
+                            log('透明模式已启用：窗口整体变为透明，透明区域可穿透');
+                        } catch(e) {
+                            log('错误: ' + e.message);
+                        }
+                    }
+
+                    async function testOpacityFull() {
+                        try {
+                            await puppet.window.setOpacity(1.0);
+                            log('透明度已设置为 1.0（完全不透明）');
+                        } catch(e) {
+                            log('错误: ' + e.message);
+                        }
+                    }
                 </script>
             </body>
             </html>";
@@ -384,19 +483,91 @@ namespace puppet
         public void SetMouseThrough(bool enabled)
         {
             _mouseThrough = enabled;
-            if (enabled)
+
+            if (_mouseThrough)
             {
-                this.WindowExStyle |= WindowExStyle.Transparent;
+                // 完全穿透模式：整个窗口都穿透
+                NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE,
+                    NativeMethods.GetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE) | (int)WindowExStyle.Transparent);
             }
             else
             {
-                this.WindowExStyle &= ~WindowExStyle.Transparent;
+                // 正常模式：不穿透
+                int currentStyle = NativeMethods.GetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE);
+                NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE,
+                    currentStyle & ~(int)WindowExStyle.Transparent);
+            }
+
+            // 强制刷新窗口
+            this.Invalidate();
+            this.Update();
+        }
+
+        public void SetTransparent(bool transparent)
+        {
+            _isTransparent = transparent;
+
+            if (transparent)
+            {
+                // 启用 Layered Window
+                NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE,
+                    NativeMethods.GetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE) | (int)WindowExStyle.Layered);
+
+                // 设置透明度（使用当前的 opacity）
+                UpdateLayeredWindowAttributes();
+            }
+            else
+            {
+                // 禁用 Layered Window
+                int currentStyle = NativeMethods.GetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE);
+                NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE,
+                    currentStyle & ~(int)WindowExStyle.Layered);
+
+                this.Opacity = 1.0;
+            }
+
+            this.Invalidate();
+            this.Update();
+        }
+
+        public void SetOpacity(double opacity)
+        {
+            _windowOpacity = Math.Max(0.1, Math.Min(1.0, opacity));
+
+            if (_isTransparent)
+            {
+                UpdateLayeredWindowAttributes();
+            }
+            else
+            {
+                this.Opacity = _windowOpacity;
             }
         }
 
+        private void UpdateLayeredWindowAttributes()
+        {
+            if (_isTransparent)
+            {
+                byte alpha = (byte)(_windowOpacity * 255);
+                NativeMethods.SetLayeredWindowAttributes(
+                    this.Handle,
+                    0, // crKey = 0 表示不使用颜色键
+                    alpha, // alpha 值
+                    (uint)LayeredWindowAttributes.LWA_ALPHA // 只使用 alpha
+                );
+            }
+        }
+
+        private bool _isTransparent = false;
+        private double _windowOpacity = 1.0;
+
+        // 移除透明穿透功能，因为 WebView2 的技术限制使得准确检测透明区域非常困难
+        // 保留此方法以保持 API 兼容性，但不实现任何功能
         public void SetMouseThroughTransparency(bool enabled)
         {
-            _mouseThroughTransparency = enabled;
+            // 由于 WebView2 的渲染机制，无法可靠地实现透明区域检测
+            // 建议用户只使用 setMouseThrough 来切换完全穿透和正常模式
+            _logController.Warn("透明穿透功能不可用，请使用 setMouseThrough 切换完全穿透和正常模式");
         }
 
         // 窗口扩展样式
@@ -422,6 +593,12 @@ namespace puppet
 
         [DllImport("user32.dll")]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetLayeredWindowAttributes(IntPtr hwnd, out uint crKey, out byte bAlpha, out uint dwFlags);
     }
 
     internal enum GetWindowLongIndex
@@ -429,10 +606,16 @@ namespace puppet
         GWL_EXSTYLE = -20
     }
 
-    [Flags]
     internal enum WindowExStyle : uint
     {
-        Transparent = 0x00000020
+        Transparent = 0x00000020,
+        Layered = 0x00080000
+    }
+
+    internal enum LayeredWindowAttributes
+    {
+        LWA_COLORKEY = 0x00000001,
+        LWA_ALPHA = 0x00000002
     }
 
     #endregion

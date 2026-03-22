@@ -2,8 +2,15 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using System.Runtime.InteropServices;
+using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace puppet.Controllers
 {
+    [ClassInterface(ClassInterfaceType.AutoDual)]
+    [ComVisible(true)]
     public class FileSystemController
     {
         /// <summary>

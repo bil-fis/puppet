@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 
 namespace puppet.Controllers
 {
+    [ClassInterface(ClassInterfaceType.AutoDual)]
+    [ComVisible(true)]
     public class ApplicationController
     {
         private Form _form;

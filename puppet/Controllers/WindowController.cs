@@ -1,7 +1,10 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace puppet.Controllers
 {
+    [ClassInterface(ClassInterfaceType.AutoDual)]
+    [ComVisible(true)]
     public class WindowController
     {
         private Form _form;
@@ -73,15 +76,23 @@ namespace puppet.Controllers
         /// </summary>
         public void SetTransparent(bool transparent)
         {
-            if (transparent)
+            if (_form is Form1 form1)
             {
-                _form.BackColor = Color.LimeGreen;
-                _form.TransparencyKey = Color.LimeGreen;
+                form1.SetTransparent(transparent);
             }
             else
             {
-                _form.BackColor = SystemColors.Control;
-                _form.TransparencyKey = Color.Empty;
+                // 降级方案
+                if (transparent)
+                {
+                    _form.BackColor = Color.LimeGreen;
+                    _form.TransparencyKey = Color.LimeGreen;
+                }
+                else
+                {
+                    _form.BackColor = SystemColors.Control;
+                    _form.TransparencyKey = Color.Empty;
+                }
             }
         }
 
@@ -90,7 +101,14 @@ namespace puppet.Controllers
         /// </summary>
         public void SetOpacity(double opacity)
         {
-            _form.Opacity = Math.Max(0.1, Math.Min(1.0, opacity));
+            if (_form is Form1 form1)
+            {
+                form1.SetOpacity(opacity);
+            }
+            else
+            {
+                _form.Opacity = Math.Max(0.1, Math.Min(1.0, opacity));
+            }
         }
 
         /// <summary>

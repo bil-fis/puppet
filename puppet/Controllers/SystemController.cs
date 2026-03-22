@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 
 namespace puppet.Controllers
 {
+    [ClassInterface(ClassInterfaceType.AutoDual)]
+    [ComVisible(true)]
     public class SystemController
     {
         #region Win32 API Declarations
