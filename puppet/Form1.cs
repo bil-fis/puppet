@@ -39,10 +39,11 @@ namespace puppet
         {
             InitializeComponent();
 
-            // 使用 DirectComposition 实现透明窗口
-            // 根据 Microsoft 官方文档，使用 WS_EX_NOREDIRECTIONBITMAP
-            this.BackColor = Color.Black;
-            this.FormBorderStyle = FormBorderStyle.None; // 无边框窗口
+            // 设置窗口标题栏和图标
+            this.BackColor = SystemColors.Control;
+            this.FormBorderStyle = FormBorderStyle.Sizable; // 有边框和标题栏
+            this.Text = "Puppet"; // 设置窗口标题
+            this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); // 设置窗口图标
 
             Environment.SetEnvironmentVariable("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "0x00000000");
 
