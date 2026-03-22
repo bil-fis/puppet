@@ -12,6 +12,7 @@ namespace puppet
         private FileSystemController _fileSystemController;
         private LogController _logController;
         private SystemController _systemController;
+        private TrayController _trayController;
 
         // 窗口拖动相关
         private bool _isDraggable = false;
@@ -60,6 +61,7 @@ namespace puppet
             _fileSystemController = new FileSystemController();
             _logController = new LogController();
             _systemController = new SystemController();
+            _trayController = null; // 将在 WebView2 初始化完成后创建
 
             // 初始化 WebView2
             webView21.CoreWebView2InitializationCompleted += WebView_CoreWebView2InitializationCompleted;
@@ -83,12 +85,16 @@ namespace puppet
                 // 设置背景完全透明（根据 Microsoft 官方文档，支持 Alpha=0）
                 webView21.DefaultBackgroundColor = Color.Transparent;
 
+                // 初始化 TrayController（需要 CoreWebView2 来执行 JavaScript 回调）
+                _trayController = new TrayController(webView21.CoreWebView2);
+
                 // 注入所有控制器到 WebView2
                 webView21.CoreWebView2.AddHostObjectToScript("window", _windowController);
                 webView21.CoreWebView2.AddHostObjectToScript("application", _applicationController);
                 webView21.CoreWebView2.AddHostObjectToScript("fs", _fileSystemController);
                 webView21.CoreWebView2.AddHostObjectToScript("log", _logController);
                 webView21.CoreWebView2.AddHostObjectToScript("system", _systemController);
+                webView21.CoreWebView2.AddHostObjectToScript("tray", _trayController);
 
                 // 注册 WebMessage 接收（用于接收透明区域数据）
                 webView21.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
@@ -322,6 +328,26 @@ namespace puppet
                     },
                     sendMouseClick: async function(x, y, b) { return await chrome.webview.hostObjects.sync.system.SendMouseClick(Number(x), Number(y), String(b || 'left')); },
                     getMousePosition: async function() { return await chrome.webview.hostObjects.sync.system.GetMousePosition(); }
+                };
+
+                // ==================== 托盘图标接口 ====================
+                
+                window.puppet.tray = {
+                    setTray: async function(name) { return await chrome.webview.hostObjects.sync.tray.SetTray(String(name)); },
+                    setMenu: async function(menu) { return await chrome.webview.hostObjects.sync.tray.SetMenu(JSON.stringify(menu)); },
+                    showBalloon: async function(title, content, timeout, icon) { 
+                        return await chrome.webview.hostObjects.sync.tray.ShowBalloon(
+                            String(title), 
+                            String(content), 
+                            Number(timeout || 30000), 
+                            String(icon || 'Info')
+                        ); 
+                    },
+                    onClick: async function(callback) { return await chrome.webview.hostObjects.sync.tray.OnClick(String(callback)); },
+                    onDoubleClick: async function(callback) { return await chrome.webview.hostObjects.sync.tray.OnDoubleClick(String(callback)); },
+                    hide: async function() { return await chrome.webview.hostObjects.sync.tray.Hide(); },
+                    show: async function() { return await chrome.webview.hostObjects.sync.tray.Show(); },
+                    setIcon: async function(iconPath) { return await chrome.webview.hostObjects.sync.tray.SetIcon(String(iconPath)); }
                 };
 
                 // ==================== 透明区域检测和同步机制 ====================
