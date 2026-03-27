@@ -89,7 +89,7 @@ namespace puppet
                 webView21.DefaultBackgroundColor = Color.Transparent;
 
                 // 初始化 TrayController（需要 CoreWebView2 来执行 JavaScript 回调）
-                _trayController = new TrayController(webView21.CoreWebView2);
+                _trayController = new TrayController(webView21.CoreWebView2, this);
 
                 // 注入所有控制器到 WebView2
                 webView21.CoreWebView2.AddHostObjectToScript("window", _windowController);
@@ -98,6 +98,120 @@ namespace puppet
                 webView21.CoreWebView2.AddHostObjectToScript("log", _logController);
                 webView21.CoreWebView2.AddHostObjectToScript("system", _systemController);
                 webView21.CoreWebView2.AddHostObjectToScript("tray", _trayController);
+
+                // 注入 puppet 命名空间到所有页面
+                // 根据 Microsoft Learn 文档，AddScriptToExecuteOnDocumentCreatedAsync 会在每个新文档创建时运行 JavaScript
+                // 这确保了无论导航到哪个页面，puppet 命名空间都可用
+                await webView21.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
+                    (function() {
+                        // 设置选项
+                        chrome.webview.hostObjects.options.defaultSyncProxy = true;
+                        chrome.webview.hostObjects.options.shouldSerializeDates = true;
+
+                        // 创建完整的 puppet 命名空间，与 GetInitScript 保持一致
+                        window.puppet = {
+                            window: chrome.webview.hostObjects.sync.window,
+                            application: chrome.webview.hostObjects.sync.application,
+                            fs: chrome.webview.hostObjects.sync.fs,
+                            log: chrome.webview.hostObjects.sync.log,
+                            system: chrome.webview.hostObjects.sync.system,
+                            tray: chrome.webview.hostObjects.sync.tray
+                        };
+
+                        // 窗口方法包装
+                        window.puppet.window = {
+                            setBorderless: async function(v) { return await chrome.webview.hostObjects.sync.window.SetBorderless(!!v); },
+                            setDraggable: async function(v) { return await chrome.webview.hostObjects.sync.window.SetDraggable(!!v); },
+                            setResizable: async function(v) { return await chrome.webview.hostObjects.sync.window.SetResizable(!!v); },
+                            setOpacity: async function(v) { return await chrome.webview.hostObjects.sync.window.SetOpacity(Number(v)); },
+                            setMouseThroughTransparency: async function(v) { return await chrome.webview.hostObjects.sync.window.SetMouseThroughTransparency(!!v); },
+                            setMouseThrough: async function(v) { return await chrome.webview.hostObjects.sync.window.SetMouseThrough(!!v); },
+                            setTransparentColor: async function(c) { return await chrome.webview.hostObjects.sync.window.SetTransparentColor(String(c)); },
+                            setTopmost: async function(v) { return await chrome.webview.hostObjects.sync.window.SetTopmost(!!v); },
+                            showInTaskbar: async function(v) { return await chrome.webview.hostObjects.sync.window.ShowInTaskbar(!!v); },
+                            moveWindow: async function(x, y) { return await chrome.webview.hostObjects.sync.window.MoveWindow(Number(x), Number(y)); },
+                            resizeWindow: async function(w, h) { return await chrome.webview.hostObjects.sync.window.ResizeWindow(Number(w), Number(h)); },
+                            centerWindow: async function() { return await chrome.webview.hostObjects.sync.window.CenterWindow(); }
+                        };
+
+                        // 应用方法包装
+                        window.puppet.Application = {
+                            close: async function() { return await chrome.webview.hostObjects.sync.application.Close(); },
+                            restart: async function() { return await chrome.webview.hostObjects.sync.application.Restart(); },
+                            getWindowInfo: async function() { return await chrome.webview.hostObjects.sync.application.GetWindowInfo(); },
+                            execute: async function(cmd) { return await chrome.webview.hostObjects.sync.application.Execute(String(cmd)); },
+                            setConfig: async function(k, v) { return await chrome.webview.hostObjects.sync.application.SetConfig(String(k), String(v)); },
+                            getAssemblyDirectory: async function() { return await chrome.webview.hostObjects.sync.application.GetAssemblyDirectory(); },
+                            getAppDataDirectory: async function() { return await chrome.webview.hostObjects.sync.application.GetAppDataDirectory(); },
+                            getCurrentUser: async function() { return await chrome.webview.hostObjects.sync.application.GetCurrentUser(); }
+                        };
+
+                        // 文件系统方法包装
+                        window.puppet.fs = {
+                            openFileDialog: async function(f, m) { 
+                                var filter = typeof f === 'string' ? f : JSON.stringify(f);
+                                return await chrome.webview.hostObjects.sync.fs.OpenFileDialog(filter, !!m); 
+                            },
+                            openFolderDialog: async function() { return await chrome.webview.hostObjects.sync.fs.OpenFolderDialog(); },
+                            readFileAsByte: async function(p) { return await chrome.webview.hostObjects.sync.fs.ReadFileAsByte(String(p)); },
+                            readFileAsJson: async function(p) { return await chrome.webview.hostObjects.sync.fs.ReadFileAsJson(String(p)); },
+                            writeByteToFile: async function(p, d) { return await chrome.webview.hostObjects.sync.fs.WriteByteToFile(String(p), d); },
+                            writeTextToFile: async function(p, t) { return await chrome.webview.hostObjects.sync.fs.WriteTextToFile(String(p), String(t)); },
+                            appendByteToFile: async function(p, d) { return await chrome.webview.hostObjects.sync.fs.AppendByteToFile(String(p), d); },
+                            appendTextToFile: async function(p, t) { return await chrome.webview.hostObjects.sync.fs.AppendTextToFile(String(p), String(t)); },
+                            exists: async function(p) { return await chrome.webview.hostObjects.sync.fs.Exists(String(p)); },
+                            delete: async function(p) { return await chrome.webview.hostObjects.sync.fs.Delete(String(p)); }
+                        };
+
+                        // 日志方法包装
+                        window.puppet.log = {
+                            info: async function(m) { return await chrome.webview.hostObjects.sync.log.Info('[info]: ' + String(m)); },
+                            warn: async function(m) { return await chrome.webview.hostObjects.sync.log.Warn('[warn]: ' + String(m)); },
+                            error: async function(m) { return await chrome.webview.hostObjects.sync.log.Error('[error]: ' + String(m)); }
+                        };
+
+                        // 系统方法包装
+                        window.puppet.system = {
+                            getSystemInfo: async function() { return await chrome.webview.hostObjects.sync.system.GetSystemInfo(); },
+                            takeScreenShot: async function() { return await chrome.webview.hostObjects.sync.system.TakeScreenShot(); },
+                            getDesktopWallpaper: async function() { return await chrome.webview.hostObjects.sync.system.GetDesktopWallpaper(); },
+                            sendKey: async function() { 
+                                const args = Array.from(arguments).map(a => String(a));
+                                return await chrome.webview.hostObjects.sync.system.SendKey.apply(null, args);
+                            },
+                            sendMouseClick: async function(x, y, b) { return await chrome.webview.hostObjects.sync.system.SendMouseClick(Number(x), Number(y), String(b || 'left')); },
+                            getMousePosition: async function() { return await chrome.webview.hostObjects.sync.system.GetMousePosition(); }
+                        };
+
+                        // 托盘图标方法包装
+                        window.puppet.tray = {
+                            setTray: async function(name) { return await chrome.webview.hostObjects.sync.tray.SetTray(String(name)); },
+                            setMenu: async function(menu) { return await chrome.webview.hostObjects.sync.tray.SetMenu(JSON.stringify(menu)); },
+                            showBalloon: async function(title, content, timeout, icon) { 
+                                return await chrome.webview.hostObjects.sync.tray.ShowBalloon(
+                                    String(title), 
+                                    String(content), 
+                                    Number(timeout || 30000), 
+                                    String(icon || 'Info')
+                                ); 
+                            },
+                            onClick: async function(callback) { return await chrome.webview.hostObjects.sync.tray.OnClick(String(callback)); },
+                            onDoubleClick: async function(callback) { return await chrome.webview.hostObjects.sync.tray.OnDoubleClick(String(callback)); },
+                            hide: async function() { return await chrome.webview.hostObjects.sync.tray.Hide(); },
+                            show: async function() { return await chrome.webview.hostObjects.sync.tray.Show(); },
+                            setIcon: async function(iconPath) { return await chrome.webview.hostObjects.sync.tray.SetIcon(String(iconPath)); }
+                        };
+
+                        // 监听 DOM 变化，确保 puppet 命名空间始终存在
+                        // 防止其他脚本覆盖
+                        Object.defineProperty(window, 'puppet', {
+                            configurable: false,
+                            writable: false,
+                            enumerable: true,
+                            value: window.puppet
+                        });
+                    })();
+                ");
 
                 // 注册 WebMessage 接收（用于接收透明区域数据）
                 webView21.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
@@ -108,10 +222,26 @@ namespace puppet
                 // 订阅文档标题改变事件（用于更新窗口标题）
                 webView21.CoreWebView2.DocumentTitleChanged += WebView_DocumentTitleChanged;
 
-                // 加载 HTML 内容（包含初始化脚本）
-                string htmlContent = GetHtmlContent();
-                await webView21.EnsureCoreWebView2Async();
-                webView21.CoreWebView2.NavigateToString(htmlContent);
+                // 启动 PUP 服务器
+                await Program.StartPupServerAsync();
+                
+                // 等待服务器启动
+                if (Program.Server != null)
+                {
+                    System.Threading.Thread.Sleep(500); // 等待服务器完全启动
+                    int port = Program.Server.Port;
+                    
+                    // 加载本地服务器页面
+                    await webView21.EnsureCoreWebView2Async();
+                    webView21.CoreWebView2.Navigate($"http://localhost:{port}/");
+                }
+                else
+                {
+                    // 如果服务器启动失败，加载默认 HTML 内容
+                    string htmlContent = GetHtmlContent();
+                    await webView21.EnsureCoreWebView2Async();
+                    webView21.CoreWebView2.NavigateToString(htmlContent);
+                }
             }
             else
             {

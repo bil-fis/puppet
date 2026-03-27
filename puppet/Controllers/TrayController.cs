@@ -20,13 +20,15 @@ namespace puppet.Controllers
         private NotifyIcon _notifyIcon;
         private ContextMenuStrip _contextMenu;
         private CoreWebView2 _webview;
+        private Form _mainForm;
         private Dictionary<string, string> _menuCommands = new Dictionary<string, string>();
         private string _onClickCallback;
         private string _onDoubleClickCallback;
 
-        public TrayController(CoreWebView2 webview)
+        public TrayController(CoreWebView2 webview, Form mainForm)
         {
             _webview = webview;
+            _mainForm = mainForm;
             InitializeNotifyIcon();
         }
 
@@ -39,8 +41,15 @@ namespace puppet.Controllers
             _notifyIcon = new NotifyIcon();
             _notifyIcon.Visible = false;
 
-            // 设置默认图标（使用系统图标）
-            _notifyIcon.Icon = SystemIcons.Application;
+            // 设置默认图标（使用窗口图标）
+            if (_mainForm != null && _mainForm.Icon != null)
+            {
+                _notifyIcon.Icon = _mainForm.Icon;
+            }
+            else
+            {
+                _notifyIcon.Icon = SystemIcons.Application;
+            }
 
             // 设置事件处理
             _notifyIcon.Click += NotifyIcon_Click;
@@ -60,6 +69,12 @@ namespace puppet.Controllers
             if (_notifyIcon == null)
             {
                 InitializeNotifyIcon();
+            }
+
+            // 使用当前窗口图标作为托盘图标
+            if (_mainForm != null && _mainForm.Icon != null)
+            {
+                _notifyIcon.Icon = _mainForm.Icon;
             }
 
             // 设置托盘图标的文本（鼠标悬停时显示）
