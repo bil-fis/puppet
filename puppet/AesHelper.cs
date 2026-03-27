@@ -97,21 +97,19 @@ namespace puppet
         }
 
         /// <summary>
-        /// 加密字节数组
+        /// 加密字节数组（使用 ECB 模式，输出长度等于输入长度）
         /// </summary>
-        /// <param name="plainBytes">明文字节数组</param>
-        /// <returns>加密后的字节数组</returns>
+        /// <param name="plainBytes">明文字节数组（必须是16字节的倍数）</param>
+        /// <returns>加密后的字节数组（长度与输入相同）</returns>
         public static byte[] EncryptBytes(byte[] plainBytes)
         {
             byte[] key = GetKey();
-            byte[] iv = GetIv();
 
             using (var aes = Aes.Create())
             {
                 aes.Key = key;
-                aes.IV = iv;
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
+                aes.Mode = CipherMode.ECB; // ECB 模式不需要 IV
+                aes.Padding = PaddingMode.None; // 不使用 padding，因为输入已经是16字节的倍数
 
                 using (var encryptor = aes.CreateEncryptor())
                 using (var msEncrypt = new MemoryStream())
@@ -126,21 +124,19 @@ namespace puppet
         }
 
         /// <summary>
-        /// 解密字节数组
+        /// 解密字节数组（使用 ECB 模式）
         /// </summary>
-        /// <param name="cipherBytes">加密的字节数组</param>
-        /// <returns>解密后的字节数组</returns>
+        /// <param name="cipherBytes">加密的字节数组（必须是16字节的倍数）</param>
+        /// <returns>解密后的字节数组（长度与输入相同）</returns>
         public static byte[] DecryptBytes(byte[] cipherBytes)
         {
             byte[] key = GetKey();
-            byte[] iv = GetIv();
 
             using (var aes = Aes.Create())
             {
                 aes.Key = key;
-                aes.IV = iv;
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
+                aes.Mode = CipherMode.ECB; // ECB 模式不需要 IV
+                aes.Padding = PaddingMode.None; // 不使用 padding
 
                 using (var decryptor = aes.CreateDecryptor())
                 using (var msDecrypt = new MemoryStream(cipherBytes))
@@ -161,26 +157,84 @@ namespace puppet
         /// <param name="password">ZIP 密码（将被加密）</param>
         public static void CreateZipWithEncryptedPassword(string sourceFolder, string zipPath, string password)
         {
-            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+            Console.WriteLine($"    开始创建加密ZIP文件...");
+            Console.WriteLine($"    ZIP路径: {zipPath}");
+            
+            try
             {
-                // 添加文件夹中的所有文件
-                foreach (string file in Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories))
+                using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
                 {
-                    string entryName = Path.GetRelativePath(sourceFolder, file);
-                    zip.CreateEntryFromFile(file, entryName);
-                }
-
-                // 加密密码并存储在 ZIP 中
-                if (!string.IsNullOrEmpty(password))
-                {
-                    string encryptedPassword = Encrypt(password);
-                    var passwordEntry = zip.CreateEntry("__password__.enc");
-                    using (var writer = new StreamWriter(passwordEntry.Open()))
+                    int fileCount = 0;
+                    
+                    Console.WriteLine($"    添加文件到ZIP:");
+                    
+                    // 添加文件夹中的所有文件
+                    foreach (string file in Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories))
                     {
-                        writer.Write(encryptedPassword);
+                        string entryName = Path.GetRelativePath(sourceFolder, file);
+                        zip.CreateEntryFromFile(file, entryName);
+                        fileCount++;
+                        
+                        var fileInfo = new FileInfo(file);
+                        Console.WriteLine($"      [{fileCount}] {entryName} ({FormatBytes(fileInfo.Length)})");
+                    }
+                    
+                    Console.WriteLine($"    ✓ 已添加 {fileCount} 个文件");
+                    
+                    // 加密密码并存储在 ZIP 中
+                    if (!string.IsNullOrEmpty(password))
+                    {
+                        Console.WriteLine($"    加密密码: {password} ({password.Length} 字符)");
+                        
+                        string encryptedPassword = Encrypt(password);
+                        Console.WriteLine($"    加密后长度: {encryptedPassword.Length} 字符");
+                        
+                        var passwordEntry = zip.CreateEntry("__password__.enc");
+                        using (var writer = new StreamWriter(passwordEntry.Open()))
+                        {
+                            writer.Write(encryptedPassword);
+                        }
+                        Console.WriteLine($"    ✓ 密码已加密并存储");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"    无密码保护");
                     }
                 }
+                
+                // 验证ZIP文件是否创建成功
+                if (File.Exists(zipPath))
+                {
+                    var zipInfo = new FileInfo(zipPath);
+                    Console.WriteLine($"    ✓ ZIP文件已验证: {FormatBytes(zipInfo.Length)}");
+                }
+                else
+                {
+                    throw new InvalidOperationException("ZIP文件创建失败");
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"    ✗ ZIP文件创建失败: {ex.Message}");
+                Console.WriteLine($"    堆栈跟踪: {ex.StackTrace}");
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// 格式化字节大小
+        /// </summary>
+        private static string FormatBytes(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
 
         /// <summary>

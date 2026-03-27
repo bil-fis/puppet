@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -511,7 +511,7 @@ namespace puppet.Controllers
             if (!_eventListeners.TryGetValue(eventName, out var listeners) || 
                 listeners.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine($"警告: 没有找到 {eventName} 的监听器`);
+                System.Diagnostics.Debug.WriteLine($"警告: 没有找到 {eventName} 的监听器");
                 return;
             }
             

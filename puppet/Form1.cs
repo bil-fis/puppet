@@ -333,9 +333,33 @@ namespace puppet
                 // 等待服务器启动（如果服务器已存在，也等待一小段时间确保完全启动）
                 if (Program.Server != null)
                 {
-                    System.Threading.Thread.Sleep(500); // 等待服务器完全启动
                     int port = Program.Server.Port;
-                    
+
+                    // 增加等待时间并添加重试机制
+                    for (int retry = 0; retry < 10; retry++)
+                    {
+                        System.Threading.Thread.Sleep(500); // 每次等待500ms
+
+                        try
+                        {
+                            // 尝试测试服务器是否已经启动
+                            using (var client = new System.Net.Http.HttpClient())
+                            {
+                                client.Timeout = TimeSpan.FromSeconds(1);
+                                var response = await client.GetAsync($"http://localhost:{port}/");
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    Console.WriteLine($"服务器已就绪，开始导航...");
+                                    break;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            Console.WriteLine($"等待服务器启动... (尝试 {retry + 1}/10)");
+                        }
+                    }
+
                     // 加载本地服务器页面
                     await webView21.EnsureCoreWebView2Async();
                     webView21.CoreWebView2.Navigate($"http://localhost:{port}/");

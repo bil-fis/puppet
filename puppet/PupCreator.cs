@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.IO;
-using System.IO.Compression;
 using System.Text;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace puppet
 {
@@ -22,63 +22,230 @@ namespace puppet
         /// <param name="password">ZIP 密码（可选）</param>
         public static void CreatePup(string sourceFolder, string outputPupFile, string? password = null)
         {
-            if (!Directory.Exists(sourceFolder))
-            {
-                throw new DirectoryNotFoundException($"Source folder not found: {sourceFolder}");
-            }
-
-            Console.WriteLine($"Creating PUP file...");
-            Console.WriteLine($"Source: {sourceFolder}");
-            Console.WriteLine($"Output: {outputPupFile}");
-            Console.WriteLine($"Password: {(string.IsNullOrEmpty(password) ? "None" : "Protected")}");
-
-            // 1. 创建临时 ZIP 文件
-            string tempZipFile = Path.GetTempFileName();
             try
             {
-                Console.WriteLine($"Creating temporary ZIP file...");
+                Console.WriteLine("=== PUP 文件创建器 ===");
+                Console.WriteLine($"源文件夹: {sourceFolder}");
+                Console.WriteLine($"输出文件: {outputPupFile}");
+                Console.WriteLine($"密码保护: {(string.IsNullOrEmpty(password) ? "否" : "是")}");
+                Console.WriteLine();
 
-                if (string.IsNullOrEmpty(password))
+                // 1. 验证源文件夹
+                Console.WriteLine("步骤 1/6: 验证源文件夹...");
+                if (!Directory.Exists(sourceFolder))
                 {
-                    // 创建无密码 ZIP
-                    CreateZipWithoutPassword(sourceFolder, tempZipFile);
+                    throw new DirectoryNotFoundException($"源文件夹不存在: {sourceFolder}");
+                }
+                Console.WriteLine($"  ✓ 源文件夹存在");
+                
+                // 显示源文件夹信息
+                DirectoryInfo dirInfo = new DirectoryInfo(sourceFolder);
+                Console.WriteLine($"  完整路径: {dirInfo.FullName}");
+                Console.WriteLine($"  文件夹大小: {FormatBytes(dirInfo.EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length))}");
+                
+                // 列出源文件夹中的文件
+                Console.WriteLine($"  包含文件:");
+                var files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
+                if (files.Length == 0)
+                {
+                    Console.WriteLine("    警告: 源文件夹为空！");
                 }
                 else
                 {
-                    // 创建带密码的 ZIP（密码已加密）
-                    AesHelper.CreateZipWithEncryptedPassword(sourceFolder, tempZipFile, password);
+                    foreach (var file in files)
+                    {
+                        var fileInfo = new FileInfo(file);
+                        string relativePath = Path.GetRelativePath(sourceFolder, file);
+                        Console.WriteLine($"    - {relativePath} ({FormatBytes(fileInfo.Length)})");
+                    }
                 }
+                Console.WriteLine();
 
-                // 2. 读取 ZIP 数据
-                byte[] zipData = File.ReadAllBytes(tempZipFile);
-                Console.WriteLine($"ZIP size: {zipData.Length} bytes");
-
-                // 3. 添加 PUP 标识头
-                byte[] pupHeader = Encoding.ASCII.GetBytes(PUP_HEADER);
-
-                // 4. 合并数据
-                byte[] pupData = new byte[pupHeader.Length + zipData.Length];
-                Buffer.BlockCopy(pupHeader, 0, pupData, 0, pupHeader.Length);
-                Buffer.BlockCopy(zipData, 0, pupData, pupHeader.Length, zipData.Length);
-
-                // 5. 保存 PUP 文件
+                // 2. 验证输出目录
+                Console.WriteLine("步骤 2/6: 验证输出目录...");
                 string outputDir = Path.GetDirectoryName(outputPupFile);
-                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                Console.WriteLine($"  输出目录: {outputDir}");
+                
+                if (string.IsNullOrEmpty(outputDir))
                 {
-                    Directory.CreateDirectory(outputDir);
+                    outputDir = Directory.GetCurrentDirectory();
+                    Console.WriteLine($"  使用当前目录: {outputDir}");
                 }
+                
+                if (!Directory.Exists(outputDir))
+                {
+                    Console.WriteLine($"  创建输出目录...");
+                    Directory.CreateDirectory(outputDir);
+                    Console.WriteLine($"  ✓ 输出目录已创建");
+                }
+                else
+                {
+                    Console.WriteLine($"  ✓ 输出目录已存在");
+                }
+                
+                // 检查是否覆盖现有文件
+                if (File.Exists(outputPupFile))
+                {
+                    Console.WriteLine($"  警告: 文件已存在，将被覆盖: {outputPupFile}");
+                    var existingInfo = new FileInfo(outputPupFile);
+                    Console.WriteLine($"  现有文件大小: {FormatBytes(existingInfo.Length)}");
+                }
+                Console.WriteLine();
 
-                File.WriteAllBytes(outputPupFile, pupData);
-                Console.WriteLine($"PUP file created successfully: {outputPupFile}");
-                Console.WriteLine($"Total size: {pupData.Length} bytes");
-            }
-            finally
-            {
-                // 删除临时 ZIP 文件
+                // 3. 创建临时 ZIP 文件
+                Console.WriteLine("步骤 3/6: 创建临时 ZIP 文件...");
+                string tempZipFile = Path.GetTempFileName();
+                Console.WriteLine($"  临时文件: {tempZipFile}");
+                
+                // 删除临时文件，因为 Path.GetTempFileName() 会预先创建一个空文件
                 if (File.Exists(tempZipFile))
                 {
                     File.Delete(tempZipFile);
+                    Console.WriteLine($"  ✓ 已删除临时空文件");
                 }
+                
+                try
+                {
+                    if (string.IsNullOrEmpty(password))
+                    {
+                        Console.WriteLine($"  创建无密码 ZIP...");
+                        CreateZipWithoutPassword(sourceFolder, tempZipFile);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  创建加密 ZIP...");
+                        CreateZipWithPassword(sourceFolder, tempZipFile, password);
+                    }
+                    
+                    // 验证ZIP文件是否创建成功
+                    if (!File.Exists(tempZipFile))
+                    {
+                        throw new InvalidOperationException("临时ZIP文件创建失败！");
+                    }
+                    
+                    var zipInfo = new FileInfo(tempZipFile);
+                    Console.WriteLine($"  ✓ ZIP文件已创建 ({FormatBytes(zipInfo.Length)})");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  ✗ ZIP文件创建失败: {ex.Message}");
+                    Console.WriteLine($"  堆栈跟踪: {ex.StackTrace}");
+                    throw;
+                }
+                Console.WriteLine();
+
+                // 4. 读取 ZIP 数据
+                Console.WriteLine("步骤 4/6: 读取 ZIP 数据...");
+                byte[] zipData = File.ReadAllBytes(tempZipFile);
+                Console.WriteLine($"  ZIP 数据大小: {FormatBytes(zipData.Length)} ({zipData.Length} bytes)");
+                Console.WriteLine();
+
+                // 5. 创建 PUP 文件
+                Console.WriteLine("步骤 5/6: 创建 PUP 文件...");
+                Console.WriteLine($"  添加标识头: {PUP_HEADER} ({PUP_HEADER.Length} bytes)");
+
+                byte[] pupHeader = Encoding.ASCII.GetBytes(PUP_HEADER);
+                byte[] encryptedPassword = Array.Empty<byte>();
+
+                // 如果有密码，对密码进行AES加密
+                if (!string.IsNullOrEmpty(password))
+                {
+                    Console.WriteLine($"  对ZIP密码进行AES加密...");
+                    // 将密码转换为字节，填充到32字节（2个16字节块，适合ECB模式）
+                    byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+                    byte[] paddedPassword = new byte[32];
+                    Array.Copy(passwordBytes, 0, paddedPassword, 0, Math.Min(passwordBytes.Length, 32));
+                    // ECB 模式加密 32 字节 = 32 字节输出
+                    encryptedPassword = AesHelper.EncryptBytes(paddedPassword);
+                    Console.WriteLine($"  加密后密码长度: {encryptedPassword.Length} bytes");
+                }
+                else
+                {
+                    Console.WriteLine($"  无密码保护");
+                }
+
+                // 拼接：头部 + 加密密码 + ZIP数据
+                byte[] pupData = new byte[pupHeader.Length + encryptedPassword.Length + zipData.Length];
+                Buffer.BlockCopy(pupHeader, 0, pupData, 0, pupHeader.Length);
+                Buffer.BlockCopy(encryptedPassword, 0, pupData, pupHeader.Length, encryptedPassword.Length);
+                Buffer.BlockCopy(zipData, 0, pupData, pupHeader.Length + encryptedPassword.Length, zipData.Length);
+
+                Console.WriteLine($"  合并数据大小: {FormatBytes(pupData.Length)} ({pupData.Length} bytes)");
+                Console.WriteLine($"    - 头部: {pupHeader.Length} bytes");
+                Console.WriteLine($"    - 加密密码: {encryptedPassword.Length} bytes");
+                Console.WriteLine($"    - ZIP数据: {zipData.Length} bytes");
+                Console.WriteLine($"  写入文件: {outputPupFile}");
+
+                try
+                {
+                    File.WriteAllBytes(outputPupFile, pupData);
+                    Console.WriteLine($"  ✓ PUP文件已写入");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  ✗ 文件写入失败: {ex.Message}");
+                    Console.WriteLine($"  堆栈跟踪: {ex.StackTrace}");
+                    throw;
+                }
+                Console.WriteLine();
+
+                // 6. 验证文件
+                Console.WriteLine("步骤 6/6: 验证 PUP 文件...");
+                if (!File.Exists(outputPupFile))
+                {
+                    throw new InvalidOperationException("PUP文件创建后验证失败！");
+                }
+                
+                var pupInfo = new FileInfo(outputPupFile);
+                Console.WriteLine($"  ✓ PUP文件已验证存在");
+                Console.WriteLine($"  文件大小: {FormatBytes(pupInfo.Length)}");
+                Console.WriteLine($"  文件路径: {pupInfo.FullName}");
+                Console.WriteLine($"  创建时间: {pupInfo.CreationTime}");
+                Console.WriteLine();
+
+                // 清理临时文件
+                Console.WriteLine("清理临时文件...");
+                if (File.Exists(tempZipFile))
+                {
+                    File.Delete(tempZipFile);
+                    Console.WriteLine($"  ✓ 临时ZIP文件已删除");
+                }
+                Console.WriteLine();
+
+                // 最终总结
+                Console.WriteLine("=== 创建成功 ===");
+                Console.WriteLine($"PUP文件: {outputPupFile}");
+                Console.WriteLine($"总大小: {FormatBytes(pupInfo.Length)}");
+                Console.WriteLine($"包含文件: {files.Length} 个");
+                Console.WriteLine($"密码保护: {(string.IsNullOrEmpty(password) ? "否" : $"是 ({password.Length} 字符)")}");
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== 创建失败 ===");
+                Console.WriteLine($"错误: {ex.GetType().Name}");
+                Console.WriteLine($"消息: {ex.Message}");
+                Console.WriteLine();
+                Console.WriteLine("详细信息:");
+                Console.WriteLine($"  {ex.StackTrace}");
+                Console.WriteLine();
+                
+                // 如果是已知异常类型，提供帮助信息
+                if (ex is DirectoryNotFoundException)
+                {
+                    Console.WriteLine("提示: 请检查源文件夹路径是否正确");
+                }
+                else if (ex is UnauthorizedAccessException)
+                {
+                    Console.WriteLine("提示: 请检查是否有足够的权限访问源文件夹或写入输出目录");
+                }
+                else if (ex is IOException)
+                {
+                    Console.WriteLine("提示: 请检查文件路径是否有效，或是否有其他程序占用文件");
+                }
+                
+                throw;
             }
         }
 
@@ -87,15 +254,64 @@ namespace puppet
         /// </summary>
         private static void CreateZipWithoutPassword(string sourceFolder, string zipPath)
         {
-            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+            var fastZip = new FastZip();
+            fastZip.CreateEmptyDirectories = true;
+
+            var files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
+            int fileCount = 0;
+
+            Console.WriteLine($"  添加文件到ZIP:");
+            foreach (var file in files)
             {
-                foreach (string file in Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories))
-                {
-                    string entryName = Path.GetRelativePath(sourceFolder, file);
-                    zip.CreateEntryFromFile(file, entryName);
-                    Console.WriteLine($"  Added: {entryName}");
-                }
+                var fileInfo = new FileInfo(file);
+                string relativePath = Path.GetRelativePath(sourceFolder, file);
+                fileCount++;
+                Console.WriteLine($"    [{fileCount}] {relativePath} ({FormatBytes(fileInfo.Length)})");
             }
+
+            fastZip.CreateZip(zipPath, sourceFolder, true, "");
+            Console.WriteLine($"  总计: {fileCount} 个文件");
+        }
+
+        /// <summary>
+        /// 创建带密码的 ZIP 文件
+        /// </summary>
+        private static void CreateZipWithPassword(string sourceFolder, string zipPath, string password)
+        {
+            var fastZip = new FastZip();
+            fastZip.CreateEmptyDirectories = true;
+            fastZip.Password = password;
+
+            var files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
+            int fileCount = 0;
+
+            Console.WriteLine($"  添加文件到ZIP (密码保护):");
+            foreach (var file in files)
+            {
+                var fileInfo = new FileInfo(file);
+                string relativePath = Path.GetRelativePath(sourceFolder, file);
+                fileCount++;
+                Console.WriteLine($"    [{fileCount}] {relativePath} ({FormatBytes(fileInfo.Length)})");
+            }
+
+            fastZip.CreateZip(zipPath, sourceFolder, true, "");
+            Console.WriteLine($"  总计: {fileCount} 个文件 (已加密)");
+        }
+
+        /// <summary>
+        /// 格式化字节大小
+        /// </summary>
+        private static string FormatBytes(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
     }
-}
+    }

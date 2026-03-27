@@ -2,7 +2,7 @@
   "profiles": {
     "puppet": {
       "commandName": "Project",
-      "commandLineArgs": "--nake-load E:\\puppet\\puppet\\test-htmls"
+      "commandLineArgs": "--load-pup E:\\puppet\\puppet\\test-htmls.pup"
     }
   }
 }
