@@ -99,6 +99,11 @@ namespace puppet
                 webView21.CoreWebView2.Settings.UserAgent = $"{currentUA} {USER_AGENT_HEADER}";
                 Console.WriteLine($"UserAgent set to: {webView21.CoreWebView2.Settings.UserAgent}");
 
+                // 添加 WebResourceRequested 事件处理器，用于拦截所有请求并添加安全头
+                // 参考 Microsoft Learn: https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2.webresourcerequested
+                webView21.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+                webView21.CoreWebView2.WebResourceRequested += WebView_WebResourceRequested;
+
                 // 初始化 TrayController（需要 CoreWebView2 来执行 JavaScript 回调）
                 _trayController = new TrayController(webView21.CoreWebView2, this);
 
@@ -439,6 +444,30 @@ namespace puppet
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"WebMessage 处理失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 拦截所有 WebView2 请求并添加安全头
+        /// 参考 Microsoft Learn: https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2.webresourcerequested
+        /// </summary>
+        private void WebView_WebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            try
+            {
+                var request = e.Request;
+
+                // 只为 localhost 请求添加安全头
+                if (request.Uri != null && (request.Uri.Contains("localhost") || request.Uri.Contains("127.0.0.1")))
+                {
+                    // 添加 Puppet-Secret 头
+                    request.Headers.SetHeader(SecretKey.HEADER_NAME, SecretKey.Key);
+                    Console.WriteLine($"[安全头] 已为请求添加 {SecretKey.HEADER_NAME}: {request.Uri}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[安全头错误] {ex.Message}");
             }
         }
 

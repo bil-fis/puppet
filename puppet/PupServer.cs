@@ -258,6 +258,25 @@ namespace puppet
                 // 设置响应头
                 response.AddHeader("Server", "PuppetPussy");
 
+                // 验证安全头（只验证 localhost 请求）
+                string? requestUri = request.Url?.ToString();
+                if (requestUri != null && (requestUri.Contains("localhost") || requestUri.Contains("127.0.0.1")))
+                {
+                    string? secretToken = request.Headers.Get(SecretKey.HEADER_NAME);
+                    if (!SecretKey.Validate(secretToken))
+                    {
+                        Console.WriteLine($"[安全验证失败] {requestUri} - 缺少或无效的 {SecretKey.HEADER_NAME} 头");
+                        response.StatusCode = 403;
+                        response.ContentType = "text/plain; charset=utf-8";
+                        string errorContent = "Forbidden: Invalid or missing Puppet-Secret header";
+                        byte[] errorBytes = Encoding.UTF8.GetBytes(errorContent);
+                        response.ContentLength64 = errorBytes.Length;
+                        await response.OutputStream.WriteAsync(errorBytes, 0, errorBytes.Length);
+                        return;
+                    }
+                    Console.WriteLine($"[安全验证成功] {requestUri}");
+                }
+
                 // 获取请求路径
                 string path = request.Url?.AbsolutePath ?? "/";
 

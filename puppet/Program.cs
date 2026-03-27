@@ -12,6 +12,9 @@ namespace puppet
         [STAThread]
         static void Main(string[] args)
         {
+            // 初始化安全密钥（必须在处理任何其他逻辑之前）
+            SecretKey.Initialize();
+
             // 处理命令行参数
             if (args.Length > 0)
             {
