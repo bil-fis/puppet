@@ -16,6 +16,7 @@ namespace puppet
         private LogController _logController;
         private SystemController _systemController;
         private TrayController _trayController;
+        private EventController _eventController;
 
         // 窗口拖动相关
         private bool _isDraggable = false;
@@ -65,6 +66,7 @@ namespace puppet
             _logController = new LogController();
             _systemController = new SystemController();
             _trayController = null; // 将在 WebView2 初始化完成后创建
+            _eventController = null; // 将在 WebView2 初始化完成后创建
 
             // 初始化 WebView2
             webView21.CoreWebView2InitializationCompleted += WebView_CoreWebView2InitializationCompleted;
@@ -91,6 +93,9 @@ namespace puppet
                 // 初始化 TrayController（需要 CoreWebView2 来执行 JavaScript 回调）
                 _trayController = new TrayController(webView21.CoreWebView2, this);
 
+                // 初始化 EventController（需要 CoreWebView2 来执行 JavaScript 回调）
+                _eventController = new EventController(webView21.CoreWebView2, this);
+
                 // 注入所有控制器到 WebView2
                 webView21.CoreWebView2.AddHostObjectToScript("window", _windowController);
                 webView21.CoreWebView2.AddHostObjectToScript("application", _applicationController);
@@ -98,6 +103,7 @@ namespace puppet
                 webView21.CoreWebView2.AddHostObjectToScript("log", _logController);
                 webView21.CoreWebView2.AddHostObjectToScript("system", _systemController);
                 webView21.CoreWebView2.AddHostObjectToScript("tray", _trayController);
+                webView21.CoreWebView2.AddHostObjectToScript("eventController", _eventController);
 
                 // 注入 puppet 命名空间到所有页面
                 // 根据 Microsoft Learn 文档，AddScriptToExecuteOnDocumentCreatedAsync 会在每个新文档创建时运行 JavaScript
@@ -200,6 +206,87 @@ namespace puppet
                             hide: async function() { return await chrome.webview.hostObjects.sync.tray.Hide(); },
                             show: async function() { return await chrome.webview.hostObjects.sync.tray.Show(); },
                             setIcon: async function(iconPath) { return await chrome.webview.hostObjects.sync.tray.SetIcon(String(iconPath)); }
+                        };
+
+                        // 事件系统包装
+                        window.puppet.events = {
+                            addEventListener: async function(eventName, callback) {
+                                return await chrome.webview.hostObjects.sync.eventController.AddEventListener(String(eventName), String(callback));
+                            },
+                            removeEventListener: async function(eventName, callbackId) {
+                                return await chrome.webview.hostObjects.sync.eventController.RemoveEventListener(String(eventName), Number(callbackId));
+                            }
+                        };
+
+                        // 设备系统包装
+                        window.puppet.device = {
+                            getDevice: async function(deviceId) {
+                                return await chrome.webview.hostObjects.sync.eventController.GetDevice(String(deviceId));
+                            },
+                            getDevices: async function(deviceType) {
+                                return await chrome.webview.hostObjects.sync.eventController.GetDevices(Number(deviceType));
+                            },
+                            status: {
+                                unknown: 0,
+                                ok: 1,
+                                error: 2,
+                                degraded: 3,
+                                predFail: 4,
+                                starting: 5,
+                                stopping: 6,
+                                service: 7,
+                                stressed: 8,
+                                nonRecover: 9,
+                                noContact: 10,
+                                lostComm: 11,
+                                notConfigured: 20,
+                                disabled: 22,
+                                notPresent: 24,
+                                stillSettingUp: 25,
+                                driversNotInstalled: 28,
+                                ready: 100,
+                                notReady: 101,
+                                pending: 102,
+                                ejected: 103,
+                                stalled: 104
+                            },
+                            type: {
+                                unknown: 0,
+                                removableDisk: 2,
+                                localDisk: 3,
+                                networkDrive: 4,
+                                compactDisc: 5,
+                                ramDisk: 6,
+                                usbDevice: 100,
+                                usbDisk: 101,
+                                usbHub: 102,
+                                usbPrinter: 103,
+                                usbCamera: 104,
+                                usbStorage: 105,
+                                keyboard: 200,
+                                mouse: 201,
+                                monitor: 202,
+                                printer: 203,
+                                scanner: 204,
+                                networkAdapter: 205,
+                                audio: 206,
+                                video: 207,
+                                bluetooth: 208
+                            },
+                            powerStatus: {
+                                unknown: 0,
+                                discharging: 1,
+                                acConnected: 2,
+                                fullyCharged: 3,
+                                low: 4,
+                                critical: 5,
+                                charging: 6,
+                                chargingHigh: 7,
+                                chargingLow: 8,
+                                chargingCritical: 9,
+                                undefined: 10,
+                                partiallyCharged: 11
+                            }
                         };
 
                         // 监听 DOM 变化，确保 puppet 命名空间始终存在
@@ -408,15 +495,50 @@ namespace puppet
             }
         }
 
-        // 重写 WndProc 处理智能点击穿透
+        // 重写 WndProc 处理智能点击穿透和窗口事件
         protected override void WndProc(ref Message m)
         {
             const int WM_NCHITTEST = 0x84;
             const int HTTRANSPARENT = -1;
             const int HTCLIENT = 1;
             const int HTCAPTION = 2;
+            const int WM_SIZE = 0x0005;
+            const int WM_MOVE = 0x0003;
+            const int WM_SYSCOMMAND = 0x0112;
+            const int SC_RESTORE = 0xF120;
+            const int SC_MINIMIZE = 0xF020;
+            const int SC_MAXIMIZE = 0xF030;
+            const int WM_ACTIVATE = 0x0006;
+            const int WA_INACTIVE = 0;
+            const int WA_ACTIVE = 1;
+            const int WA_CLICKACTIVE = 2;
 
             base.WndProc(ref m);
+
+            // 处理窗口大小变化
+            if (m.Msg == WM_SIZE)
+            {
+                _eventController?.OnWindowResize(this.Width, this.Height);
+            }
+
+            // 处理窗口移动
+            if (m.Msg == WM_MOVE)
+            {
+                _eventController?.OnWindowMove(this.Location.X, this.Location.Y);
+            }
+
+            // 处理系统命令（最大化、最小化、恢复）
+            if (m.Msg == WM_SYSCOMMAND)
+            {
+                int command = m.WParam.ToInt32() & 0xFFF0;
+                if (command == SC_RESTORE || command == SC_MINIMIZE || command == SC_MAXIMIZE)
+                {
+                    // 延迟检查窗口状态变化，确保消息处理完成
+                    this.BeginInvoke(new Action(() => {
+                        _eventController?.CheckWindowStateChange();
+                    }));
+                }
+            }
 
             // 如果启用了透明模式且不是完全穿透模式，实现智能点击穿透
             if (m.Msg == WM_NCHITTEST && _isTransparent && !_mouseThrough)

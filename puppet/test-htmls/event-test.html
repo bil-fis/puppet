@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Puppet 事件系统测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #666;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button.active {
+            background-color: #28a745;
+        }
+        
+        .log {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+        
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+        
+        .log-entry.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+        
+        .info-panel {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .device-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Puppet 事件系统测试</h1>
+        
+        <div class="section">
+            <h2>USB 设备事件</h2>
+            <div class="button-group">
+                <button id="btn-usb-plug-in" onclick="toggleEvent('usb-plug-in', this)">监听 USB 插入</button>
+                <button id="btn-usb-plug-out" onclick="toggleEvent('usb-plug-out', this)">监听 USB 拔出</button>
+            </div>
+            <div class="info-panel">
+                <p>插入或拔出USB设备时，会触发相应的事件回调</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>磁盘挂载事件</h2>
+            <div class="button-group">
+                <button id="btn-disk-mount" onclick="toggleEvent('disk-mount', this)">监听磁盘挂载</button>
+                <button id="btn-disk-unmount" onclick="toggleEvent('disk-unmount', this)">监听磁盘卸载</button>
+            </div>
+            <div class="info-panel">
+                <p>挂载或卸载磁盘时，会触发相应的事件回调</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>窗口事件</h2>
+            <div class="button-group">
+                <button id="btn-window-focus" onclick="toggleEvent('window-focus', this)">监听窗口获得焦点</button>
+                <button id="btn-window-blur" onclick="toggleEvent('window-blur', this)">监听窗口失去焦点</button>
+                <button id="btn-window-maximize" onclick="toggleEvent('window-maximize', this)">监听窗口最大化</button>
+                <button id="btn-window-minimize" onclick="toggleEvent('window-minimize', this)">监听窗口最小化</button>
+                <button id="btn-window-restore" onclick="toggleEvent('window-restore', this)">监听窗口恢复</button>
+                <button id="btn-window-resize" onclick="toggleEvent('window-resize', this)">监听窗口大小变化</button>
+                <button id="btn-window-move" onclick="toggleEvent('window-move', this)">监听窗口移动</button>
+            </div>
+            <div class="info-panel">
+                <p>窗口状态变化时，会触发相应的事件回调</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>电源事件</h2>
+            <div class="button-group">
+                <button id="btn-power-change" onclick="toggleEvent('power-change', this)">监听电源状态变化</button>
+            </div>
+            <div class="info-panel">
+                <p>插拔电源或电池状态变化时，会触发相应的事件回调</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>设备查询</h2>
+            <div class="button-group">
+                <button onclick="listAllDevices()">列出所有设备</button>
+                <button onclick="listUSBDevices()">列出 USB 设备</button>
+                <button onclick="listDisks()">列出磁盘</button>
+            </div>
+            <div id="device-list" class="device-info" style="display: none;">
+                <h3>设备列表</h3>
+                <div id="device-content"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>事件日志</h2>
+            <button onclick="clearLog()">清空日志</button>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 存储事件监听器ID
+        const eventListeners = {};
+        
+        // 事件回调函数
+        const eventCallbacks = {
+            'usb-plug-in': function(e) {
+                log('USB 设备插入', e);
+                showDeviceInfo(e.Device);
+            },
+            'usb-plug-out': function(e) {
+                log('USB 设备拔出', e);
+                showDeviceInfo(e.Device);
+            },
+            'disk-mount': function(e) {
+                log('磁盘挂载', e);
+                showDeviceInfo(e.Device);
+            },
+            'disk-unmount': function(e) {
+                log('磁盘卸载', e);
+                showDeviceInfo(e.Device);
+            },
+            'window-focus': function(e) {
+                log('窗口获得焦点', e);
+            },
+            'window-blur': function(e) {
+                log('窗口失去焦点', e);
+            },
+            'window-maximize': function(e) {
+                log('窗口最大化', e);
+            },
+            'window-minimize': function(e) {
+                log('窗口最小化', e);
+            },
+            'window-restore': function(e) {
+                log('窗口恢复', e);
+            },
+            'window-resize': function(e) {
+                log('窗口大小变化: ' + e.width + 'x' + e.height, e);
+            },
+            'window-move': function(e) {
+                log('窗口移动: (' + e.x + ', ' + e.y + ')', e);
+            },
+            'power-change': function(e) {
+                log('电源状态变化: ' + e.status, e);
+            }
+        };
+        
+        // 切换事件监听
+        async function toggleEvent(eventName, button) {
+            if (eventListeners[eventName]) {
+                // 移除监听器
+                await puppet.events.removeEventListener(eventName, eventListeners[eventName]);
+                delete eventListeners[eventName];
+                button.classList.remove('active');
+                button.textContent = button.textContent.replace('✓ ', '');
+                log('已停止监听: ' + eventName, null, 'warning');
+            } else {
+                // 添加监听器
+                const callbackName = 'on' + eventName.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                
+                // 确保回调函数存在
+                window[callbackName] = eventCallbacks[eventName];
+                
+                const listenerId = await puppet.events.addEventListener(eventName, callbackName);
+                eventListeners[eventName] = listenerId;
+                button.classList.add('active');
+                button.textContent = '✓ ' + button.textContent;
+                log('开始监听: ' + eventName, null, 'success');
+            }
+        }
+        
+        // 记录日志
+        function log(message, data, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let content = `[${timestamp}] ${message}`;
+            
+            if (data) {
+                content += '\n' + JSON.stringify(data, null, 2);
+            }
+            
+            entry.textContent = content;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // 清空日志
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // 显示设备信息
+        function showDeviceInfo(device) {
+            if (!device) return;
+            
+            const deviceDiv = document.createElement('div');
+            deviceDiv.className = 'device-info';
+            
+            let statusBadge = getDeviceStatusBadge(device.Status);
+            let typeBadge = getDeviceTypeBadge(device.Type);
+            
+            deviceDiv.innerHTML = `
+                <h4>${device.Name || device.DeviceID}</h4>
+                <p>
+                    ${typeBadge} ${statusBadge}
+                </p>
+                <p><strong>设备ID:</strong> ${device.DeviceID}</p>
+                <p><strong>描述:</strong> ${device.Description || 'N/A'}</p>
+                ${device.DriveLetter ? `<p><strong>盘符:</strong> ${device.DriveLetter}</p>` : ''}
+                ${device.VolumeName ? `<p><strong>卷标:</strong> ${device.VolumeName}</p>` : ''}
+                ${device.Size ? `<p><strong>容量:</strong> ${formatBytes(device.Size)}</p>` : ''}
+                ${device.FreeSpace !== undefined ? `<p><strong>可用空间:</strong> ${formatBytes(device.FreeSpace)}</p>` : ''}
+            `;
+            
+            document.body.appendChild(deviceDiv);
+            
+            // 5秒后自动移除
+            setTimeout(() => {
+                deviceDiv.remove();
+            }, 5000);
+        }
+        
+        // 获取设备状态徽章
+        function getDeviceStatusBadge(status) {
+            const statusMap = {
+                0: '未知',
+                1: '正常',
+                2: '错误',
+                3: '降级',
+                4: '即将故障',
+                5: '启动中',
+                6: '停止中',
+                7: '服务中',
+                8: '压力过大',
+                9: '无法恢复',
+                10: '无联系',
+                11: '通讯丢失',
+                20: '未配置',
+                22: '已禁用',
+                24: '不存在',
+                25: '正在设置',
+                28: '驱动未安装',
+                100: '就绪',
+                101: '未就绪',
+                102: '等待中',
+                103: '已弹出',
+                104: '停滞'
+            };
+            
+            const statusName = statusMap[status] || '未知';
+            let badgeClass = 'badge-info';
+            
+            if (status === 1 || status === 100) badgeClass = 'badge-success';
+            else if (status === 2 || status === 9 || status === 11) badgeClass = 'badge-danger';
+            else if (status === 3 || status === 4 || status === 8) badgeClass = 'badge-warning';
+            
+            return `<span class="badge ${badgeClass}">${statusName}</span>`;
+        }
+        
+        // 获取设备类型徽章
+        function getDeviceTypeBadge(type) {
+            const typeMap = {
+                0: '未知',
+                2: '移动磁盘',
+                3: '本地磁盘',
+                4: '网络驱动器',
+                5: '光盘',
+                6: 'RAM磁盘',
+                100: 'USB设备',
+                101: 'USB磁盘',
+                102: 'USB集线器',
+                103: 'USB打印机',
+                104: 'USB摄像头',
+                105: 'USB存储',
+                200: '键盘',
+                201: '鼠标',
+                202: '显示器',
+                203: '打印机',
+                204: '扫描仪',
+                205: '网络适配器',
+                206: '音频设备',
+                207: '视频设备',
+                208: '蓝牙设备'
+            };
+            
+            const typeName = typeMap[type] || '未知';
+            return `<span class="badge badge-info">${typeName}</span>`;
+        }
+        
+        // 格式化字节数
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        // 列出所有设备
+        async function listAllDevices() {
+            try {
+                const devices = await puppet.device.getDevices(puppet.device.type.unknown);
+                displayDeviceList(devices, '所有设备');
+            } catch (error) {
+                log('获取设备列表失败: ' + error.message, null, 'error');
+            }
+        }
+        
+        // 列出USB设备
+        async function listUSBDevices() {
+            try {
+                const devices = await puppet.device.getDevices(puppet.device.type.usbDevice);
+                displayDeviceList(devices, 'USB设备');
+            } catch (error) {
+                log('获取USB设备列表失败: ' + error.message, null, 'error');
+            }
+        }
+        
+        // 列出磁盘
+        async function listDisks() {
+            try {
+                const devices = await puppet.device.getDevices(puppet.device.type.localDisk);
+                displayDeviceList(devices, '本地磁盘');
+            } catch (error) {
+                log('获取磁盘列表失败: ' + error.message, null, 'error');
+            }
+        }
+        
+        // 显示设备列表
+        function displayDeviceList(devices, title) {
+            const listDiv = document.getElementById('device-list');
+            const contentDiv = document.getElementById('device-content');
+            
+            listDiv.style.display = 'block';
+            
+            if (!devices || devices.length === 0) {
+                contentDiv.innerHTML = '<p>没有找到设备</p>';
+                return;
+            }
+            
+            let html = '<p>共找到 ' + devices.length + ' 个设备:</p>';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<tr style="background-color: #f8f9fa;"><th style="padding: 8px; border: 1px solid #dee2e6;">名称</th><th style="padding: 8px; border: 1px solid #dee2e6;">类型</th><th style="padding: 8px; border: 1px solid #dee2e6;">状态</th><th style="padding: 8px; border: 1px solid #dee2e6;">描述</th></tr>';
+            
+            devices.forEach(device => {
+                html += '<tr>';
+                html += '<td style="padding: 8px; border: 1px solid #dee2e6;">' + (device.Name || device.DeviceID) + '</td>';
+                html += '<td style="padding: 8px; border: 1px solid #dee2e6;">' + getDeviceTypeBadge(device.Type) + '</td>';
+                html += '<td style="padding: 8px; border: 1px solid #dee2e6;">' + getDeviceStatusBadge(device.Status) + '</td>';
+                html += '<td style="padding: 8px; border: 1px solid #dee2e6;">' + (device.Description || 'N/A') + '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            contentDiv.innerHTML = html;
+        }
+        
+        // 页面加载完成
+        window.addEventListener('load', function() {
+            log('Puppet 事件系统测试页面已加载', null, 'success');
+            log('点击上方按钮开始监听各种事件', null, 'info');
+        });
+    </script>
+</body>
+</html>

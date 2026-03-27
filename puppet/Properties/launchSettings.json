@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "puppet": {
+      "commandName": "Project",
+      "commandLineArgs": "--nake-load E:\\puppet\\puppet\\test-htmls"
+    }
+  }
+}
