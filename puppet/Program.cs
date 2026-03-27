@@ -137,20 +137,35 @@ namespace puppet
                 int port = PortSelector.GetAvailablePort(7738);
                 Console.WriteLine($"Using port: {port}");
 
-                // 创建并启动服务器（裸文件夹模式）
+                // 创建服务器（裸文件夹模式）
                 Server = new PupServer(folder, true, port);
                 Console.WriteLine($"Starting PUP Server in nake-load mode...");
                 Console.WriteLine($"Serving folder: {folder}");
                 Console.WriteLine($"Server URL: http://localhost:{port}/");
-                Console.WriteLine("Press Enter to stop the server...");
                 Console.WriteLine();
 
-                // 启动服务器
-                Server.StartAsync().GetAwaiter().GetResult();
+                // 在后台启动服务器（不阻塞主线程）
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Server.StartAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Server error: {ex.Message}");
+                    }
+                });
+
+                // 启动 GUI 应用（与服务器并行运行）
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                ApplicationConfiguration.Initialize();
+                Application.Run(new Form1());
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error starting server: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
 

@@ -208,23 +208,37 @@ namespace puppet
                             setIcon: async function(iconPath) { return await chrome.webview.hostObjects.sync.tray.SetIcon(String(iconPath)); }
                         };
 
-                        // 事件系统包装
+                        // 事件系统包装 - 支持直接传函数或函数名
                         window.puppet.events = {
                             addEventListener: async function(eventName, callback) {
-                                return await chrome.webview.hostObjects.sync.eventController.AddEventListener(String(eventName), String(callback));
+                                let callbackName;
+                                
+                                // 如果是函数，生成一个唯一的函数名并存储
+                                if (typeof callback === 'function') {
+                                    callbackName = '__puppet_event_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                                    window[callbackName] = callback;
+                                } else if (typeof callback === 'string') {
+                                    callbackName = callback;
+                                } else {
+                                    throw new Error('Callback must be a function or string');
+                                }
+                                
+                                return Number(await chrome.webview.hostObjects.sync.eventController.AddEventListener(String(eventName), String(callbackName)));
                             },
                             removeEventListener: async function(eventName, callbackId) {
-                                return await chrome.webview.hostObjects.sync.eventController.RemoveEventListener(String(eventName), Number(callbackId));
+                                return await chrome.webview.hostObjects.sync.eventController.RemoveEventListener(String(eventName), BigInt(callbackId));
                             }
                         };
 
                         // 设备系统包装
                         window.puppet.device = {
                             getDevice: async function(deviceId) {
-                                return await chrome.webview.hostObjects.sync.eventController.GetDevice(String(deviceId));
+                                const jsonResult = await chrome.webview.hostObjects.sync.eventController.GetDevice(String(deviceId));
+                                return JSON.parse(jsonResult);
                             },
                             getDevices: async function(deviceType) {
-                                return await chrome.webview.hostObjects.sync.eventController.GetDevices(Number(deviceType));
+                                const jsonResult = await chrome.webview.hostObjects.sync.eventController.GetDevices(Number(deviceType));
+                                return JSON.parse(jsonResult);
                             },
                             status: {
                                 unknown: 0,
@@ -309,10 +323,14 @@ namespace puppet
                 // 订阅文档标题改变事件（用于更新窗口标题）
                 webView21.CoreWebView2.DocumentTitleChanged += WebView_DocumentTitleChanged;
 
-                // 启动 PUP 服务器
-                await Program.StartPupServerAsync();
-                
-                // 等待服务器启动
+                // 检查服务器是否已经启动（例如通过 --nake-load 命令）
+                if (Program.Server == null)
+                {
+                    // 服务器未启动，启动 PUP 服务器
+                    await Program.StartPupServerAsync();
+                }
+
+                // 等待服务器启动（如果服务器已存在，也等待一小段时间确保完全启动）
                 if (Program.Server != null)
                 {
                     System.Threading.Thread.Sleep(500); // 等待服务器完全启动

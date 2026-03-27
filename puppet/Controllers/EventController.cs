@@ -245,9 +245,9 @@ namespace puppet.Controllers
         {
             try
             {
-                // 获取现有USB设备
+                // 获取现有USB设备 - 使用Win32_LogicalDisk DriveType=2
                 using (var searcher = new ManagementObjectSearcher(
-                    "SELECT * FROM Win32_PnPEntity WHERE PNPClass LIKE 'USB%'"))
+                    "SELECT * FROM Win32_LogicalDisk WHERE DriveType = 2"))
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
@@ -255,6 +255,7 @@ namespace puppet.Controllers
                         if (!string.IsNullOrEmpty(deviceId))
                         {
                             _existingUSBDevices.Add(deviceId);
+                            System.Diagnostics.Debug.WriteLine($"添加现有USB设备（U盘）: {deviceId}");
                         }
                     }
                 }
@@ -271,10 +272,13 @@ namespace puppet.Controllers
                         }
                     }
                 }
+
+                System.Diagnostics.Debug.WriteLine($"初始化了 {_existingUSBDevices.Count} 个现有USB设备（U盘）");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"初始化现有设备失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
             }
         }
 
@@ -464,15 +468,50 @@ namespace puppet.Controllers
         }
 
         /// <summary>
+        /// 在UI线程上执行操作
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        private async System.Threading.Tasks.Task RunOnUiThread(Func<System.Threading.Tasks.Task> action)
+        {
+            if (_form.InvokeRequired)
+            {
+                await (System.Threading.Tasks.Task)_form.Invoke(async () => await action());
+            }
+            else
+            {
+                await action();
+            }
+        }
+
+        /// <summary>
+        /// 在UI线程上执行操作（无返回值）
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        private void RunOnUiThread(Action action)
+        {
+            if (_form.InvokeRequired)
+            {
+                _form.Invoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        /// <summary>
         /// 触发事件
         /// </summary>
         /// <param name="eventName">事件名称</param>
         /// <param name="eventData">事件数据</param>
         private async void TriggerEvent(string eventName, object eventData)
         {
+            System.Diagnostics.Debug.WriteLine($"TriggerEvent被调用: {eventName}");
+            
             if (!_eventListeners.TryGetValue(eventName, out var listeners) || 
                 listeners.Count == 0)
             {
+                System.Diagnostics.Debug.WriteLine($"警告: 没有找到 {eventName} 的监听器`);
                 return;
             }
             
@@ -482,12 +521,19 @@ namespace puppet.Controllers
                 callbacksToExecute = listeners.ToList();
             }
             
+            System.Diagnostics.Debug.WriteLine($"找到 {callbacksToExecute.Count} 个 {eventName} 监听器");
+            
             // 按注册顺序执行回调
             foreach (var callbackId in callbacksToExecute)
             {
                 if (_callbacks.TryGetValue(callbackId, out var callbackName))
                 {
+                    System.Diagnostics.Debug.WriteLine($"执行回调: {callbackName} (ID: {callbackId})");
                     await ExecuteCallback(callbackName, eventData);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"警告: 找不到回调函数 ID {callbackId}");
                 }
             }
         }
@@ -502,20 +548,35 @@ namespace puppet.Controllers
             try
             {
                 string eventDataJson = JsonConvert.SerializeObject(eventData);
+                System.Diagnostics.Debug.WriteLine($"准备执行JavaScript回调: {callbackName}");
+                System.Diagnostics.Debug.WriteLine($"事件数据: {eventDataJson}");
+                
                 string script = $@"
                     if (typeof {callbackName} === 'function') {{
                         try {{
                             {callbackName}({eventDataJson});
+                            console.log('[Puppet] 回调函数执行成功: {callbackName}');
                         }} catch (e) {{
-                            console.error('回调函数执行错误:', e);
+                            console.error('[Puppet] 回调函数执行错误:', e);
+                            console.error('[Puppet] 错误详情:', e.message);
                         }}
+                    }} else {{
+                        console.error('[Puppet] 回调函数不存在: {callbackName}');
+                        console.error('[Puppet] typeof {callbackName} =', typeof {callbackName});
                     }}
                 ";
-                await _webview.ExecuteScriptAsync(script);
+                
+                // 使用辅助方法确保在UI线程上执行
+                await RunOnUiThread(async () =>
+                {
+                    string result = await _webview.ExecuteScriptAsync(script);
+                    System.Diagnostics.Debug.WriteLine($"JavaScript执行结果: {result}");
+                });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"执行回调失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
             }
         }
 
@@ -524,31 +585,60 @@ namespace puppet.Controllers
         /// </summary>
         private void StartUSBMonitoring()
         {
-            if (_usbArrivalWatcher != null) return;
+            if (_usbArrivalWatcher != null) 
+            {
+                System.Diagnostics.Debug.WriteLine("USB监控已经在运行，跳过启动");
+                return;
+            }
             
             try
             {
-                // 监控USB设备插入
-                _usbArrivalWatcher = new ManagementEventWatcher(
-                    "SELECT * FROM __InstanceCreationEvent WITHIN 2 " +
-                    "WHERE TargetInstance ISA 'Win32_PnPEntity' " +
-                    "AND TargetInstance.PNPClass LIKE 'USB%'");
+                // 根据Microsoft Learn文档，使用Win32_LogicalDisk监听DriveType=2（Removable Disk）
+                // 减少WITHIN时间以提高响应速度
+                string insertionQuery = "SELECT * FROM __InstanceCreationEvent WITHIN 1 " +
+                    "WHERE TargetInstance ISA 'Win32_LogicalDisk' " +
+                    "AND TargetInstance.DriveType = 2";
                 
+                System.Diagnostics.Debug.WriteLine($"启动USB插入监听: {insertionQuery}");
+                
+                _usbArrivalWatcher = new ManagementEventWatcher(insertionQuery);
                 _usbArrivalWatcher.EventArrived += OnUSBArrival;
                 _usbArrivalWatcher.Start();
                 
-                // 监控USB设备拔出
-                _usbRemovalWatcher = new ManagementEventWatcher(
-                    "SELECT * FROM __InstanceDeletionEvent WITHIN 2 " +
-                    "WHERE TargetInstance ISA 'Win32_PnPEntity' " +
-                    "AND TargetInstance.PNPClass LIKE 'USB%'");
+                System.Diagnostics.Debug.WriteLine("USB插入监听器已启动");
                 
+                // 监控USB设备拔出
+                string removalQuery = "SELECT * FROM __InstanceDeletionEvent WITHIN 1 " +
+                    "WHERE TargetInstance ISA 'Win32_LogicalDisk' " +
+                    "AND TargetInstance.DriveType = 2";
+                
+                System.Diagnostics.Debug.WriteLine($"启动USB拔出监听: {removalQuery}");
+                
+                _usbRemovalWatcher = new ManagementEventWatcher(removalQuery);
                 _usbRemovalWatcher.EventArrived += OnUSBRemoval;
                 _usbRemovalWatcher.Start();
+                
+                System.Diagnostics.Debug.WriteLine("USB拔出监听器已启动");
+                System.Diagnostics.Debug.WriteLine("USB监控已完全启动（监听Win32_LogicalDisk DriveType=2）");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"启动USB监控失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
+                
+                // 清理失败的监听器
+                if (_usbArrivalWatcher != null)
+                {
+                    _usbArrivalWatcher.Stop();
+                    _usbArrivalWatcher.Dispose();
+                    _usbArrivalWatcher = null;
+                }
+                if (_usbRemovalWatcher != null)
+                {
+                    _usbRemovalWatcher.Stop();
+                    _usbRemovalWatcher.Dispose();
+                    _usbRemovalWatcher = null;
+                }
             }
         }
 
@@ -557,28 +647,64 @@ namespace puppet.Controllers
         /// </summary>
         private void OnUSBArrival(object sender, EventArrivedEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine("=== USB插入事件被触发 ===");
+            
             try
             {
-                ManagementBaseObject obj = (ManagementBaseObject)e.NewEvent["TargetInstance"];
-                string deviceId = obj["DeviceID"]?.ToString();
+                ManagementBaseObject newEvent = e.NewEvent;
+                System.Diagnostics.Debug.WriteLine($"事件类型: {newEvent.ClassPath.ClassName}");
                 
-                if (!string.IsNullOrEmpty(deviceId) && !_existingUSBDevices.Contains(deviceId))
+                ManagementBaseObject obj = (ManagementBaseObject)newEvent["TargetInstance"];
+                if (obj == null)
                 {
-                    _existingUSBDevices.Add(deviceId);
-                    
-                    Device device = CreateDeviceFromWMI(obj);
-                    
-                    TriggerEvent("usb-plug-in", new
-                    {
-                        deviceType = device.Type,
-                        Device = device
-                    });
+                    System.Diagnostics.Debug.WriteLine("错误: TargetInstance为null");
+                    return;
                 }
+                
+                string deviceId = obj["DeviceID"]?.ToString();
+                string name = obj["Name"]?.ToString();
+                uint driveType = Convert.ToUInt32(obj["DriveType"] ?? 0);
+                
+                System.Diagnostics.Debug.WriteLine($"USB设备插入（U盘）: {name} ({deviceId}), DriveType: {driveType}");
+                System.Diagnostics.Debug.WriteLine($"现有USB设备列表: {string.Join(", ", _existingUSBDevices)}");
+                
+                if (string.IsNullOrEmpty(deviceId))
+                {
+                    System.Diagnostics.Debug.WriteLine("警告: DeviceID为空，跳过此设备");
+                    return;
+                }
+                
+                if (_existingUSBDevices.Contains(deviceId))
+                {
+                    System.Diagnostics.Debug.WriteLine($"设备已存在，跳过: {deviceId}");
+                    return;
+                }
+                
+                _existingUSBDevices.Add(deviceId);
+                System.Diagnostics.Debug.WriteLine($"添加到现有设备列表: {deviceId}");
+                
+                // 使用CreateDiskFromWMI创建设备
+                Device device = CreateDiskFromWMI(obj);
+                // 强制设置为USBDisk类型
+                device.Type = DeviceType.USBDisk;
+                
+                System.Diagnostics.Debug.WriteLine($"准备触发usb-plug-in事件: {device.Name}");
+                
+                TriggerEvent("usb-plug-in", new
+                {
+                    deviceType = device.Type,
+                    Device = device
+                });
+                
+                System.Diagnostics.Debug.WriteLine($"USB插入事件已成功触发: {device.Name}");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"USB插入事件处理失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
             }
+            
+            System.Diagnostics.Debug.WriteLine("=== USB插入事件处理完成 ===");
         }
 
         /// <summary>
@@ -590,23 +716,33 @@ namespace puppet.Controllers
             {
                 ManagementBaseObject obj = (ManagementBaseObject)e.NewEvent["TargetInstance"];
                 string deviceId = obj["DeviceID"]?.ToString();
+                string name = obj["Name"]?.ToString();
+                uint driveType = Convert.ToUInt32(obj["DriveType"] ?? 0);
+                
+                System.Diagnostics.Debug.WriteLine($"USB设备拔出（U盘）: {name} ({deviceId}), DriveType: {driveType}");
                 
                 if (!string.IsNullOrEmpty(deviceId) && _existingUSBDevices.Contains(deviceId))
                 {
                     _existingUSBDevices.Remove(deviceId);
                     
-                    Device device = CreateDeviceFromWMI(obj);
+                    // 使用CreateDiskFromWMI创建设备
+                    Device device = CreateDiskFromWMI(obj);
+                    // 强制设置为USBDisk类型
+                    device.Type = DeviceType.USBDisk;
                     
                     TriggerEvent("usb-plug-out", new
                     {
                         deviceType = device.Type,
                         Device = device
                     });
+                    
+                    System.Diagnostics.Debug.WriteLine($"USB拔出事件已触发: {device.Name}");
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"USB拔出事件处理失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
             }
         }
 
@@ -971,17 +1107,41 @@ namespace puppet.Controllers
                 Description = obj["Description"]?.ToString(),
                 Manufacturer = obj["Manufacturer"]?.ToString(),
                 PNPDeviceID = obj["PNPDeviceID"]?.ToString(),
-                ConfigManagerErrorCode = Convert.ToUInt32(obj["ConfigManagerErrorCode"] ?? 0),
-                Present = Convert.ToBoolean(obj["Present"] ?? true)
+                ConfigManagerErrorCode = Convert.ToUInt32(obj["ConfigManagerErrorCode"] ?? 0)
             };
+            
+            // Present属性在某些Windows版本中不存在，设置为true作为默认值
+            try
+            {
+                if (obj["Present"] != null)
+                {
+                    device.Present = Convert.ToBoolean(obj["Present"]);
+                }
+                else
+                {
+                    device.Present = true;
+                }
+            }
+            catch
+            {
+                device.Present = true;
+            }
             
             // 解析状态
             string status = obj["Status"]?.ToString();
             device.Status = ParseStatus(status, device.ConfigManagerErrorCode);
             
-            // 解析设备类型
-            string pnpClass = obj["PNPClass"]?.ToString();
-            device.Type = ParseDeviceTypeFromPNPClass(pnpClass);
+            // 解析设备类型 - PNPClass属性在某些Windows版本中不存在
+            try
+            {
+                string pnpClass = obj["PNPClass"]?.ToString();
+                device.Type = ParseDeviceTypeFromPNPClass(pnpClass);
+            }
+            catch
+            {
+                // 如果PNPClass不存在，尝试从其他属性推断设备类型
+                device.Type = DeviceType.Unknown;
+            }
             
             return device;
         }
@@ -1068,7 +1228,9 @@ namespace puppet.Controllers
         {
             if (string.IsNullOrEmpty(pnpClass)) return DeviceType.Unknown;
             
-            return pnpClass.ToLower() switch
+            string lowerPnpClass = pnpClass.ToLower();
+            
+            return lowerPnpClass switch
             {
                 "usb" => DeviceType.USBDevice,
                 "diskdrive" => DeviceType.LocalDisk,
@@ -1083,16 +1245,26 @@ namespace puppet.Controllers
                 "audioendpoint" => DeviceType.Audio,
                 "display" => DeviceType.Video,
                 "bluetooth" => DeviceType.Bluetooth,
+                // 添加更多USB设备类型支持
+                _ when lowerPnpClass.Contains("usb") => DeviceType.USBDevice,
+                _ when lowerPnpClass.Contains("disk") => DeviceType.LocalDisk,
+                _ when lowerPnpClass.Contains("volume") => DeviceType.RemovableDisk,
+                _ when lowerPnpClass.Contains("cd") => DeviceType.CompactDisc,
+                _ when lowerPnpClass.Contains("dvd") => DeviceType.CompactDisc,
+                _ when lowerPnpClass.Contains("camera") => DeviceType.USBCamera,
+                _ when lowerPnpClass.Contains("hub") => DeviceType.USBHub,
+                _ when lowerPnpClass.Contains("storage") => DeviceType.USBStorage,
+                _ when lowerPnpClass.Contains("print") => DeviceType.USBPrinter,
                 _ => DeviceType.Unknown
             };
         }
 
         /// <summary>
-        /// 获取设备详细信息
+        /// 获取单个设备的详细信息
         /// </summary>
         /// <param name="deviceId">设备ID</param>
-        /// <returns>设备信息</returns>
-        public Device GetDevice(string deviceId)
+        /// <returns>设备信息的JSON字符串</returns>
+        public string GetDevice(string deviceId)
         {
             try
             {
@@ -1102,7 +1274,8 @@ namespace puppet.Controllers
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        return CreateDeviceFromWMI(obj);
+                        Device device = CreateDeviceFromWMI(obj);
+                        return JsonConvert.SerializeObject(device, Formatting.Indented);
                     }
                 }
                 
@@ -1112,16 +1285,17 @@ namespace puppet.Controllers
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        return CreateDiskFromWMI(obj);
+                        Device device = CreateDiskFromWMI(obj);
+                        return JsonConvert.SerializeObject(device, Formatting.Indented);
                     }
                 }
                 
-                return null;
+                return "null";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"获取设备失败: {ex.Message}");
-                return null;
+                return "null";
             }
         }
 
@@ -1129,8 +1303,8 @@ namespace puppet.Controllers
         /// 获取指定类型的所有设备
         /// </summary>
         /// <param name="deviceType">设备类型</param>
-        /// <returns>设备列表</returns>
-        public List<Device> GetDevices(DeviceType deviceType)
+        /// <returns>设备列表的JSON字符串</returns>
+        public string GetDevices(DeviceType deviceType)
         {
             List<Device> devices = new List<Device>();
             
@@ -1139,31 +1313,63 @@ namespace puppet.Controllers
                 // 根据设备类型选择查询
                 string query = deviceType switch
                 {
+                    // USBDisk类型映射到Win32_LogicalDisk的DriveType=2（Removable Disk）
+                    DeviceType.USBDisk => "SELECT * FROM Win32_LogicalDisk WHERE DriveType = 2",
                     DeviceType.RemovableDisk or DeviceType.LocalDisk or DeviceType.CompactDisc or DeviceType.RAMDisk =>
                         $"SELECT * FROM Win32_LogicalDisk WHERE DriveType = {(int)deviceType}",
                     _ => "SELECT * FROM Win32_PnPEntity"
                 };
                 
+                System.Diagnostics.Debug.WriteLine($"查询设备: {deviceType}, 查询语句: {query}");
+                
                 using (var searcher = new ManagementObjectSearcher(query))
                 {
+                    int count = 0;
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        Device device = CreateDeviceFromWMI(obj);
+                        Device device;
+                        
+                        // 对于磁盘设备，使用CreateDiskFromWMI
+                        if (deviceType == DeviceType.RemovableDisk || 
+                            deviceType == DeviceType.LocalDisk || 
+                            deviceType == DeviceType.CompactDisc || 
+                            deviceType == DeviceType.RAMDisk ||
+                            deviceType == DeviceType.NetworkDrive ||
+                            deviceType == DeviceType.USBDisk)
+                        {
+                            device = CreateDiskFromWMI(obj);
+                            // 对于USBDisk类型，确保设备类型正确
+                            if (deviceType == DeviceType.USBDisk)
+                            {
+                                device.Type = DeviceType.USBDisk;
+                            }
+                            System.Diagnostics.Debug.WriteLine($"找到磁盘设备: {device.Name} ({device.DeviceID}), 类型: {device.Type}");
+                        }
+                        else
+                        {
+                            device = CreateDeviceFromWMI(obj);
+                            System.Diagnostics.Debug.WriteLine($"找到PnP设备: {device.Name} ({device.DeviceID}), 类型: {device.Type}");
+                        }
                         
                         // 过滤设备类型
                         if (device.Type == deviceType || deviceType == DeviceType.Unknown)
                         {
                             devices.Add(device);
+                            count++;
                         }
                     }
+                    
+                    System.Diagnostics.Debug.WriteLine($"找到 {count} 个匹配的设备");
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"获取设备列表失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
             }
             
-            return devices;
+            // 返回JSON字符串
+            return JsonConvert.SerializeObject(devices, Formatting.Indented);
         }
 
         /// <summary>

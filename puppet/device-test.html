@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Device Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        h2 {
+            color: #569cd6;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #1177bb;
+        }
+        .console {
+            background-color: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .console .info {
+            color: #4ec9b0;
+        }
+        .console .success {
+            color: #6a9955;
+        }
+        .console .error {
+            color: #f44747;
+        }
+        .console .warning {
+            color: #dcdcaa;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .card {
+            background-color: #252526;
+            border: 1px solid #3c3c3c;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #4ec9b0;
+            font-size: 14px;
+        }
+        .card p {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .card .label {
+            color: #9cdcfe;
+        }
+        .status-ok { color: #6a9955; }
+        .status-error { color: #f44747; }
+        .status-warning { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Device Test Page</h1>
+        
+        <h2>Event Listeners</h2>
+        <button onclick="testUSBEvents()">Start USB Events</button>
+        <button onclick="testDiskEvents()">Start Disk Events</button>
+        <button onclick="testPowerEvents()">Start Power Events</button>
+        <button onclick="testWindowEvents()">Start Window Events</button>
+        <button onclick="stopAllEvents()">Stop All Events</button>
+        <button onclick="checkEventStatus()">Check Event Status</button>
+        
+        <h2>Device Queries</h2>
+        <button onclick="getAllDevices()">Get All Devices</button>
+        <button onclick="getUSBDevices()">Get USB Devices</button>
+        <button onclick="getDiskDevices()">Get Disk Devices</button>
+        <button onclick="getLocalDiskDevices()">Get Local Disk Devices</button>
+        <button onclick="getRemovableDiskDevices()">Get Removable Disk Devices</button>
+        <button onclick="getUSBDiskDevices()">Get USB Disk Devices</button>
+        <button onclick="testGetSingleDevice()">Test Get Single Device</button>
+        <button onclick="refreshUSBDiskCheck()">Refresh USB Disk Check</button>
+        <button onclick="clearConsole()">Clear Console</button>
+        
+        <h2>Console</h2>
+        <div class="console" id="console">Ready...</div>
+        
+        <h2>Device List</h2>
+        <div class="grid" id="deviceList"></div>
+    </div>
+
+    <script>
+        const consoleDiv = document.getElementById('console');
+        const deviceListDiv = document.getElementById('deviceList');
+        const eventListeners = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            consoleDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        function clearConsole() {
+            consoleDiv.innerHTML = 'Ready...';
+        }
+        
+        async function getAllDevices() {
+            try {
+                log('Getting all devices...', 'info');
+                const devices = await puppet.device.getDevices(puppet.device.type.unknown);
+                log(`Found ${devices.length} devices`, 'success');
+                displayDevices(devices);
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function getUSBDevices() {
+            try {
+                log('Getting USB devices...', 'info');
+                const devices = await puppet.device.getDevices(puppet.device.type.usbDevice);
+                log(`Found ${devices.length} USB devices`, 'success');
+                displayDevices(devices);
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function getDiskDevices() {
+            try {
+                log('Getting removable disk devices...', 'info');
+                const devices = await puppet.device.getDevices(puppet.device.type.removableDisk);
+                log(`Found ${devices.length} removable disk devices`, 'success');
+                displayDevices(devices);
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        async function getLocalDiskDevices() {
+            try {
+                log('Getting local disk devices...', 'info');
+                const devices = await puppet.device.getDevices(puppet.device.type.localDisk);
+                log(`Found ${devices.length} local disk devices`, 'success');
+                displayDevices(devices);
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        async function getRemovableDiskDevices() {
+            try {
+                log('Getting removable disk devices...', 'info');
+                const devices = await puppet.device.getDevices(puppet.device.type.removableDisk);
+                log(`Found ${devices.length} removable disk devices`, 'success');
+                displayDevices(devices);
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        async function getUSBDiskDevices() {
+            try {
+                log('Getting USB disk devices...', 'info');
+                const devices = await puppet.device.getDevices(puppet.device.type.usbDisk);
+                log(`Found ${devices.length} USB disk devices`, 'success');
+                displayDevices(devices);
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        let usbCheckInterval = null;
+        let previousUSBDevices = [];
+        
+        async function refreshUSBDiskCheck() {
+            if (usbCheckInterval) {
+                clearInterval(usbCheckInterval);
+                usbCheckInterval = null;
+                log('USB磁盘检查已停止', 'warning');
+                return;
+            }
+            
+            log('启动USB磁盘检查（每2秒）...', 'info');
+            
+            // 获取初始列表
+            previousUSBDevices = await puppet.device.getDevices(puppet.device.type.usbDisk);
+            log(`当前USB设备: ${previousUSBDevices.map(d => d.DriveLetter).join(', ') || '无'}`, 'info');
+            
+            usbCheckInterval = setInterval(async () => {
+                try {
+                    const currentDevices = await puppet.device.getDevices(puppet.device.type.usbDisk);
+                    const currentDrives = currentDevices.map(d => d.DriveLetter).sort().join(',');
+                    const previousDrives = previousUSBDevices.map(d => d.DriveLetter).sort().join(',');
+                    
+                    if (currentDrives !== previousDrives) {
+                        log('检测到USB设备变化！', 'success');
+                        log(`  之前: ${previousDrives || '无'}`, 'info');
+                        log(`  现在: ${currentDrives || '无'}`, 'info');
+                        displayDevices(currentDevices);
+                        
+                        previousUSBDevices = currentDevices;
+                    }
+                } catch (e) {
+                    log(`检查失败: ${e.message}`, 'error');
+                }
+            }, 2000);
+            
+            log('USB磁盘检查已启动', 'success');
+        }
+        
+        async function testGetSingleDevice() {
+            try {
+                log('Testing getDevice method...', 'info');
+                // 尝试获取C盘
+                const device = await puppet.device.getDevice('C:');
+                if (device) {
+                    log(`Found device: ${device.Name}`, 'success');
+                    displayDevices([device]);
+                } else {
+                    log('Device not found', 'warning');
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function testUSBEvents() {
+            try {
+                log('Registering USB event listeners...', 'info');
+                
+                // 使用直接传函数的方式
+                const listenerId1 = await puppet.events.addEventListener('usb-plug-in', function(e) {
+                    log(`USB设备插入: ${e.Device.Name} (${e.Device.DriveLetter})`, 'success');
+                    displayDevices([e.Device]);
+                });
+                eventListeners.push({ event: 'usb-plug-in', id: listenerId1 });
+                log(`USB Plug-In listener registered (ID: ${listenerId1})`, 'success');
+                
+                const listenerId2 = await puppet.events.addEventListener('usb-plug-out', function(e) {
+                    log(`USB设备拔出: ${e.Device.Name} (${e.Device.DriveLetter})`, 'warning');
+                });
+                eventListeners.push({ event: 'usb-plug-out', id: listenerId2 });
+                log(`USB Plug-Out listener registered (ID: ${listenerId2})`, 'success');
+                
+                log('Please insert or remove a USB device to test...', 'info');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        async function testDiskEvents() {
+            try {
+                log('Registering disk event listeners...', 'info');
+                
+                const listenerId1 = await puppet.events.addEventListener('disk-mount', 'onDiskMount');
+                eventListeners.push({ event: 'disk-mount', id: listenerId1 });
+                log(`Disk Mount listener registered (ID: ${listenerId1})`, 'success');
+                
+                const listenerId2 = await puppet.events.addEventListener('disk-unmount', 'onDiskUnmount');
+                eventListeners.push({ event: 'disk-unmount', id: listenerId2 });
+                log(`Disk Unmount listener registered (ID: ${listenerId2})`, 'success');
+                
+                log('Please insert or remove a disk to test...', 'info');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function testPowerEvents() {
+            try {
+                log('Registering power event listener...', 'info');
+                
+                const listenerId = await puppet.events.addEventListener('power-change', 'onPowerChange');
+                eventListeners.push({ event: 'power-change', id: listenerId });
+                log(`Power Change listener registered (ID: ${listenerId})`, 'success');
+                
+                log('Please connect or disconnect power adapter to test...', 'info');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function stopAllEvents() {
+            try {
+                log('Stopping all event listeners...', 'info');
+                for (const listener of eventListeners) {
+                    await puppet.events.removeEventListener(listener.event, listener.id);
+                    log(`Removed ${listener.event} listener (ID: ${listener.id})`, 'warning');
+                }
+                eventListeners.length = 0;
+                log('All event listeners stopped', 'success');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        async function checkEventStatus() {
+            log('=== Event Status ===', 'info');
+            log(`Total active listeners: ${eventListeners.length}`, 'info');
+            for (const listener of eventListeners) {
+                log(`  - ${listener.event}: ID ${listener.id}`, 'info');
+            }
+            log('==================', 'info');
+        }
+        
+        async function testWindowEvents() {
+            try {
+                log('Registering window event listeners...', 'info');
+                
+                const listenerId1 = await puppet.events.addEventListener('window-focus', function(e) {
+                    log(`窗口获得焦点`, 'success');
+                });
+                eventListeners.push({ event: 'window-focus', id: listenerId1 });
+                
+                const listenerId2 = await puppet.events.addEventListener('window-blur', function(e) {
+                    log(`窗口失去焦点`, 'warning');
+                });
+                eventListeners.push({ event: 'window-blur', id: listenerId2 });
+                
+                log('Window event listeners registered', 'success');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        function displayDevices(devices) {
+            deviceListDiv.innerHTML = '';
+            
+            if (!devices || devices.length === 0) {
+                deviceListDiv.innerHTML = '<p class="warning">No devices found</p>';
+                return;
+            }
+            
+            devices.forEach(device => {
+                const statusClass = getStatusClass(device.Status);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h3>${device.Name || 'Unknown Device'}</h3>
+                    <p><span class="label">Type:</span> ${getTypeName(device.Type)}</p>
+                    <p><span class="label">Status:</span> <span class="${statusClass}">${getStatusLabel(device.Status)}</span></p>
+                    <p><span class="label">DeviceID:</span> ${device.DeviceID || 'N/A'}</p>
+                    ${device.DriveLetter ? `<p><span class="label">Drive:</span> ${device.DriveLetter}</p>` : ''}
+                    ${device.VolumeName ? `<p><span class="label">Volume:</span> ${device.VolumeName}</p>` : ''}
+                    ${device.Manufacturer ? `<p><span class="label">Manufacturer:</span> ${device.Manufacturer}</p>` : ''}
+                    ${device.Size ? `<p><span class="label">Size:</span> ${formatBytes(device.Size)}</p>` : ''}
+                    ${device.FreeSpace ? `<p><span class="label">Free:</span> ${formatBytes(device.FreeSpace)}</p>` : ''}
+                `;
+                deviceListDiv.appendChild(card);
+            });
+        }
+        
+        function getStatusClass(status) {
+            const statusMap = {
+                1: 'status-ok',
+                2: 'status-error',
+                3: 'status-warning',
+                4: 'status-warning',
+                20: 'status-warning',
+                22: 'status-warning',
+                24: 'status-error'
+            };
+            return statusMap[status] || 'status-ok';
+        }
+        
+        function getStatusLabel(status) {
+            const statusMap = {
+                0: 'Unknown',
+                1: 'OK',
+                2: 'Error',
+                3: 'Degraded',
+                4: 'Predicted Failure',
+                5: 'Starting',
+                6: 'Stopping',
+                7: 'Service',
+                8: 'Stressed',
+                9: 'Non-Recoverable',
+                10: 'No Contact',
+                11: 'Lost Communication',
+                20: 'Not Configured',
+                22: 'Disabled',
+                24: 'Not Present',
+                25: 'Still Setting Up',
+                28: 'Drivers Not Installed',
+                100: 'Ready',
+                101: 'Not Ready',
+                102: 'Pending',
+                103: 'Ejected',
+                104: 'Stalled'
+            };
+            return statusMap[status] || `Unknown (${status})`;
+        }
+        
+        function getTypeName(type) {
+            const typeMap = {
+                0: 'Unknown',
+                2: 'Removable Disk',
+                3: 'Local Disk',
+                4: 'Network Drive',
+                5: 'Compact Disc',
+                6: 'RAM Disk',
+                100: 'USB Device',
+                101: 'USB Disk',
+                102: 'USB Hub',
+                103: 'USB Printer',
+                104: 'USB Camera',
+                105: 'USB Storage',
+                200: 'Keyboard',
+                201: 'Mouse',
+                202: 'Monitor',
+                203: 'Printer',
+                204: 'Scanner',
+                205: 'Network Adapter',
+                206: 'Audio',
+                207: 'Video',
+                208: 'Bluetooth'
+            };
+            return typeMap[type] || `Unknown (${type})`;
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        // 页面加载时自动获取所有设备
+        window.addEventListener('DOMContentLoaded', function() {
+            log('Device test page loaded', 'info');
+            setTimeout(() => {
+                getAllDevices();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
