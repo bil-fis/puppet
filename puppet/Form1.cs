@@ -9,6 +9,9 @@ namespace puppet
 {
     public partial class Form1 : Form
     {
+        // 应用程序标识（用于 WebView2 UserAgent）
+        private const string USER_AGENT_HEADER = "Puppet/1.0.11";
+
         // 控制器实例
         private WindowController _windowController;
         private ApplicationController _applicationController;
@@ -89,6 +92,12 @@ namespace puppet
             {
                 // 设置背景完全透明（根据 Microsoft 官方文档，支持 Alpha=0）
                 webView21.DefaultBackgroundColor = Color.Transparent;
+
+                // 设置自定义 UserAgent
+                string currentUA = await webView21.CoreWebView2.ExecuteScriptAsync("navigator.userAgent");
+                currentUA = currentUA.Trim('"'); // 移除 JSON 字符串引号
+                webView21.CoreWebView2.Settings.UserAgent = $"{currentUA} {USER_AGENT_HEADER}";
+                Console.WriteLine($"UserAgent set to: {webView21.CoreWebView2.Settings.UserAgent}");
 
                 // 初始化 TrayController（需要 CoreWebView2 来执行 JavaScript 回调）
                 _trayController = new TrayController(webView21.CoreWebView2, this);
