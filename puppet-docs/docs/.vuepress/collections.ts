@@ -66,6 +66,11 @@ const zhGuideDoc = defineCollection({
       icon: 'file-zip'
     },
     {
+      text: 'PUP 启动脚本',
+      link: '/guide/pup-script',
+      icon: 'code'
+    },
+    {
       text: '架构设计',
       link: '/guide/architecture',
       icon: 'architecture'
@@ -168,5 +173,145 @@ export const zhCollections = defineCollections([
 
 /* =================== locale: en-US ======================= */
 
-// 英文配置预留（如需要可添加）
-export const enCollections = defineCollections([])
+// Guide documentation - doc type with sidebar
+const enGuideDoc = defineCollection({
+  type: 'doc',
+  dir: 'en/guide',
+  linkPrefix: '/en/guide',
+  title: 'Guide',
+  sidebar: [
+    {
+      text: 'Overview',
+      link: '/en/guide/',
+      icon: 'info'
+    },
+    {
+      text: 'Introduction',
+      link: '/en/guide/introduction',
+      icon: 'book'
+    },
+    {
+      text: 'Getting Started',
+      link: '/en/guide/getting-started',
+      icon: 'rocket'
+    },
+    {
+      text: 'Project Structure',
+      link: '/en/guide/project-structure',
+      icon: 'folder-tree'
+    },
+    {
+      text: 'Command Line Parameters',
+      link: '/en/guide/cli-parameters',
+      icon: 'terminal'
+    },
+    {
+      text: 'PUP File Format',
+      link: '/en/guide/pup-format',
+      icon: 'file-zip'
+    },
+    {
+      text: 'PUP Startup Script',
+      link: '/en/guide/pup-script',
+      icon: 'code'
+    },
+    {
+      text: 'Architecture',
+      link: '/en/guide/architecture',
+      icon: 'architecture'
+    },
+    {
+      text: 'Best Practices',
+      link: '/en/guide/best-practices',
+      icon: 'star'
+    },
+    {
+      text: 'Security',
+      link: '/en/guide/security',
+      icon: 'shield'
+    },
+    {
+      text: 'Puppet Signing Tool',
+      link: '/en/guide/puppet-sign',
+      icon: 'key'
+    }
+  ]
+})
+
+// API documentation - doc type with sidebar
+const enApiDoc = defineCollection({
+  type: 'doc',
+  dir: 'en/api',
+  linkPrefix: '/en/api',
+  title: 'API Documentation',
+  sidebar: [
+    {
+      text: 'Overview',
+      link: '/en/api/index',
+      icon: 'info'
+    },
+    {
+      text: 'Window Control',
+      link: '/en/api/window',
+      icon: 'window'
+    },
+    {
+      text: 'Application Control',
+      link: '/en/api/application',
+      icon: 'apps'
+    },
+    {
+      text: 'File System',
+      link: '/en/api/fs',
+      icon: 'folder'
+    },
+    {
+      text: 'Logging',
+      link: '/en/api/log',
+      icon: 'note'
+    },
+    {
+      text: 'System',
+      link: '/en/api/system',
+      icon: 'setting'
+    },
+    {
+      text: 'Tray Icon',
+      link: '/en/api/tray',
+      icon: 'menu'
+    },
+    {
+      text: 'Event System',
+      link: '/en/api/events',
+      icon: 'bolt'
+    },
+    {
+      text: 'Device System',
+      link: '/en/api/device',
+      icon: 'devices'
+    },
+    {
+      text: 'Persistent Storage',
+      link: '/en/api/storage',
+      icon: 'database'
+    }
+  ]
+})
+
+// Changelog - doc type with sidebar
+const enChangelogDoc = defineCollection({
+  type: 'doc',
+  dir: 'en/changelog',
+  linkPrefix: '/en/changelog',
+  title: 'Changelog',
+  sidebar: 'auto'
+})
+
+/**
+ * Export all collections
+ */
+export const enCollections = defineCollections([
+  enGuideDoc,
+  enApiDoc,
+  enChangelogDoc,
+])

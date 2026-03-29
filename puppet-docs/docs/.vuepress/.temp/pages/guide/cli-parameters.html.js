@@ -1,16 +1,3 @@
 import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/cli-parameters.html.vue"
-const data = JSON.parse("{\"path\":\"/guide/cli-parameters.html\",\"title\":\"命令行参数 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"命令行参数\",\"permalink\":\"/guide/cli-parameters.html\",\"createTime\":\"2026/03/28 14:57:15\"},\"readingTime\":{\"minutes\":11.04,\"words\":3313},\"git\":{},\"filePathRelative\":\"guide/cli-parameters.md\",\"headers\":[]}")
+const data = JSON.parse("{\"path\":\"/guide/cli-parameters.html\",\"title\":\"命令行参数 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"命令行参数\",\"permalink\":\"/guide/cli-parameters.html\",\"createTime\":\"2026/03/28 14:57:15\"},\"readingTime\":{\"minutes\":11.04,\"words\":3313},\"git\":{\"createdTime\":1774770165000,\"updatedTime\":1774784550000,\"contributors\":[{\"name\":\"bil-fis\",\"username\":\"\",\"email\":\"lww090627@163.com\",\"commits\":2,\"avatar\":\"https://gravatar.com/avatar/806cd648ad5a58432fd10b88e274afe27f6681f329fbe28bdbad70224a67496b?d=retro\"}]},\"filePathRelative\":\"guide/cli-parameters.md\",\"headers\":[]}")
 export { comp, data }
-
-if (import.meta.webpackHot) {
-  import.meta.webpackHot.accept()
-  if (__VUE_HMR_RUNTIME__.updatePageData) {
-    __VUE_HMR_RUNTIME__.updatePageData(data)
-  }
-}
-
-if (import.meta.hot) {
-  import.meta.hot.accept(({ data }) => {
-    __VUE_HMR_RUNTIME__.updatePageData(data)
-  })
-}

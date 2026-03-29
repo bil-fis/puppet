@@ -136,6 +136,10 @@
 <span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">    scriptFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> @"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\script.txt</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">   // 启动脚本文件</span></span>
 <span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
 <div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="启动脚本-v1-1" tabindex="-1"><a class="header-anchor" href="#启动脚本-v1-1"><span>启动脚本（V1.1）</span></a></h2>
+<div class="hint-container tip">
+<p class="hint-container-title">详细文档</p>
+<p>关于启动脚本的完整使用说明、语法参考和最佳实践，请参阅 <VPLink href="./pup-script.md">PUP 启动脚本</VPLink> 文档。</p>
+</div>
 <h3 id="概述-1" tabindex="-1"><a class="header-anchor" href="#概述-1"><span>概述</span></a></h3>
 <p>V1.1 格式支持在 PUP 加载后自动执行预设脚本，实现快速初始化窗口状态。</p>
 <h3 id="脚本语法" tabindex="-1"><a class="header-anchor" href="#脚本语法"><span>脚本语法</span></a></h3>

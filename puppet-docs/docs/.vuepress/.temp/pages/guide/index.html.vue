@@ -6,6 +6,7 @@
 <li><VPLink href="./architecture.md">架构设计</VPLink> - 深入了解框架的内部架构和工作原理</li>
 <li><VPLink href="./project-structure.md">项目结构</VPLink> - Puppet 项目的标准目录结构</li>
 <li><VPLink href="./pup-format.md">PUP 文件格式</VPLink> - 了解 Puppet 独特的打包格式</li>
+<li><VPLink href="./pup-script.md">PUP 启动脚本</VPLink> - 使用启动脚本配置应用窗口</li>
 <li><VPLink href="./cli-parameters.md">命令行参数</VPLink> - 命令行工具使用说明</li>
 <li><VPLink href="./security.md">安全机制</VPLink> - 框架的安全特性和最佳实践</li>
 <li><VPLink href="./best-practices.md">最佳实践</VPLink> - 开发高质量 Puppet 应用的建议</li>

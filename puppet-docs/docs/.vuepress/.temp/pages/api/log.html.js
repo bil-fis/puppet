@@ -1,16 +1,3 @@
 import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/api/log.html.vue"
-const data = JSON.parse("{\"path\":\"/api/log.html\",\"title\":\"日志 API | API 文档\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"日志 API\",\"permalink\":\"/api/log.html\",\"createTime\":\"2026/03/28 15:07:28\"},\"readingTime\":{\"minutes\":5.62,\"words\":1687},\"git\":{},\"filePathRelative\":\"api/log.md\",\"headers\":[]}")
+const data = JSON.parse("{\"path\":\"/api/log.html\",\"title\":\"日志 API | API 文档\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"日志 API\",\"permalink\":\"/api/log.html\",\"createTime\":\"2026/03/28 15:07:28\"},\"readingTime\":{\"minutes\":5.62,\"words\":1687},\"git\":{\"createdTime\":1774770165000,\"updatedTime\":1774784550000,\"contributors\":[{\"name\":\"bil-fis\",\"username\":\"\",\"email\":\"lww090627@163.com\",\"commits\":2,\"avatar\":\"https://gravatar.com/avatar/806cd648ad5a58432fd10b88e274afe27f6681f329fbe28bdbad70224a67496b?d=retro\"}]},\"filePathRelative\":\"api/log.md\",\"headers\":[]}")
 export { comp, data }
-
-if (import.meta.webpackHot) {
-  import.meta.webpackHot.accept()
-  if (__VUE_HMR_RUNTIME__.updatePageData) {
-    __VUE_HMR_RUNTIME__.updatePageData(data)
-  }
-}
-
-if (import.meta.hot) {
-  import.meta.hot.accept(({ data }) => {
-    __VUE_HMR_RUNTIME__.updatePageData(data)
-  })
-}

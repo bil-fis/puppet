@@ -1,4 +1,4 @@
-export const redirects = JSON.parse("{\"/api/\":\"/api/index.html\"}")
+export const redirects = JSON.parse("{\"/api/\":\"/api/index.html\",\"/en/api/\":\"/en/api/index.html\"}")
 
 export const routes = Object.fromEntries([
   ["/", { loader: () => import(/* webpackChunkName: "index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/index.html.js"), meta: {"title":"创建第一个应用"} }],
@@ -13,6 +13,7 @@ export const routes = Object.fromEntries([
   ["/api/tray.html", { loader: () => import(/* webpackChunkName: "api_tray.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/api/tray.html.js"), meta: {"title":"托盘图标 API"} }],
   ["/api/window.html", { loader: () => import(/* webpackChunkName: "api_window.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/api/window.html.js"), meta: {"title":"窗口控制 API"} }],
   ["/changelog/", { loader: () => import(/* webpackChunkName: "changelog_index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/changelog/index.html.js"), meta: {"title":"更新日志"} }],
+  ["/en/", { loader: () => import(/* webpackChunkName: "en_index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/en/index.html.js"), meta: {"title":""} }],
   ["/guide/architecture.html", { loader: () => import(/* webpackChunkName: "guide_architecture.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/architecture.html.js"), meta: {"title":"架构设计"} }],
   ["/guide/best-practices.html", { loader: () => import(/* webpackChunkName: "guide_best-practices.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/best-practices.html.js"), meta: {"title":"最佳实践"} }],
   ["/guide/cli-parameters.html", { loader: () => import(/* webpackChunkName: "guide_cli-parameters.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/cli-parameters.html.js"), meta: {"title":"命令行参数"} }],
@@ -20,25 +21,14 @@ export const routes = Object.fromEntries([
   ["/guide/introduction.html", { loader: () => import(/* webpackChunkName: "guide_introduction.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/introduction.html.js"), meta: {"title":"框架介绍"} }],
   ["/guide/project-structure.html", { loader: () => import(/* webpackChunkName: "guide_project-structure.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/project-structure.html.js"), meta: {"title":"项目结构"} }],
   ["/guide/pup-format.html", { loader: () => import(/* webpackChunkName: "guide_pup-format.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/pup-format.html.js"), meta: {"title":"PUP 文件格式"} }],
+  ["/guide/pup-script.html", { loader: () => import(/* webpackChunkName: "guide_pup-script.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/pup-script.html.js"), meta: {"title":"PUP 启动脚本"} }],
   ["/guide/puppet-sign.html", { loader: () => import(/* webpackChunkName: "guide_puppet-sign.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/puppet-sign.html.js"), meta: {"title":"Puppet 签名工具"} }],
   ["/guide/", { loader: () => import(/* webpackChunkName: "guide_index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/index.html.js"), meta: {"title":"指南"} }],
   ["/guide/security.html", { loader: () => import(/* webpackChunkName: "guide_security.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/security.html.js"), meta: {"title":"安全机制"} }],
+  ["/en/api/index.html", { loader: () => import(/* webpackChunkName: "en_api_index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/en/api/index.html.js"), meta: {"title":"API Overview"} }],
+  ["/en/changelog/", { loader: () => import(/* webpackChunkName: "en_changelog_index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/en/changelog/index.html.js"), meta: {"title":"Changelog"} }],
+  ["/en/guide/getting-started.html", { loader: () => import(/* webpackChunkName: "en_guide_getting-started.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/en/guide/getting-started.html.js"), meta: {"title":"Getting Started"} }],
+  ["/en/guide/introduction.html", { loader: () => import(/* webpackChunkName: "en_guide_introduction.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/en/guide/introduction.html.js"), meta: {"title":"Framework Introduction"} }],
+  ["/en/guide/", { loader: () => import(/* webpackChunkName: "en_guide_index.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/en/guide/index.html.js"), meta: {"title":"Guide"} }],
   ["/404.html", { loader: () => import(/* webpackChunkName: "404.html" */"E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/404.html.js"), meta: {"title":""} }],
 ]);
-
-if (import.meta.webpackHot) {
-  import.meta.webpackHot.accept()
-  if (__VUE_HMR_RUNTIME__.updateRoutes) {
-    __VUE_HMR_RUNTIME__.updateRoutes(routes)
-  }
-  if (__VUE_HMR_RUNTIME__.updateRedirects) {
-    __VUE_HMR_RUNTIME__.updateRedirects(redirects)
-  }
-}
-
-if (import.meta.hot) {
-  import.meta.hot.accept(({ routes, redirects }) => {
-    __VUE_HMR_RUNTIME__.updateRoutes(routes)
-    __VUE_HMR_RUNTIME__.updateRedirects(redirects)
-  })
-}

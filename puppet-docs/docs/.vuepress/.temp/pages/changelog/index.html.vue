@@ -8,7 +8,7 @@
 <span class="line"><span>- 0：次版本号（向下兼容的功能新增）</span></span>
 <span class="line"><span>- 0：修订号（向下兼容的问题修正）</span></span></code></pre>
 <div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="版本历史" tabindex="-1"><a class="header-anchor" href="#版本历史"><span>版本历史</span></a></h2>
-<h3 id="v1-1-0-2026-03-29" tabindex="-1"><a class="header-anchor" href="#v1-1-0-2026-03-29"><span>v1.1.0 (2026-03-29)</span></a></h3>
+<h3 id="v1-0-11-2026-03-29" tabindex="-1"><a class="header-anchor" href="#v1-0-11-2026-03-29"><span>v1.0.11 (2026-03-29)</span></a></h3>
 <h4 id="新增功能" tabindex="-1"><a class="header-anchor" href="#新增功能"><span>新增功能</span></a></h4>
 <ul>
 <li>

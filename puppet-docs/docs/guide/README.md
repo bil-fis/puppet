@@ -15,6 +15,7 @@ createTime: 2026/03/28 14:50:37
 - [架构设计](./architecture.md) - 深入了解框架的内部架构和工作原理
 - [项目结构](./project-structure.md) - Puppet 项目的标准目录结构
 - [PUP 文件格式](./pup-format.md) - 了解 Puppet 独特的打包格式
+- [PUP 启动脚本](./pup-script.md) - 使用启动脚本配置应用窗口
 - [命令行参数](./cli-parameters.md) - 命令行工具使用说明
 - [安全机制](./security.md) - 框架的安全特性和最佳实践
 - [最佳实践](./best-practices.md) - 开发高质量 Puppet 应用的建议

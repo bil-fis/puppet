@@ -1,5 +1,0 @@
-set startup_position x,y // 设置启动位置：使用指定坐标的方法
-set startup_position POSITION // 设置启动位置：使用预先坐标法，包含left-top left-bottom right-top right-bottom center，所有bottom排除任务栏
-
-set borderless BOOLEAN // 设置是否有边框
-set window_size x,y //设定窗口大小 
