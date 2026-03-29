@@ -25,6 +25,7 @@ namespace puppet
         private bool _isDraggable = false;
         private bool _isMouseDown = false;
         private Point _mouseOffset;
+        private HashSet<string> _movableElements = new HashSet<string>();
 
         // 鼠标穿透相关
         private bool _mouseThrough = false;
@@ -151,7 +152,43 @@ namespace puppet
                             showInTaskbar: async function(v) { return await chrome.webview.hostObjects.sync.window.ShowInTaskbar(!!v); },
                             moveWindow: async function(x, y) { return await chrome.webview.hostObjects.sync.window.MoveWindow(Number(x), Number(y)); },
                             resizeWindow: async function(w, h) { return await chrome.webview.hostObjects.sync.window.ResizeWindow(Number(w), Number(h)); },
-                            centerWindow: async function() { return await chrome.webview.hostObjects.sync.window.CenterWindow(); }
+                            centerWindow: async function() { return await chrome.webview.hostObjects.sync.window.CenterWindow(); },
+                            mountMovableElement: async function(elementId) {
+                                if (!elementId || typeof elementId !== 'string') {
+                                    throw new Error('Invalid element ID');
+                                }
+                                const element = document.getElementById(elementId);
+                                if (!element) {
+                                    throw new Error('Element not found: ' + elementId);
+                                }
+                                await chrome.webview.hostObjects.sync.window.MountMovableElement(String(elementId));
+                                element.style.cursor = 'move';
+                                let isDragging = false;
+                                element.addEventListener('mousedown', function(e) {
+                                    if (e.button === 0) {
+                                        isDragging = true;
+                                        chrome.webview.postMessage(JSON.stringify({ type: 'window-drag' }));
+                                    }
+                                });
+                                element.addEventListener('mouseup', function() {
+                                    isDragging = false;
+                                });
+                                element.addEventListener('mouseleave', function() {
+                                    isDragging = false;
+                                });
+                                return true;
+                            },
+                            unmountMovableElement: async function(elementId) {
+                                if (!elementId || typeof elementId !== 'string') {
+                                    throw new Error('Invalid element ID');
+                                }
+                                const element = document.getElementById(elementId);
+                                if (element) {
+                                    element.style.cursor = '';
+                                }
+                                await chrome.webview.hostObjects.sync.window.UnmountMovableElement(String(elementId));
+                                return true;
+                            }
                         };
 
                         // 应用方法包装
@@ -401,17 +438,17 @@ namespace puppet
             try
             {
                 string message = e.WebMessageAsJson;
-                
+
                 // 使用 Newtonsoft.Json 解析消息
                 var messageObj = Newtonsoft.Json.Linq.JObject.Parse(message);
-                
+
                 string type = messageObj["type"]?.ToString();
-                
+
                 if (type == "transparentRegions")
                 {
                     var regions = new List<Rectangle>();
                     var dataArray = messageObj["data"] as Newtonsoft.Json.Linq.JArray;
-                    
+
                     if (dataArray != null)
                     {
                         foreach (var regionItem in dataArray)
@@ -422,7 +459,7 @@ namespace puppet
                                                     int top = Convert.ToInt32(regionItem["top"]);
                                                     int right = Convert.ToInt32(regionItem["right"]);
                                                     int bottom = Convert.ToInt32(regionItem["bottom"]);
-                                                    
+
                                                     regions.Add(new Rectangle(left, top, right - left, bottom - top));
                                                 }
                                                 catch
@@ -430,15 +467,22 @@ namespace puppet
                                                     // 忽略无效的区域数据
                                                 }
                                             }                    }
-                    
+
                     // 更新透明区域缓存（线程安全）
                     lock (_transparentRegionsLock)
                     {
                         _transparentRegions = regions;
                     }
-                    
+
                     // 更新 CompositionRenderer
                     _compositionRenderer?.UpdateTransparentRegions(regions);
+                }
+                else if (type == "window-drag")
+                {
+                    // 处理窗口拖动请求
+                    // 使用 Win32 API 模拟点击标题栏，实现窗口拖动
+                    NativeMethods.ReleaseCapture();
+                    NativeMethods.SendMessage(this.Handle, 0xA1, (IntPtr)2, IntPtr.Zero);
                 }
             }
             catch (Exception ex)
@@ -582,6 +626,7 @@ namespace puppet
             const int HTTRANSPARENT = -1;
             const int HTCLIENT = 1;
             const int HTCAPTION = 2;
+            const int WM_NCLBUTTONDOWN = 0xA1;
             const int WM_SIZE = 0x0005;
             const int WM_MOVE = 0x0003;
             const int WM_SYSCOMMAND = 0x0112;
@@ -1375,6 +1420,42 @@ namespace puppet
             this.ShowInTaskbar = show;
         }
 
+        /// <summary>
+        /// 添加一个可移动的 HTML 元素
+        /// </summary>
+        /// <param name="elementId">HTML 元素的 ID</param>
+        public void AddMovableElement(string elementId)
+        {
+            if (string.IsNullOrEmpty(elementId))
+            {
+                throw new ArgumentException("Element ID cannot be null or empty", nameof(elementId));
+            }
+            _movableElements.Add(elementId);
+        }
+
+        /// <summary>
+        /// 移除一个可移动的 HTML 元素
+        /// </summary>
+        /// <param name="elementId">HTML 元素的 ID</param>
+        public void RemoveMovableElement(string elementId)
+        {
+            if (string.IsNullOrEmpty(elementId))
+            {
+                throw new ArgumentException("Element ID cannot be null or empty", nameof(elementId));
+            }
+            _movableElements.Remove(elementId);
+        }
+
+        /// <summary>
+        /// 检查指定元素是否为可移动元素
+        /// </summary>
+        /// <param name="elementId">HTML 元素的 ID</param>
+        /// <returns>如果元素可移动则返回 true，否则返回 false</returns>
+        public bool IsMovableElement(string elementId)
+        {
+            return _movableElements.Contains(elementId);
+        }
+
         // 窗口扩展样式
         private WindowExStyle WindowExStyle
         {
@@ -1413,6 +1494,12 @@ namespace puppet
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
         public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);

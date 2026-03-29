@@ -21,6 +21,58 @@ namespace puppet.Controllers
         }
 
         /// <summary>
+        /// 检查路径是否危险（指向 Windows 系统文件夹或启动目录）
+        /// </summary>
+        private bool IsDangerousPath(string path)
+        {
+            try
+            {
+                // 获取规范化的完整路径
+                string fullPath = Path.GetFullPath(path);
+
+                // 获取所有驱动器的根目录
+                var drives = DriveInfo.GetDrives();
+
+                // 检查每个驱动器的 Windows 文件夹
+                foreach (var drive in drives)
+                {
+                    if (drive.DriveType == DriveType.Fixed)
+                    {
+                        string windowsPath = Path.Combine(drive.RootDirectory.FullName, "Windows");
+                        string system32Path = Path.Combine(windowsPath, "System32");
+                        string sysWOW64Path = Path.Combine(windowsPath, "SysWOW64");
+
+                        // 检查路径是否以这些系统路径开头
+                        if (fullPath.StartsWith(windowsPath, StringComparison.OrdinalIgnoreCase) ||
+                            fullPath.StartsWith(system32Path, StringComparison.OrdinalIgnoreCase) ||
+                            fullPath.StartsWith(sysWOW64Path, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+
+                        // 检查启动目录
+                        string programDataPath = Path.Combine(drive.RootDirectory.FullName, "ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Startup");
+                        string appDataStartupPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Windows", "Start Menu", "Programs", "Startup");
+                        string allUsersStartup = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup);
+
+                        if (fullPath.StartsWith(programDataPath, StringComparison.OrdinalIgnoreCase) ||
+                            fullPath.StartsWith(appDataStartupPath, StringComparison.OrdinalIgnoreCase) ||
+                            fullPath.StartsWith(allUsersStartup, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 检查路径是否安全（不指向 Windows 系统文件夹）
         /// </summary>
         private bool IsPathSafe(string path)
@@ -219,9 +271,27 @@ namespace puppet.Controllers
         /// </summary>
         public void WriteByteToFile(string path, string base64Data)
         {
-            if (!IsPathSafe(path))
+            // 检查是否是危险路径
+            if (IsDangerousPath(path))
             {
-                throw new UnauthorizedAccessException("Access to Windows system folders is not allowed");
+                string fullPath = Path.GetFullPath(path);
+                DialogResult result = PermissionDialog.ShowPermissionDialog(
+                    "安全警告",
+                    "您正在尝试写入系统目录或启动目录，这可能影响系统安全。",
+                    fullPath
+                );
+
+                if (result == DialogResult.Abort)
+                {
+                    // 永久阻止 - 可以保存到配置文件（这里简化为抛出异常）
+                    throw new UnauthorizedAccessException("用户已永久阻止对此路径的访问");
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    // 拒绝
+                    throw new UnauthorizedAccessException("用户取消了操作");
+                }
+                // DialogResult.OK - 允许，继续执行
             }
 
             byte[] bytes = Convert.FromBase64String(base64Data);
@@ -233,9 +303,27 @@ namespace puppet.Controllers
         /// </summary>
         public void WriteTextToFile(string path, string text)
         {
-            if (!IsPathSafe(path))
+            // 检查是否是危险路径
+            if (IsDangerousPath(path))
             {
-                throw new UnauthorizedAccessException("Access to Windows system folders is not allowed");
+                string fullPath = Path.GetFullPath(path);
+                DialogResult result = PermissionDialog.ShowPermissionDialog(
+                    "安全警告",
+                    "您正在尝试写入系统目录或启动目录，这可能影响系统安全。",
+                    fullPath
+                );
+
+                if (result == DialogResult.Abort)
+                {
+                    // 永久阻止
+                    throw new UnauthorizedAccessException("用户已永久阻止对此路径的访问");
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    // 拒绝
+                    throw new UnauthorizedAccessException("用户取消了操作");
+                }
+                // DialogResult.OK - 允许，继续执行
             }
 
             File.WriteAllText(path, text, Encoding.UTF8);
@@ -246,9 +334,27 @@ namespace puppet.Controllers
         /// </summary>
         public void AppendByteToFile(string path, string base64Data)
         {
-            if (!IsPathSafe(path))
+            // 检查是否是危险路径
+            if (IsDangerousPath(path))
             {
-                throw new UnauthorizedAccessException("Access to Windows system folders is not allowed");
+                string fullPath = Path.GetFullPath(path);
+                DialogResult result = PermissionDialog.ShowPermissionDialog(
+                    "安全警告",
+                    "您正在尝试写入系统目录或启动目录，这可能影响系统安全。",
+                    fullPath
+                );
+
+                if (result == DialogResult.Abort)
+                {
+                    // 永久阻止
+                    throw new UnauthorizedAccessException("用户已永久阻止对此路径的访问");
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    // 拒绝
+                    throw new UnauthorizedAccessException("用户取消了操作");
+                }
+                // DialogResult.OK - 允许，继续执行
             }
 
             if (!File.Exists(path))
@@ -265,9 +371,27 @@ namespace puppet.Controllers
         /// </summary>
         public void AppendTextToFile(string path, string text)
         {
-            if (!IsPathSafe(path))
+            // 检查是否是危险路径
+            if (IsDangerousPath(path))
             {
-                throw new UnauthorizedAccessException("Access to Windows system folders is not allowed");
+                string fullPath = Path.GetFullPath(path);
+                DialogResult result = PermissionDialog.ShowPermissionDialog(
+                    "安全警告",
+                    "您正在尝试写入系统目录或启动目录，这可能影响系统安全。",
+                    fullPath
+                );
+
+                if (result == DialogResult.Abort)
+                {
+                    // 永久阻止
+                    throw new UnauthorizedAccessException("用户已永久阻止对此路径的访问");
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    // 拒绝
+                    throw new UnauthorizedAccessException("用户取消了操作");
+                }
+                // DialogResult.OK - 允许，继续执行
             }
 
             File.AppendAllText(path, text, Encoding.UTF8);

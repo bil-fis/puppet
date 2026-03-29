@@ -1,0 +1,321 @@
+<template><div><p>PUP（Puppet Package）是 Puppet 框架专用的应用打包格式。它将整个 Web 应用打包为一个独立的文件，支持加密保护，便于分发和部署。</p>
+<h2 id="概述" tabindex="-1"><a class="header-anchor" href="#概述"><span>概述</span></a></h2>
+<p>PUP 文件是一种自定义的打包格式，结合了 ZIP 压缩和 AES 加密技术，具有以下特点：</p>
+<ul>
+<li><strong>单文件分发</strong>：所有资源打包为一个文件</li>
+<li><strong>密码保护</strong>：支持 AES-256 加密</li>
+<li><strong>快速加载</strong>：优化的文件结构和加载机制</li>
+<li><strong>跨版本兼容</strong>：版本标识确保兼容性</li>
+</ul>
+<h2 id="文件结构" tabindex="-1"><a class="header-anchor" href="#文件结构"><span>文件结构</span></a></h2>
+<h3 id="二进制结构" tabindex="-1"><a class="header-anchor" href="#二进制结构"><span>二进制结构</span></a></h3>
+<p>PUP 文件由三个部分组成：</p>
+<div class="language- line-numbers-mode" data-highlighter="shiki" data-ext="" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-"><span class="line"><span>┌─────────────────────────────────────────────────────┐</span></span>
+<span class="line"><span>│           PUP V1.0 标识头 (8 字节)                   │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│           AES 加密的 ZIP 密码 (32 字节)              │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│           ZIP 数据 (变长)                            │</span></span>
+<span class="line"><span>└─────────────────────────────────────────────────────┘</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="详细说明" tabindex="-1"><a class="header-anchor" href="#详细说明"><span>详细说明</span></a></h3>
+<h4 id="_1-标识头-8-字节" tabindex="-1"><a class="header-anchor" href="#_1-标识头-8-字节"><span>1. 标识头（8 字节）</span></a></h4>
+<p>固定字符串 <code v-pre>&quot;PUP V1.0&quot;</code>，用于识别文件格式和版本。</p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">private</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> static</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> readonly</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[]</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> PUP_HEADER</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> Encoding</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">UTF8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">GetBytes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">PUP V1.0</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div><h4 id="_2-加密的-zip-密码-32-字节" tabindex="-1"><a class="header-anchor" href="#_2-加密的-zip-密码-32-字节"><span>2. 加密的 ZIP 密码（32 字节）</span></a></h4>
+<p>ZIP 文件的解压密码，使用固定密钥 <code v-pre>&quot;ILOVEPUPPET&quot;</code> 进行 AES 加密。</p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 固定加密密钥</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">private</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> static</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> readonly</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[]</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> FixedKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> Encoding</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">UTF8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">GetBytes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">ILOVEPUPPET</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 加密 ZIP 密码</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> encryptedPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> AesHelper</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">Encrypt</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">zipPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> string</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">FixedKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666">));</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h4 id="_3-zip-数据" tabindex="-1"><a class="header-anchor" href="#_3-zip-数据"><span>3. ZIP 数据</span></a></h4>
+<p>包含整个应用文件的 ZIP 压缩数据。</p>
+<h2 id="创建-pup-文件" tabindex="-1"><a class="header-anchor" href="#创建-pup-文件"><span>创建 PUP 文件</span></a></h2>
+<h3 id="命令行方式" tabindex="-1"><a class="header-anchor" href="#命令行方式"><span>命令行方式</span></a></h3>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --create-pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -i</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> &#x3C;</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">源文件</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">夹</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">></span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -o</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> &#x3C;</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">输出文件.pu</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">p</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">></span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE"> [-p </span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">&#x3C;</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">密</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">码</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">></span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">]</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div><p><strong>参数说明</strong>：</p>
+<ul>
+<li><code v-pre>-i</code> 或 <code v-pre>--input</code>：源文件夹路径</li>
+<li><code v-pre>-o</code> 或 <code v-pre>--output</code>：输出 PUP 文件路径</li>
+<li><code v-pre>-p</code> 或 <code v-pre>--password</code>：（可选）ZIP 密码，用于加密</li>
+</ul>
+<p><strong>示例</strong>：</p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 无密码创建</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --create-pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -i</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -o</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp.pup</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 使用密码创建</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --create-pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -i</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -o</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp.pup</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -p</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">MySecretPassword</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="代码方式-c" tabindex="-1"><a class="header-anchor" href="#代码方式-c"><span>代码方式（C#）</span></a></h3>
+<p>使用 <code v-pre>PupCreator</code> 类创建 PUP 文件：</p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">using</span><span style="--shiki-light:#2E8F82;--shiki-dark:#5DA994"> Puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 创建 PUP 文件</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">PupCreator</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">CreatePup</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">    sourceFolder</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> @"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">    outputPupFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> @"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp.pup</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">    password</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">MySecretPassword</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">  // 可选</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="加载-pup-文件" tabindex="-1"><a class="header-anchor" href="#加载-pup-文件"><span>加载 PUP 文件</span></a></h2>
+<h3 id="命令行方式-1" tabindex="-1"><a class="header-anchor" href="#命令行方式-1"><span>命令行方式</span></a></h3>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --load-pup</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> &#x3C;</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">文件.pu</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">p</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">></span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div><p><strong>示例</strong>：</p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --load-pup</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">C:\MyApp.pup</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div><h3 id="配置文件方式" tabindex="-1"><a class="header-anchor" href="#配置文件方式"><span>配置文件方式</span></a></h3>
+<p>编辑 <code v-pre>puppet.ini</code> 文件：</p>
+<div class="language-ini line-numbers-mode" data-highlighter="shiki" data-ext="ini" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-ini"><span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">[</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">file</span><span style="--shiki-light:#999999;--shiki-dark:#666666">]</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">file</span><span style="--shiki-light:#999999;--shiki-dark:#666666">=</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">C:\MyApp.pup</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><p>然后直接运行 <code v-pre>puppet.exe</code>。</p>
+<h2 id="加密机制" tabindex="-1"><a class="header-anchor" href="#加密机制"><span>加密机制</span></a></h2>
+<h3 id="加密流程" tabindex="-1"><a class="header-anchor" href="#加密流程"><span>加密流程</span></a></h3>
+<div class="language- line-numbers-mode" data-highlighter="shiki" data-ext="" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-"><span class="line"><span>1. 生成随机 ZIP 密码</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>2. 使用固定密钥 "ILOVEPUPPET" 加密 ZIP 密码</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>3. 创建 ZIP 文件（使用 ZIP 密码加密）</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>4. 拼接：标识头 + 加密的 ZIP 密码 + ZIP 数据</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>5. 写入 PUP 文件</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="解密流程" tabindex="-1"><a class="header-anchor" href="#解密流程"><span>解密流程</span></a></h3>
+<div class="language- line-numbers-mode" data-highlighter="shiki" data-ext="" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-"><span class="line"><span>1. 读取文件前 8 字节，验证标识头</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>2. 读取接下来的 32 字节（加密的 ZIP 密码）</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>3. 使用固定密钥解密 ZIP 密码</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>4. 读取剩余数据（ZIP 数据）</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>5. 使用解密的 ZIP 密码解压 ZIP 数据</span></span>
+<span class="line"><span>        ↓</span></span>
+<span class="line"><span>6. 提取文件到内存或临时目录</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="加密算法" tabindex="-1"><a class="header-anchor" href="#加密算法"><span>加密算法</span></a></h3>
+<p>PUP 使用以下加密算法：</p>
+<ul>
+<li><strong>加密算法</strong>：AES (Advanced Encryption Standard)</li>
+<li><strong>密钥长度</strong>：256 位</li>
+<li><strong>模式</strong>：CBC (Cipher Block Chaining)</li>
+<li><strong>填充</strong>：PKCS7</li>
+</ul>
+<div class="hint-container tip">
+<p class="hint-container-title">安全说明</p>
+<p>加密的 ZIP 密码使用固定的密钥 <code v-pre>&quot;ILOVEPUPPET&quot;</code> 加密，这是一种轻量级的保护方式。如果需要更强的安全性，建议使用文件系统加密（如 BitLocker）或分发时使用 HTTPS。</p>
+</div>
+<h2 id="zip-密码生成" tabindex="-1"><a class="header-anchor" href="#zip-密码生成"><span>ZIP 密码生成</span></a></h2>
+<p>如果未指定密码，系统会自动生成随机密码：</p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">private</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> static</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> GenerateRandomPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">{</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">    const</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> chars</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">    var</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> random</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#2E8F82;--shiki-dark:#5DA994"> Random</span><span style="--shiki-light:#999999;--shiki-dark:#666666">();</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    return</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> string</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">Enumerable</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">Repeat</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">chars</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 16</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">        .</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">Select</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">s</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> =></span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> s</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">random</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">Next</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">s</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">Length</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)]).</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">ToArray</span><span style="--shiki-light:#999999;--shiki-dark:#666666">());</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="文件验证" tabindex="-1"><a class="header-anchor" href="#文件验证"><span>文件验证</span></a></h2>
+<p>PUP 服务器在加载时会验证文件格式：</p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">public</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> bool</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> LoadPupFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">{</span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 1. 读取文件</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[]</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> File</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">ReadAllBytes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">_pupFilePath</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 2. 验证标识头</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    if</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> (</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">Length</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> &#x3C;</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 40</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">  // 8 (header) + 32 (encrypted password)</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">        return</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> false</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> header</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> Encoding</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">UTF8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">GetString</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 0</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    if</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> (</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">header</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> !=</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">PUP V1.0</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">        return</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> false</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 3. 提取加密的 ZIP 密码</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> encryptedPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> Encoding</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">UTF8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">GetString</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 32</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 4. 解密 ZIP 密码</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> zipPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> AesHelper</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">Decrypt</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">encryptedPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> string</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">FixedKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666">));</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 5. 提取 ZIP 数据</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[]</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> zipData</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">Length</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> -</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 40</span><span style="--shiki-light:#999999;--shiki-dark:#666666">];</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    Array</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">Copy</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 40</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> zipData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 0</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> zipData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">Length</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 6. 打开 ZIP 文件</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    _zipFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#2E8F82;--shiki-dark:#5DA994"> ZipInputStream</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">new</span><span style="--shiki-light:#2E8F82;--shiki-dark:#5DA994"> MemoryStream</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">zipData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">));</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    _zipFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">Password</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> zipPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    return</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> true</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="性能考虑" tabindex="-1"><a class="header-anchor" href="#性能考虑"><span>性能考虑</span></a></h2>
+<h3 id="文件大小" tabindex="-1"><a class="header-anchor" href="#文件大小"><span>文件大小</span></a></h3>
+<p>PUP 文件大小取决于：</p>
+<ul>
+<li>源文件总大小</li>
+<li>ZIP 压缩率（通常 30-70%）</li>
+<li>加密开销（约 40 字节）</li>
+</ul>
+<p><strong>优化建议</strong>：</p>
+<ul>
+<li>压缩图片和媒体文件</li>
+<li>移除未使用的资源</li>
+<li>使用 CDN 加载第三方库</li>
+</ul>
+<h3 id="加载速度" tabindex="-1"><a class="header-anchor" href="#加载速度"><span>加载速度</span></a></h3>
+<p>PUP 文件加载速度取决于：</p>
+<ul>
+<li>文件大小</li>
+<li>磁盘读取速度</li>
+<li>解密和解压速度</li>
+</ul>
+<p><strong>优化建议</strong>：</p>
+<ul>
+<li>保持文件大小合理（建议 &lt; 50MB）</li>
+<li>使用 SSD 提升读取速度</li>
+<li>预加载常用资源</li>
+</ul>
+<h2 id="版本兼容性" tabindex="-1"><a class="header-anchor" href="#版本兼容性"><span>版本兼容性</span></a></h2>
+<h3 id="标识头" tabindex="-1"><a class="header-anchor" href="#标识头"><span>标识头</span></a></h3>
+<p>当前版本使用 <code v-pre>&quot;PUP V1.0&quot;</code> 作为标识头。</p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">private</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> static</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> readonly</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[]</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> PUP_HEADER</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> Encoding</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">UTF8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">GetBytes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">PUP V1.0</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div><h3 id="版本升级" tabindex="-1"><a class="header-anchor" href="#版本升级"><span>版本升级</span></a></h3>
+<p>如果需要升级 PUP 格式：</p>
+<ol>
+<li>更新标识头（如 <code v-pre>&quot;PUP V2.0&quot;</code>）</li>
+<li>修改文件结构</li>
+<li>保持向后兼容性</li>
+</ol>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 示例：版本检测</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">string</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> header</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> Encoding</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">UTF8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">GetString</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">fileData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 0</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 8</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">switch</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> (</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">header</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">{</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    case</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">PUP V1.0</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">        // 使用 V1.0 解析逻辑</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">        break</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    case</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">PUP V2.0</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">        // 使用 V2.0 解析逻辑</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">        break</span><span style="--shiki-light:#999999;--shiki-dark:#666666">;</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    default</span><span style="--shiki-light:#999999;--shiki-dark:#666666">:</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">        throw</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#2E8F82;--shiki-dark:#5DA994"> NotSupportedException</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">不支持的 PUP 版本</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="与裸文件夹模式的对比" tabindex="-1"><a class="header-anchor" href="#与裸文件夹模式的对比"><span>与裸文件夹模式的对比</span></a></h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>PUP 文件</th>
+<th>裸文件夹</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>分发方式</td>
+<td>单文件</td>
+<td>文件夹</td>
+</tr>
+<tr>
+<td>加密保护</td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>开发便利性</td>
+<td>较低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>热重载</td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>文件大小</td>
+<td>较小</td>
+<td>较大</td>
+</tr>
+<tr>
+<td>加载速度</td>
+<td>稍慢</td>
+<td>快</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>发布分发</td>
+<td>开发调试</td>
+</tr>
+</tbody>
+</table>
+<h2 id="最佳实践" tabindex="-1"><a class="header-anchor" href="#最佳实践"><span>最佳实践</span></a></h2>
+<h3 id="_1-创建-pup-文件" tabindex="-1"><a class="header-anchor" href="#_1-创建-pup-文件"><span>1. 创建 PUP 文件</span></a></h3>
+<ul>
+<li>在发布前创建 PUP 文件</li>
+<li>使用有意义的密码</li>
+<li>测试 PUP 文件可以正常加载</li>
+</ul>
+<h3 id="_2-密码管理" tabindex="-1"><a class="header-anchor" href="#_2-密码管理"><span>2. 密码管理</span></a></h3>
+<ul>
+<li>不要在代码中硬编码密码</li>
+<li>使用环境变量或配置文件存储密码</li>
+<li>定期更换密码</li>
+</ul>
+<h3 id="_3-文件优化" tabindex="-1"><a class="header-anchor" href="#_3-文件优化"><span>3. 文件优化</span></a></h3>
+<ul>
+<li>压缩图片和媒体文件</li>
+<li>移除调试代码和注释</li>
+<li>使用生产环境的构建配置</li>
+</ul>
+<h3 id="_4-版本控制" tabindex="-1"><a class="header-anchor" href="#_4-版本控制"><span>4. 版本控制</span></a></h3>
+<ul>
+<li>在文件名中包含版本号</li>
+<li>保留历史版本的 PUP 文件</li>
+<li>记录每个版本的变更</li>
+</ul>
+<h3 id="_5-分发策略" tabindex="-1"><a class="header-anchor" href="#_5-分发策略"><span>5. 分发策略</span></a></h3>
+<ul>
+<li>使用 HTTPS 分发 PUP 文件</li>
+<li>提供文件校验（如 MD5、SHA256）</li>
+<li>包含详细的更新日志</li>
+</ul>
+<h2 id="故障排除" tabindex="-1"><a class="header-anchor" href="#故障排除"><span>故障排除</span></a></h2>
+<h3 id="常见问题" tabindex="-1"><a class="header-anchor" href="#常见问题"><span>常见问题</span></a></h3>
+<h4 id="_1-无效的-pup-文件" tabindex="-1"><a class="header-anchor" href="#_1-无效的-pup-文件"><span>1. &quot;无效的 PUP 文件&quot;</span></a></h4>
+<p><strong>原因</strong>：文件格式不正确或已损坏</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>重新创建 PUP 文件</li>
+<li>检查文件是否完整</li>
+<li>验证文件头是否为 &quot;PUP V1.0&quot;</li>
+</ul>
+<h4 id="_2-解密失败" tabindex="-1"><a class="header-anchor" href="#_2-解密失败"><span>2. &quot;解密失败&quot;</span></a></h4>
+<p><strong>原因</strong>：加密密码不正确</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>确认创建时使用的密码</li>
+<li>检查密码是否包含特殊字符</li>
+<li>重新创建 PUP 文件</li>
+</ul>
+<h4 id="_3-文件过大" tabindex="-1"><a class="header-anchor" href="#_3-文件过大"><span>3. &quot;文件过大&quot;</span></a></h4>
+<p><strong>原因</strong>：包含大量资源文件</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>压缩图片和媒体文件</li>
+<li>移除未使用的资源</li>
+<li>使用 CDN 加载第三方库</li>
+</ul>
+<h4 id="_4-加载缓慢" tabindex="-1"><a class="header-anchor" href="#_4-加载缓慢"><span>4. &quot;加载缓慢&quot;</span></a></h4>
+<p><strong>原因</strong>：文件较大或磁盘读取速度慢</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>优化文件大小</li>
+<li>使用 SSD</li>
+<li>预加载常用资源</li>
+</ul>
+<h2 id="相关资源" tabindex="-1"><a class="header-anchor" href="#相关资源"><span>相关资源</span></a></h2>
+<ul>
+<li><VPLink href="./cli-parameters.md">命令行参数</VPLink> - 完整的命令行选项</li>
+<li><VPLink href="./project-structure.md">项目结构</VPLink> - 项目目录组织</li>
+<li><VPLink href="./best-practices.md">最佳实践</VPLink> - 开发建议</li>
+</ul>
+<h2 id="下一步" tabindex="-1"><a class="header-anchor" href="#下一步"><span>下一步</span></a></h2>
+<p>了解 PUP 格式后，建议：</p>
+<ol>
+<li>尝试创建您的第一个 PUP 文件</li>
+<li>学习 <VPLink href="./cli-parameters.md">命令行参数</VPLink> 了解更多选项</li>
+<li>参考 <VPLink href="./best-practices.md">最佳实践</VPLink> 优化您的项目</li>
+</ol>
+</div></template>
+
+

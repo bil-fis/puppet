@@ -119,6 +119,52 @@ namespace puppet.Controllers
                     string extension = Path.GetExtension(command).ToLowerInvariant();
                     if (extension == ".exe" || extension == ".bat" || extension == ".cmd" || extension == ".msi")
                     {
+                        // 检查是否在系统目录下
+                        string fullPath = Path.GetFullPath(command);
+                        bool isSystemPath = false;
+
+                        // 检查所有驱动器的 Windows 文件夹
+                        var drives = DriveInfo.GetDrives();
+                        foreach (var drive in drives)
+                        {
+                            if (drive.DriveType == DriveType.Fixed)
+                            {
+                                string windowsPath = Path.Combine(drive.RootDirectory.FullName, "Windows");
+                                string system32Path = Path.Combine(windowsPath, "System32");
+                                string sysWOW64Path = Path.Combine(windowsPath, "SysWOW64");
+
+                                if (fullPath.StartsWith(windowsPath, StringComparison.OrdinalIgnoreCase) ||
+                                    fullPath.StartsWith(system32Path, StringComparison.OrdinalIgnoreCase) ||
+                                    fullPath.StartsWith(sysWOW64Path, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    isSystemPath = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 如果是系统目录下的可执行文件，弹窗确认
+                        if (isSystemPath)
+                        {
+                            DialogResult result = PermissionDialog.ShowPermissionDialog(
+                                "安全警告",
+                                "您正在尝试执行系统目录下的可执行文件，这可能影响系统安全。",
+                                fullPath
+                            );
+
+                            if (result == DialogResult.Abort)
+                            {
+                                // 永久阻止
+                                return $"Error: 用户已永久阻止执行此文件";
+                            }
+                            else if (result == DialogResult.Cancel)
+                            {
+                                // 拒绝
+                                return $"Error: 用户取消了操作";
+                            }
+                            // DialogResult.OK - 允许，继续执行
+                        }
+
                         // 启动可执行文件
                         var exeProcess = Process.Start(new ProcessStartInfo
                         {

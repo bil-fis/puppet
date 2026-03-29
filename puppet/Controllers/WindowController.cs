@@ -200,5 +200,38 @@ namespace puppet.Controllers
                 _form.ShowInTaskbar = show;
             }
         }
+
+        /// <summary>
+        /// 挂载一个可移动的 HTML 元素
+        /// 当用户在该元素上按住鼠标拖动时，整个窗口会跟随移动
+        /// </summary>
+        /// <param name="elementId">HTML 元素的 ID</param>
+        public void MountMovableElement(string elementId)
+        {
+            if (_form is Form1 form1)
+            {
+                form1.AddMovableElement(elementId);
+            }
+            else
+            {
+                throw new NotSupportedException("This feature is only supported in Form1");
+            }
+        }
+
+        /// <summary>
+        /// 卸载一个可移动的 HTML 元素
+        /// </summary>
+        /// <param name="elementId">HTML 元素的 ID</param>
+        public void UnmountMovableElement(string elementId)
+        {
+            if (_form is Form1 form1)
+            {
+                form1.RemoveMovableElement(elementId);
+            }
+            else
+            {
+                throw new NotSupportedException("This feature is only supported in Form1");
+            }
+        }
     }
 }

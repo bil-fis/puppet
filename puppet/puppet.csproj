@@ -6,7 +6,13 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>puppet.ico</ApplicationIcon>
+    <Authors>林晚晚ss</Authors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="puppet.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" />

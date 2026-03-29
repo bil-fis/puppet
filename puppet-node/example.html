@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppet Framework 示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .environment {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Puppet Framework</h1>
+        
+        <div class="environment" id="environment">
+            检测环境中...
+        </div>
+        
+        <button onclick="testWindow()">窗口控制</button>
+        <button onclick="testSystem()">系统信息</button>
+        <button onclick="testFile()">文件操作</button>
+        <button onclick="testTray()">托盘图标</button>
+        <button onclick="testEvents()">事件监听</button>
+        
+        <div class="info" id="info">
+            点击按钮测试功能
+        </div>
+    </div>
+
+    <script src="puppet.js"></script>
+    <script>
+        // 检测运行环境
+        function detectEnvironment() {
+            const envDiv = document.getElementById('environment');
+            
+            if (typeof window !== 'undefined' && 
+                typeof window.chrome !== 'undefined' && 
+                typeof window.chrome.webview !== 'undefined') {
+                envDiv.innerHTML = '✅ 运行环境: Puppet Framework';
+                envDiv.style.background = 'rgba(0, 128, 0, 0.2)';
+            } else if (typeof window !== 'undefined') {
+                envDiv.innerHTML = '🌐 运行环境: 浏览器（模拟模式）';
+                envDiv.style.background = 'rgba(255, 165, 0, 0.2)';
+            } else {
+                envDiv.innerHTML = '💻 运行环境: Node.js（模拟模式）';
+                envDiv.style.background = 'rgba(255, 165, 0, 0.2)';
+            }
+        }
+        
+        // 显示信息
+        function showInfo(message) {
+            const infoDiv = document.getElementById('info');
+            const timestamp = new Date().toLocaleTimeString();
+            infoDiv.innerHTML = `[${timestamp}] ${message}`;
+        }
+        
+        // 窗口控制测试
+        async function testWindow() {
+            try {
+                showInfo('设置窗口样式...');
+                
+                await puppet.window.setBorderless(true);
+                await puppet.window.setDraggable(true);
+                await puppet.window.setResizable(true);
+                await puppet.window.setOpacity(0.9);
+                await puppet.window.centerWindow();
+                
+                showInfo('窗口样式已设置');
+            } catch (error) {
+                showInfo('错误: ' + error.message);
+            }
+        }
+        
+        // 系统信息测试
+        async function testSystem() {
+            try {
+                showInfo('获取系统信息...');
+                
+                const sysInfo = await puppet.system.getSystemInfo();
+                showInfo(`操作系统: ${sysInfo.osName}\nCPU: ${sysInfo.cpuModel}\n内存: ${sysInfo.totalMemory} MB`);
+            } catch (error) {
+                showInfo('错误: ' + error.message);
+            }
+        }
+        
+        // 文件操作测试
+        async function testFile() {
+            try {
+                showInfo('打开文件选择器...');
+                
+                const files = await puppet.fs.openFileDialog(
+                    ['文本文件', '*.txt'],
+                    false
+                );
+                
+                if (files.length > 0) {
+                    showInfo(`选择的文件: ${files[0]}`);
+                    
+                    const content = await puppet.fs.readFileAsText(files[0]);
+                    showInfo(`文件内容: ${content.substring(0, 100)}...`);
+                } else {
+                    showInfo('未选择文件');
+                }
+            } catch (error) {
+                showInfo('错误: ' + error.message);
+            }
+        }
+        
+        // 托盘图标测试
+        async function testTray() {
+            try {
+                showInfo('设置托盘图标...');
+                
+                await puppet.tray.setTray('Puppet 示例');
+                
+                await puppet.tray.setMenu([
+                    { Text: '显示窗口', Command: 'show' },
+                    { Text: '退出', Command: 'exit' }
+                ]);
+                
+                await puppet.tray.showBalloon(
+                    'Puppet Framework',
+                    '欢迎使用 Puppet Framework！',
+                    5000,
+                    'Info'
+                );
+                
+                showInfo('托盘图标已设置');
+            } catch (error) {
+                showInfo('错误: ' + error.message);
+            }
+        }
+        
+        // 事件监听测试
+        async function testEvents() {
+            try {
+                showInfo('设置事件监听...');
+                
+                await puppet.events.addEventListener('usb-plug-in', (event) => {
+                    showInfo(`USB 设备插入: ${JSON.stringify(event.data)}`);
+                });
+                
+                await puppet.events.addEventListener('window-maximize', () => {
+                    showInfo('窗口已最大化');
+                });
+                
+                showInfo('事件监听器已设置');
+            } catch (error) {
+                showInfo('错误: ' + error.message);
+            }
+        }
+        
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            detectEnvironment();
+            showInfo('应用已加载，点击按钮测试功能');
+        });
+    </script>
+</body>
+</html>
