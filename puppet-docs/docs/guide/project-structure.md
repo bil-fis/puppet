@@ -198,11 +198,14 @@ puppet/
 ├── Form1.resx                 # 资源文件
 ├── PupServer.cs               # PUP 服务器
 ├── PupCreator.cs              # PUP 创建器
-├── AesHelper.cs               # 加密工具
-├── SecretKey.cs               # 密钥管理
-├── IniReader.cs               # INI 读取器
-├── PortSelector.cs            # 端口选择器
-├── PermissionDialog.cs        # 权限对话框
+├── AesHelper.cs               # 加密工具（已移动到 Core/）
+├── SecretKey.cs               # 密钥管理（已移动到 Core/）
+├── IniReader.cs               # INI 读取器（已移动到 Core/）
+├── PortSelector.cs            # 端口选择器（已移动到 Core/）
+├── PermissionDialog.cs        # 权限对话框（已移动到 UI/）
+├── PupCreator.cs              # PUP 文件创建器（已移动到 PUP/）
+├── PupServer.cs               # PUP 服务器（已移动到 PUP/）
+├── StorageController.cs        # 持久化存储控制器
 ├── puppet.ini                 # 框架配置
 ├── puppet.csproj              # 项目文件
 ├── Controllers/               # 控制器目录
@@ -213,11 +216,34 @@ puppet/
 │   ├── LogController.cs
 │   ├── SystemController.cs
 │   └── TrayController.cs
+├── Core/                     # 核心工具类
+│   ├── AesHelper.cs
+│   ├── IniReader.cs
+│   ├── PortSelector.cs
+│   ├── SecretKey.cs
+│   └── Security/            # 签名和安全工具类
+│       ├── AppSignatureValidator.cs
+│       ├── CertificateUtils.cs
+│       ├── CryptoUtils.cs
+│       └── SecurityException.cs
+├── PUP/                      # PUP 文件处理
+│   ├── PupCreator.cs
+│   ├── PupServer.cs
+│   └── PupScriptExecutor.cs
+├── UI/                       # 用户界面组件
+│   └── PermissionDialog.cs
 └── test-htmls/                # 测试页面
     ├── index.html
     ├── event-test.html
     └── device-test.html
 ```
+
+**目录组织说明**：
+
+- **Controllers/** - 控制器类，处理 API 请求
+- **Core/** - 核心工具类，包括加密、配置、安全等
+- **PUP/** - PUP 文件格式处理，支持 V1.0、V1.1、V1.2 格式
+- **UI/** - 用户界面组件，如权限对话框
 
 ## 配置文件
 

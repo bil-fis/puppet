@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using puppet.PUP;
 
 namespace puppet
 {
@@ -68,10 +69,15 @@ namespace puppet
             string? inputFolder = null;
             string? outputFile = null;
             string? password = null;
+            string? version = "1.0";
+            string? scriptFile = null;
+            string? certificate = null;
+            string? privateKey = null;
+            string? privateKeyPassword = null;
 
             Console.WriteLine("=== PUP 文件创建工具 ===");
             Console.WriteLine();
-            Console.WriteLine("用法: puppet.exe --create-pup -i <input-folder> -o <output.pup> [-p <password>]");
+            Console.WriteLine("用法: puppet.exe --create-pup -i <input-folder> -o <output.pup> [-p <password>] [-v <version>] [--script <script-file>] [--certificate <file>] [--private-key <file>] [--private-key-password <password>]");
             Console.WriteLine();
 
             if (args.Length < 2)
@@ -79,13 +85,20 @@ namespace puppet
                 Console.WriteLine("错误: 缺少必需参数");
                 Console.WriteLine();
                 Console.WriteLine("参数说明:");
-                Console.WriteLine("  -i <input-folder>  必需，源文件夹路径");
-                Console.WriteLine("  -o <output.pup>     必需，输出PUP文件路径");
-                Console.WriteLine("  -p <password>      可选，ZIP密码");
+                Console.WriteLine("  -i <input-folder>        必需，源文件夹路径");
+                Console.WriteLine("  -o <output.pup>           必需，输出PUP文件路径");
+                Console.WriteLine("  -p <password>            可选，ZIP密码");
+                Console.WriteLine("  -v <version>             可选，PUP版本（1.0、1.1 或 1.2），默认为 1.0");
+                Console.WriteLine("  --script <file>          可选，V1.1/V1.2版本的启动脚本文件");
+                Console.WriteLine("  --certificate <file>     可选，证书文件（V1.2版本必需）");
+                Console.WriteLine("  --private-key <file>     可选，私钥文件（V1.2版本必需）");
+                Console.WriteLine("  --private-key-password   可选，私钥加密密码（V1.2版本必需）");
                 Console.WriteLine();
                 Console.WriteLine("示例:");
                 Console.WriteLine("  puppet.exe --create-pup -i \"C:\\MyProject\" -o \"C:\\Output\\myapp.pup\"");
                 Console.WriteLine("  puppet.exe --create-pup -i \"C:\\MyProject\" -o \"C:\\Output\\myapp.pup\" -p \"mypassword\"");
+                Console.WriteLine("  puppet.exe --create-pup -i \"C:\\MyProject\" -o \"C:\\Output\\myapp.pup\" -v 1.1 --script \"C:\\script.txt\"");
+                Console.WriteLine("  puppet.exe --create-pup -i \"C:\\MyProject\" -o \"C:\\Output\\myapp.pup\" -v 1.2 --certificate \"C:\\app.crt\" --private-key \"C:\\app.key\" --private-key-password \"keypassword\"");
                 Console.WriteLine();
                 return;
             }
@@ -130,6 +143,62 @@ namespace puppet
                                 return;
                             }
                             break;
+                        case "-v":
+                        case "--version":
+                            if (i + 1 < args.Length)
+                            {
+                                version = args[++i];
+                            }
+                            else
+                            {
+                                Console.WriteLine("错误: -v/--version 参数缺少值");
+                                return;
+                            }
+                            break;
+                        case "--script":
+                            if (i + 1 < args.Length)
+                            {
+                                scriptFile = args[++i];
+                            }
+                            else
+                            {
+                                Console.WriteLine("错误: --script 参数缺少值");
+                                return;
+                            }
+                            break;
+                        case "--certificate":
+                            if (i + 1 < args.Length)
+                            {
+                                certificate = args[++i];
+                            }
+                            else
+                            {
+                                Console.WriteLine("错误: --certificate 参数缺少值");
+                                return;
+                            }
+                            break;
+                        case "--private-key":
+                            if (i + 1 < args.Length)
+                            {
+                                privateKey = args[++i];
+                            }
+                            else
+                            {
+                                Console.WriteLine("错误: --private-key 参数缺少值");
+                                return;
+                            }
+                            break;
+                        case "--private-key-password":
+                            if (i + 1 < args.Length)
+                            {
+                                privateKeyPassword = args[++i];
+                            }
+                            else
+                            {
+                                Console.WriteLine("错误: --private-key-password 参数缺少值");
+                                return;
+                            }
+                            break;
                         default:
                             Console.WriteLine($"错误: 未知参数 {args[i]}");
                             Console.WriteLine("使用 --create-pup -h 查看帮助信息");
@@ -161,6 +230,55 @@ namespace puppet
                 Console.WriteLine();
                 Console.WriteLine("提示: 使用 puppet.exe --create-pup -i <input-folder> -o <output.pup>");
                 return;
+            }
+
+            // 验证版本参数
+            if (version != "1.0" && version != "1.1" && version != "1.2")
+            {
+                Console.WriteLine("错误: 无效的版本号。支持的版本: 1.0, 1.1, 1.2");
+                return;
+            }
+
+            // 如果是V1.1版本，必须提供脚本文件
+            if (version == "1.1" && string.IsNullOrEmpty(scriptFile))
+            {
+                Console.WriteLine("错误: V1.1版本需要提供 --script 参数");
+                Console.WriteLine("提示: 使用 puppet.exe --create-pup -i <input-folder> -o <output.pup> -v 1.1 --script <script-file>");
+                return;
+            }
+
+            // 如果是V1.2版本，必须提供证书和私钥
+            if (version == "1.2")
+            {
+                if (string.IsNullOrEmpty(certificate))
+                {
+                    Console.WriteLine("错误: V1.2版本需要提供 --certificate 参数");
+                    Console.WriteLine("提示: 使用 puppet.exe --create-pup -i <input-folder> -o <output.pup> -v 1.2 --certificate <cert> --private-key <key> --private-key-password <password>");
+                    return;
+                }
+                if (string.IsNullOrEmpty(privateKey))
+                {
+                    Console.WriteLine("错误: V1.2版本需要提供 --private-key 参数");
+                    Console.WriteLine("提示: 使用 puppet.exe --create-pup -i <input-folder> -o <output.pup> -v 1.2 --certificate <cert> --private-key <key> --private-key-password <password>");
+                    return;
+                }
+                if (string.IsNullOrEmpty(privateKeyPassword))
+                {
+                    Console.WriteLine("错误: V1.2版本需要提供 --private-key-password 参数");
+                    Console.WriteLine("提示: 使用 puppet.exe --create-pup -i <input-folder> -o <output.pup> -v 1.2 --certificate <cert> --private-key <key> --private-key-password <password>");
+                    return;
+                }
+            }
+
+            // 验证脚本文件
+            if (!string.IsNullOrEmpty(scriptFile))
+            {
+                if (!File.Exists(scriptFile))
+                {
+                    Console.WriteLine($"错误: 脚本文件不存在: {scriptFile}");
+                    return;
+                }
+                Console.WriteLine($"  ✓ 脚本文件存在: {scriptFile}");
             }
 
             // 验证输入文件夹
@@ -197,6 +315,7 @@ namespace puppet
                 Console.WriteLine("  建议使用 .pup 扩展名");
             }
             Console.WriteLine($"输出文件: {outputFile}");
+            Console.WriteLine($"PUP版本: {version}");
             Console.WriteLine();
 
             // 检查密码
@@ -213,11 +332,21 @@ namespace puppet
                 Console.WriteLine("开始创建 PUP 文件...");
                 Console.WriteLine();
                 
-                PupCreator.CreatePup(inputFolder, outputFile, password);
+                PupCreator.CreatePup(inputFolder, outputFile, password, version, scriptFile, certificate, privateKey, privateKeyPassword);
                 
                 Console.WriteLine();
                 Console.WriteLine("✓ PUP 文件创建成功!");
                 Console.WriteLine($"  文件位置: {outputFile}");
+                Console.WriteLine($"  PUP版本: {version}");
+                
+                if (version == "1.2" && !string.IsNullOrEmpty(certificate))
+                {
+                    Console.WriteLine($"  包含证书: {certificate}");
+                    if (!string.IsNullOrEmpty(privateKey))
+                    {
+                        Console.WriteLine($"  包含私钥: {privateKey}");
+                    }
+                }
                 
                 // 验证文件是否真的创建了
                 if (File.Exists(outputFile))

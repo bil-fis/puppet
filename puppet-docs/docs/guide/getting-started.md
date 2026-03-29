@@ -241,6 +241,20 @@ puppet.exe --create-pup -i "C:\MyProject" -o "C:\MyProject.pup" -p "mypassword"
 
 详细说明请参考 [PUP 文件格式](./pup-format.md)。
 
+### Q: 如何创建带签名的 PUP 文件？
+
+A: 使用 V1.2 格式和 puppet-sign 工具：
+
+```bash
+# 1. 生成签名密钥对
+puppet-sign.exe --generate-signing-key --alias MyApp --key-size 2048
+
+# 2. 创建带签名的 PUP 文件
+puppet.exe --create-pup -i "C:\MyProject" -o "C:\MyProject.pup" -v 1.2 --certificate "app.crt" --private-key "app.key" --private-key-password "mypassword"
+```
+
+带签名的 PUP 文件可以确保应用的完整性和来源可信度。详细说明请参考 [安全机制](./security.md) 和 [PUP 文件格式](./pup-format.md)。
+
 ### Q: 如何让应用开机自启动？
 
 A: 使用 Application API 的 `execute` 方法创建快捷方式：

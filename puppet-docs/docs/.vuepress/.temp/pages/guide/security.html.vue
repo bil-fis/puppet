@@ -181,7 +181,216 @@
 <p class="hint-container-title">安全限制</p>
 <p>加密的 ZIP 密钥使用固定的密钥 <code v-pre>&quot;ILOVEPUPPET&quot;</code> 加密，这是一种轻量级的保护方式。如果需要更强的安全性，建议使用文件系统加密（如 BitLocker）。</p>
 </div>
-<h2 id="安全最佳实践" tabindex="-1"><a class="header-anchor" href="#安全最佳实践"><span>安全最佳实践</span></a></h2>
+<h3 id="_5-数据签名验证" tabindex="-1"><a class="header-anchor" href="#_5-数据签名验证"><span>5. 数据签名验证</span></a></h3>
+<h4 id="签名机制" tabindex="-1"><a class="header-anchor" href="#签名机制"><span>签名机制</span></a></h4>
+<p>Puppet Storage API 提供了基于自签名证书的数据签名验证机制，防止数据库被篡改。此机制参考 Android APK 签名设计，提供企业级的数据完整性保护。</p>
+<p><strong>签名架构</strong>：</p>
+<div class="language- line-numbers-mode" data-highlighter="shiki" data-ext="" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-"><span class="line"><span>┌─────────────────────────────────────────────┐</span></span>
+<span class="line"><span>│  应用层                                   │</span></span>
+<span class="line"><span>│  ┌─────────────────────────────────────┐  │</span></span>
+<span class="line"><span>│  │  RSA 2048/4096 位密钥对            │  │</span></span>
+<span class="line"><span>│  │  自签名 X.509 证书                  │  │</span></span>
+<span class="line"><span>│  │  SHA256withRSA 签名                │  │</span></span>
+<span class="line"><span>│  └─────────────────────────────────────┘  │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│  验证层                                   │</span></span>
+<span class="line"><span>│  ┌─────────────────────────────────────┐  │</span></span>
+<span class="line"><span>│  │  证书有效性验证                      │  │</span></span>
+<span class="line"><span>│  │  自签名状态检查                      │  │</span></span>
+<span class="line"><span>│  │  签名完整性验证                      │  │</span></span>
+<span class="line"><span>│  │  证书指纹比对                        │  │</span></span>
+<span class="line"><span>│  └─────────────────────────────────────┘  │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│  数据层                                   │</span></span>
+<span class="line"><span>│  ┌─────────────────────────────────────┐  │</span></span>
+<span class="line"><span>│  │  数据库元数据表                      │  │</span></span>
+<span class="line"><span>│  │  应用ID (AppID)                      │  │</span></span>
+<span class="line"><span>│  │  证书指纹                           │  │</span></span>
+<span class="line"><span>│  │  签名数据                           │  │</span></span>
+<span class="line"><span>│  └─────────────────────────────────────┘  │</span></span>
+<span class="line"><span>└─────────────────────────────────────────────┘</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h4 id="安全特性" tabindex="-1"><a class="header-anchor" href="#安全特性"><span>安全特性</span></a></h4>
+<p><strong>1. 数据完整性保护</strong></p>
+<ul>
+<li>使用 SHA256withRSA 算法对数据库内容进行签名</li>
+<li>任何对数据库的修改都会导致签名验证失败</li>
+<li>提供防篡改保证</li>
+</ul>
+<p><strong>2. 身份验证</strong></p>
+<ul>
+<li>通过证书的应用ID（CN）验证数据库创建者</li>
+<li>通过证书指纹确保证书的唯一性</li>
+<li>防止冒名顶替</li>
+</ul>
+<p><strong>3. 密钥保护</strong></p>
+<ul>
+<li>私钥在 PUP 文件中使用 AES-256-GCM 加密存储</li>
+<li>密钥派生使用 PBKDF2（100,000次迭代）</li>
+<li>防止私钥泄露</li>
+</ul>
+<p><strong>4. 算法强度</strong></p>
+<ul>
+<li>RSA 密钥：2048 或 4096 位</li>
+<li>签名算法：SHA256withRSA</li>
+<li>加密算法：AES-256-GCM</li>
+<li>密钥派生：PBKDF2 + SHA256</li>
+</ul>
+<h4 id="签名流程" tabindex="-1"><a class="header-anchor" href="#签名流程"><span>签名流程</span></a></h4>
+<p><strong>1. 生成签名密钥对</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 交互式生成</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --generate-signing-key</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --interactive</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><p>生成的文件：</p>
+<ul>
+<li><code v-pre>app.crt</code> - 自签名证书（包含公钥）</li>
+<li><code v-pre>app.key</code> - RSA 私钥（加密存储）</li>
+</ul>
+<p><strong>2. 创建带签名的 PUP 文件</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --create-pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -i</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> myapp</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -o</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> myapp.pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> \</span></span>
+<span class="line"><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076">  --certificate</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.crt</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> \</span></span>
+<span class="line"><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076">  --private-key</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>3. 数据库自动签名</strong></p>
+<p>当使用包含证书的 PUP 文件时：</p>
+<ul>
+<li><strong>创建新数据库</strong>：自动使用私钥签名</li>
+<li><strong>打开已有数据库</strong>：自动验证签名</li>
+<li><strong>验证失败</strong>：记录警告，但允许访问（向后兼容）</li>
+</ul>
+<h4 id="验证流程" tabindex="-1"><a class="header-anchor" href="#验证流程"><span>验证流程</span></a></h4>
+<p><strong>签名验证步骤</strong>：</p>
+<div class="language- line-numbers-mode" data-highlighter="shiki" data-ext="" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-"><span class="line"><span>1. 读取数据库内容</span></span>
+<span class="line"><span>2. 计算数据库的 SHA256 哈希</span></span>
+<span class="line"><span>3. 从数据库元数据读取签名</span></span>
+<span class="line"><span>4. 从 PUP 文件提取证书</span></span>
+<span class="line"><span>5. 使用证书公钥验证签名</span></span>
+<span class="line"><span>6. 检查证书有效性和自签名状态</span></span>
+<span class="line"><span>7. 验证通过 → 允许访问</span></span>
+<span class="line"><span>8. 验证失败 → 记录警告</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>验证失败处理</strong>：</p>
+<div class="language- line-numbers-mode" data-highlighter="shiki" data-ext="" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-"><span class="line"><span>┌─────────────────────────────────────────────┐</span></span>
+<span class="line"><span>│  验证失败场景                               │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│  1. 数据库被篡改                            │</span></span>
+<span class="line"><span>│     → 警告："数据库签名验证失败"             │</span></span>
+<span class="line"><span>│     → 仍允许访问（向后兼容）                 │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│  2. 证书不匹配                             │</span></span>
+<span class="line"><span>│     → 警告："证书指纹不匹配"                 │</span></span>
+<span class="line"><span>│     → 仍允许访问（向后兼容）                 │</span></span>
+<span class="line"><span>├─────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│  3. 证书已过期                             │</span></span>
+<span class="line"><span>│     → 警告："证书已过期"                     │</span></span>
+<span class="line"><span>│     → 仍允许访问（向后兼容）                 │</span></span>
+<span class="line"><span>└─────────────────────────────────────────────┘</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h4 id="安全注意事项" tabindex="-1"><a class="header-anchor" href="#安全注意事项"><span>安全注意事项</span></a></h4>
+<p><strong>1. 私钥保护</strong></p>
+<div class="language-csharp line-numbers-mode" data-highlighter="shiki" data-ext="csharp" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-csharp"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 私钥在 PUP 文件中加密存储</span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">byte</span><span style="--shiki-light:#999999;--shiki-dark:#666666">[]</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> encryptedPrivateKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> CryptoUtils</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">EncryptWithPassword</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    privateKeyBytes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    password</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 解密时需要正确的密码</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">var</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> privateKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> AppSignatureGenerator</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">DecryptPrivateKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    encryptedPrivateKey</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    password</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>2. 证书有效期</strong></p>
+<ul>
+<li>建议设置较长的有效期（如 25 年）</li>
+<li>定期检查证书到期时间</li>
+<li>过期前生成新证书并重新签名</li>
+</ul>
+<p><strong>3. 密钥备份</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 备份证书和私钥</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">copy</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.crt</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.crt.backup</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">copy</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key.backup</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 存储在安全的位置</span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 不要上传到公共仓库</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>4. 签名不可逆</strong></p>
+<ul>
+<li>一旦签名，不能修改签名而不破坏验证</li>
+<li>修改数据库内容会导致签名验证失败</li>
+<li>需要重新签名才能修改</li>
+</ul>
+<h4 id="安全最佳实践" tabindex="-1"><a class="header-anchor" href="#安全最佳实践"><span>安全最佳实践</span></a></h4>
+<p><strong>1. 始终使用签名</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 创建 PUP 文件时始终包含证书和私钥</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --create-pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -i</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> myapp</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> -o</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> myapp.pup</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> \</span></span>
+<span class="line"><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076">  --certificate</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.crt</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> \</span></span>
+<span class="line"><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076">  --private-key</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>2. 定期验证签名</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 定期验证数据库签名</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --verify-database</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> default.db</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --certificate</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.crt</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>3. 监控签名验证失败</strong></p>
+<div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 在应用中监控签名验证失败</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">const</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> signatureLogs</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> await</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">getLogs</span><span style="--shiki-light:#999999;--shiki-dark:#666666">();</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">const</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> failures</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> signatureLogs</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">filter</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =></span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE"> </span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">  log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">message</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">includes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">签名验证失败</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">if</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> (</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">failures</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#998418;--shiki-dark:#B8A965">length</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> ></span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 0</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">  console</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">warn</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">发现签名验证失败:</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">,</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> failures</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>4. 保护密钥文件</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 设置文件权限（Linux/macOS）</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">chmod</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 600</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 设置文件权限（Windows）</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">icacls</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> /inheritance:r</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">icacls</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> app.key</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D"> /grant:r</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77"> "</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">%USERNAME%:F</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">"</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>5. 使用强密钥</strong></p>
+<div class="language-bash line-numbers-mode" data-highlighter="shiki" data-ext="bash" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-bash"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD"># 使用 4096 位密钥（更高安全性）</span></span>
+<span class="line"><span style="--shiki-light:#59873A;--shiki-dark:#80A665">puppet.exe</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --generate-signing-key</span><span style="--shiki-light:#A65E2B;--shiki-dark:#C99076"> --key-size</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 4096</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><h4 id="安全威胁分析" tabindex="-1"><a class="header-anchor" href="#安全威胁分析"><span>安全威胁分析</span></a></h4>
+<p><strong>1. 中间人攻击</strong></p>
+<ul>
+<li><strong>风险</strong>：攻击者拦截 PUP 文件并替换证书</li>
+<li><strong>防护</strong>：证书指纹验证，确保证书未被替换</li>
+</ul>
+<p><strong>2. 重放攻击</strong></p>
+<ul>
+<li><strong>风险</strong>：攻击者使用旧的签名数据库替换新数据库</li>
+<li><strong>防护</strong>：签名包含时间戳，可以检测重放</li>
+</ul>
+<p><strong>3. 密钥泄露</strong></p>
+<ul>
+<li><strong>风险</strong>：私钥被泄露，攻击者可以伪造签名</li>
+<li><strong>防护</strong>：私钥加密存储，定期轮换密钥</li>
+</ul>
+<p><strong>4. 证书伪造</strong></p>
+<ul>
+<li><strong>风险</strong>：攻击者创建假证书并签名恶意数据库</li>
+<li><strong>防护</strong>：检查证书指纹和自签名状态</li>
+</ul>
+<h4 id="安全审计" tabindex="-1"><a class="header-anchor" href="#安全审计"><span>安全审计</span></a></h4>
+<p><strong>签名检查清单</strong>：</p>
+<ul class="task-list-container">
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-0" disabled="disabled"><label class="task-list-item-label" for="task-item-0"> 所有 PUP 文件都包含证书和私钥</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-1" disabled="disabled"><label class="task-list-item-label" for="task-item-1"> 私钥文件权限设置正确</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-2" disabled="disabled"><label class="task-list-item-label" for="task-item-2"> 定期验证数据库签名</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-3" disabled="disabled"><label class="task-list-item-label" for="task-item-3"> 监控签名验证失败事件</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-4" disabled="disabled"><label class="task-list-item-label" for="task-item-4"> 证书有效期设置合理</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-5" disabled="disabled"><label class="task-list-item-label" for="task-item-5"> 密钥备份在安全位置</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-6" disabled="disabled"><label class="task-list-item-label" for="task-item-6"> 使用足够强度的密钥（2048+位）</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-7" disabled="disabled"><label class="task-list-item-label" for="task-item-7"> 私钥使用强密码保护</label></li>
+</ul>
+<p><strong>日志监控</strong>：</p>
+<div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 监控签名相关事件</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">async</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> function</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> monitorSignatureEvents</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">  const</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> logs</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> await</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">getLogs</span><span style="--shiki-light:#999999;--shiki-dark:#666666">();</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">  </span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">  const</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> signatureEvents</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> logs</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">filter</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =></span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">message</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">includes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">签名</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> ||</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">message</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">includes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">证书</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> ||</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">message</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">includes</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">fingerprint</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">  );</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">  </span></span>
+<span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">  for</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> (</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">const</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> event</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> of</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> signatureEvents</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    console</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">`</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">[</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">${</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">event</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">time</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">}</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">] </span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">${</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">event</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">level</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">}</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">: </span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">${</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">event</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">message</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">}</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">`</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">  }</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="安全最佳实践-1" tabindex="-1"><a class="header-anchor" href="#安全最佳实践-1"><span>安全最佳实践</span></a></h2>
 <h3 id="_1-输入验证" tabindex="-1"><a class="header-anchor" href="#_1-输入验证"><span>1. 输入验证</span></a></h3>
 <h4 id="javascript-层" tabindex="-1"><a class="header-anchor" href="#javascript-层"><span>JavaScript 层</span></a></h4>
 <div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 验证文件路径</span></span>
@@ -271,7 +480,7 @@
 <span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 不要在代码中硬编码敏感信息</span></span>
 <span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 不推荐：</span></span>
 <span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// const apiKey = 'my-secret-key-12345';</span></span></code></pre>
-<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="安全审计" tabindex="-1"><a class="header-anchor" href="#安全审计"><span>安全审计</span></a></h2>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="安全审计-1" tabindex="-1"><a class="header-anchor" href="#安全审计-1"><span>安全审计</span></a></h2>
 <h3 id="常见安全风险" tabindex="-1"><a class="header-anchor" href="#常见安全风险"><span>常见安全风险</span></a></h3>
 <h4 id="_1-路径遍历攻击" tabindex="-1"><a class="header-anchor" href="#_1-路径遍历攻击"><span>1. 路径遍历攻击</span></a></h4>
 <p><strong>风险</strong>：通过特殊字符访问系统文件</p>
@@ -308,15 +517,15 @@
 <h3 id="安全检查清单" tabindex="-1"><a class="header-anchor" href="#安全检查清单"><span>安全检查清单</span></a></h3>
 <p>在发布应用前，请检查以下项目：</p>
 <ul class="task-list-container">
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-0" disabled="disabled"><label class="task-list-item-label" for="task-item-0"> 所有文件路径都经过验证</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-1" disabled="disabled"><label class="task-list-item-label" for="task-item-1"> 敏感操作都有权限确认</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-2" disabled="disabled"><label class="task-list-item-label" for="task-item-2"> 不在代码中硬编码敏感信息</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-3" disabled="disabled"><label class="task-list-item-label" for="task-item-3"> 使用加密保护 PUP 文件</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-4" disabled="disabled"><label class="task-list-item-label" for="task-item-4"> 实施适当的错误处理</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-5" disabled="disabled"><label class="task-list-item-label" for="task-item-5"> 记录安全相关事件</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-6" disabled="disabled"><label class="task-list-item-label" for="task-item-6"> 限制应用的访问范围</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-7" disabled="disabled"><label class="task-list-item-label" for="task-item-7"> 定期更新依赖库</label></li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-8" disabled="disabled"><label class="task-list-item-label" for="task-item-8"> 进行安全测试</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-8" disabled="disabled"><label class="task-list-item-label" for="task-item-8"> 所有文件路径都经过验证</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-9" disabled="disabled"><label class="task-list-item-label" for="task-item-9"> 敏感操作都有权限确认</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-10" disabled="disabled"><label class="task-list-item-label" for="task-item-10"> 不在代码中硬编码敏感信息</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-11" disabled="disabled"><label class="task-list-item-label" for="task-item-11"> 使用加密保护 PUP 文件</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-12" disabled="disabled"><label class="task-list-item-label" for="task-item-12"> 实施适当的错误处理</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-13" disabled="disabled"><label class="task-list-item-label" for="task-item-13"> 记录安全相关事件</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-14" disabled="disabled"><label class="task-list-item-label" for="task-item-14"> 限制应用的访问范围</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-15" disabled="disabled"><label class="task-list-item-label" for="task-item-15"> 定期更新依赖库</label></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" id="task-item-16" disabled="disabled"><label class="task-list-item-label" for="task-item-16"> 进行安全测试</label></li>
 </ul>
 <h2 id="安全工具" tabindex="-1"><a class="header-anchor" href="#安全工具"><span>安全工具</span></a></h2>
 <h3 id="文件扫描" tabindex="-1"><a class="header-anchor" href="#文件扫描"><span>文件扫描</span></a></h3>

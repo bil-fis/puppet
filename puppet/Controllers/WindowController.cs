@@ -19,6 +19,13 @@ namespace puppet.Controllers
         /// </summary>
         public void SetBorderless(bool borderless)
         {
+            // 线程安全检查
+            if (_form.InvokeRequired)
+            {
+                _form.Invoke(new Action(() => SetBorderless(borderless)));
+                return;
+            }
+
             if (borderless)
             {
                 _form.FormBorderStyle = FormBorderStyle.None;
@@ -163,6 +170,13 @@ namespace puppet.Controllers
         /// </summary>
         public void MoveWindow(int x, int y)
         {
+            // 线程安全检查
+            if (_form.InvokeRequired)
+            {
+                _form.Invoke(new Action(() => MoveWindow(x, y)));
+                return;
+            }
+
             _form.Location = new Point(x, y);
         }
 
@@ -171,6 +185,13 @@ namespace puppet.Controllers
         /// </summary>
         public void ResizeWindow(int width, int height)
         {
+            // 线程安全检查
+            if (_form.InvokeRequired)
+            {
+                _form.Invoke(new Action(() => ResizeWindow(width, height)));
+                return;
+            }
+
             _form.Size = new Size(width, height);
         }
 
@@ -179,6 +200,13 @@ namespace puppet.Controllers
         /// </summary>
         public void CenterWindow()
         {
+            // 线程安全检查
+            if (_form.InvokeRequired)
+            {
+                _form.Invoke(new Action(CenterWindow));
+                return;
+            }
+
             Rectangle screen = Screen.PrimaryScreen.WorkingArea;
             _form.Location = new Point(
                 (screen.Width - _form.Width) / 2,

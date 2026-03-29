@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.37111.16 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "puppet", "puppet\puppet.csproj", "{80819F7B-A3AF-4F18-93CA-A22FE40927B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "puppet-sign", "puppet-sign\puppet-sign.csproj", "{E3D6A2C1-5F4E-4A9B-9C7D-1E8F3B7C5A2D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{80819F7B-A3AF-4F18-93CA-A22FE40927B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80819F7B-A3AF-4F18-93CA-A22FE40927B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80819F7B-A3AF-4F18-93CA-A22FE40927B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3D6A2C1-5F4E-4A9B-9C7D-1E8F3B7C5A2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3D6A2C1-5F4E-4A9B-9C7D-1E8F3B7C5A2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3D6A2C1-5F4E-4A9B-9C7D-1E8F3B7C5A2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3D6A2C1-5F4E-4A9B-9C7D-1E8F3B7C5A2D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

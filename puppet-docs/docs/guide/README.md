@@ -18,6 +18,15 @@ createTime: 2026/03/28 14:50:37
 - [命令行参数](./cli-parameters.md) - 命令行工具使用说明
 - [安全机制](./security.md) - 框架的安全特性和最佳实践
 - [最佳实践](./best-practices.md) - 开发高质量 Puppet 应用的建议
+- [Puppet 签名工具](./puppet-sign.md) - 使用 puppet-sign 进行签名和验证
+
+## 相关工具
+
+- **puppet-sign** - 独立的签名工具，用于生成签名密钥对、签名数据库和验证签名
+  - 支持生成自签名 X.509 证书
+  - 支持 RSA 2048/4096 位密钥
+  - 支持数据库签名和验证
+  - 详见 [Puppet 签名工具](./puppet-sign.md)
 
 ## 什么是 Puppet？
 

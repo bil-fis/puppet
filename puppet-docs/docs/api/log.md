@@ -18,6 +18,62 @@ createTime: 2026/03/28 15:07:28
 
 ## 方法
 
+### setFile()
+
+设置日志文件保存路径，支持自定义格式化字符串。
+
+```javascript
+puppet.log.setFile(pathPattern: string): void
+```
+
+**参数**：
+
+- `pathPattern` (string) - 日志文件路径模式，支持日期时间格式化
+
+**支持的格式占位符**：
+
+| 占位符 | 说明 | 示例 |
+|--------|------|------|
+| `{yyyy}` | 4位年份 | 2026 |
+| `{yy}` | 2位年份 | 26 |
+| `{MM}` | 月份（01-12） | 03 |
+| `{dd}` | 日期（01-31） | 29 |
+| `{HH}` | 小时（00-23） | 14 |
+| `{mm}` | 分钟（00-59） | 30 |
+| `{ss}` | 秒（00-59） | 45 |
+| `{fff}` | 毫秒（000-999） | 123 |
+| `{%i}` | 自增序号 | 839472 |
+
+**示例**：
+
+```javascript
+// 基础用法：设置固定日志文件
+puppet.log.setFile('logs/app.log');
+
+// 使用日期时间格式化
+puppet.log.setFile('logs/app-{yyyy-MM-dd}.log');
+
+// 使用完整日期时间
+puppet.log.setFile('logs/app-{yyyy-MM-dd HH-mm-ss}.log');
+
+// 使用日期和序号
+puppet.log.setFile('logs/app-{yyyy-MM-dd}_{%i}.log');
+
+// 自定义格式
+puppet.log.setFile('Puppet_log-{yy-MM-dd HH:MM:SS - %i}.log');
+
+// 包含子目录（会自动创建）
+puppet.log.setFile('logs/2026/03/app.log');
+```
+
+**注意事项**：
+
+::: warning 安全提示
+- 写入 Windows 系统敏感文件夹（如 Windows、Program Files）会弹出安全确认对话框
+- 用户可以取消操作，防止日志写入系统文件夹
+- 不存在子目录时会自动创建
+:::
+
 ### info()
 
 输出信息级别日志。
@@ -82,6 +138,40 @@ puppet.log.error('操作超时');
 ```
 
 ## 使用示例
+
+### 日志文件配置
+
+```javascript
+// 应用启动时配置日志文件
+async function initLogging() {
+    // 使用日期作为日志文件名
+    puppet.log.setFile('logs/app-{yyyy-MM-dd}.log');
+    
+    puppet.log.info('日志系统初始化完成');
+    puppet.log.info('应用启动');
+}
+
+// 使用完整的日期时间格式
+async function initDetailedLogging() {
+    puppet.log.setFile('logs/app-{yyyy-MM-dd HH-mm-ss}.log');
+    
+    puppet.log.info('详细日志系统初始化完成');
+}
+
+// 使用日期和序号，防止文件名冲突
+async function initSequencedLogging() {
+    puppet.log.setFile('logs/app-{yyyy-MM-dd}_{%i}.log');
+    
+    puppet.log.info('序列化日志系统初始化完成');
+}
+
+// 按月归档日志
+async function initMonthlyLogging() {
+    puppet.log.setFile('logs/{yyyy}/{MM}/app-{dd}.log');
+    
+    puppet.log.info('按月归档的日志系统初始化完成');
+}
+```
 
 ### 基础日志
 
@@ -220,7 +310,31 @@ await monitor.measureAsync('loadData', async () => {
 
 ## 最佳实践
 
-### 1. 日志级别使用
+### 1. 日志文件管理
+
+合理管理日志文件，避免日志文件过大：
+
+```javascript
+// 按日期分割日志
+puppet.log.setFile('logs/app-{yyyy-MM-dd}.log');
+
+// 按月归档
+puppet.log.setFile('logs/{yyyy}/{MM}/app.log');
+
+// 使用序号防止文件名冲突
+puppet.log.setFile('logs/app-{yyyy-MM-dd}_{%i}.log');
+
+// 定期清理旧日志（建议在外部实现）
+async function cleanupOldLogs(daysToKeep = 30) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+    
+    // 遍历日志目录，删除旧日志
+    // 这需要在应用层实现
+}
+```
+
+### 2. 日志级别使用
 
 根据消息严重性选择合适的日志级别：
 
@@ -296,16 +410,22 @@ puppet.log.info('用户登录: john');
 
 ### Q: 日志保存在哪里？
 
-A: 日志会输出到控制台和应用日志文件中。
+A: 默认日志保存在应用目录下的 `puppet.log` 文件中。您可以使用 `puppet.log.setFile()` 方法自定义日志文件路径和格式。
 
 ### Q: 如何清空日志？
 
-A: 日志会持续追加，需要手动管理日志文件。
+A: 日志会持续追加到文件中。如果需要清空日志，可以：
+- 删除或清空日志文件
+- 使用新的日志文件名（通过日期时间格式化）
 
 ### Q: 可以自定义日志格式吗？
 
-A: 可以使用结构化日志自定义格式。
+A: 是的！使用 `puppet.log.setFile()` 方法可以自定义日志文件路径和格式，支持日期时间和序号占位符。
 
 ### Q: 日志会影响性能吗？
 
-A: 日志操作对性能影响很小，但应避免在循环中频繁输出日志。
+A: 日志操作使用线程安全的文件写入，对性能影响很小。但应避免在循环中频繁输出日志。
+
+### Q: 为什么写入系统文件夹会弹出确认对话框？
+
+A: 为了安全起见，写入 Windows 系统敏感文件夹（如 Windows、Program Files）会弹出安全确认对话框，防止误操作影响系统安全。

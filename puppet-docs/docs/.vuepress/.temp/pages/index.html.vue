@@ -47,6 +47,12 @@ puppet.exe --load-pup app.pup
 <ul>
 <li>托盘菜单、气泡通知、自定义图标</li>
 </ul>
+<h3 id="安全机制" tabindex="-1"><a class="header-anchor" href="#安全机制"><span>安全机制</span></a></h3>
+<ul>
+<li>PUP 文件数字签名（V1.2）</li>
+<li>数据库签名验证</li>
+<li>证书完整性检查</li>
+</ul>
 <hr>
 <div style="text-align: center; padding: 40px 20px 20px; border-top: 1px solid var(--c-border); margin-top: 60px; color: var(--c-text-light);">
   <p style="margin: 0 0 10px 0; font-size: 16px;">

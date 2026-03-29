@@ -136,5 +136,62 @@ namespace puppet
             }
             return false;
         }
+
+        /// <summary>
+        /// 设置配置值
+        /// </summary>
+        /// <param name="section">节名</param>
+        /// <param name="key">键名</param>
+        /// <param name="value">值</param>
+        public void SetValue(string section, string key, string value)
+        {
+            // 如果节不存在，创建新节
+            if (!_data.ContainsKey(section))
+            {
+                _data[section] = new Dictionary<string, string>();
+            }
+
+            // 设置值
+            _data[section][key] = value;
+        }
+
+        /// <summary>
+        /// 保存 INI 文件
+        /// </summary>
+        public void Save()
+        {
+            try
+            {
+                // 备份原文件
+                if (File.Exists(_filePath))
+                {
+                    string backupPath = _filePath + ".backup";
+                    File.Copy(_filePath, backupPath, true);
+                }
+
+                // 写入新内容
+                using (var writer = new StreamWriter(_filePath, false, Encoding.UTF8))
+                {
+                    foreach (var section in _data)
+                    {
+                        // 写入节头
+                        writer.WriteLine($"[{section.Key}]");
+
+                        // 写入键值对
+                        foreach (var kvp in section.Value)
+                        {
+                            writer.WriteLine($"{kvp.Key}={kvp.Value}");
+                        }
+
+                        // 节之间空一行
+                        writer.WriteLine();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to save INI file: {ex.Message}", ex);
+            }
+        }
     }
 }

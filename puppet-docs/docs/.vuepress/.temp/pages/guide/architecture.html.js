@@ -1,5 +1,5 @@
 import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/architecture.html.vue"
-const data = JSON.parse("{\"path\":\"/guide/architecture.html\",\"title\":\"架构设计 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"架构设计\",\"permalink\":\"/guide/architecture.html\",\"createTime\":\"2026/03/28 14:53:30\"},\"readingTime\":{\"minutes\":6.95,\"words\":2084},\"git\":{},\"filePathRelative\":\"guide/architecture.md\",\"headers\":[]}")
+const data = JSON.parse("{\"path\":\"/guide/architecture.html\",\"title\":\"架构设计 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"架构设计\",\"permalink\":\"/guide/architecture.html\",\"createTime\":\"2026/03/28 14:53:30\"},\"readingTime\":{\"minutes\":7.63,\"words\":2289},\"git\":{},\"filePathRelative\":\"guide/architecture.md\",\"headers\":[]}")
 export { comp, data }
 
 if (import.meta.webpackHot) {

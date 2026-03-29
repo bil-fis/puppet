@@ -34,7 +34,58 @@ const zhGuideDoc = defineCollection({
   dir: 'guide',
   linkPrefix: '/guide',
   title: '指南',
-  sidebar: 'auto'
+  sidebar: [
+    {
+      text: '概述',
+      link: '/guide/',
+      icon: 'info'
+    },
+    {
+      text: '介绍',
+      link: '/guide/introduction',
+      icon: 'book'
+    },
+    {
+      text: '快速开始',
+      link: '/guide/getting-started',
+      icon: 'rocket'
+    },
+    {
+      text: '项目结构',
+      link: '/guide/project-structure',
+      icon: 'folder-tree'
+    },
+    {
+      text: '命令行参数',
+      link: '/guide/cli-parameters',
+      icon: 'terminal'
+    },
+    {
+      text: 'PUP 文件格式',
+      link: '/guide/pup-format',
+      icon: 'file-zip'
+    },
+    {
+      text: '架构设计',
+      link: '/guide/architecture',
+      icon: 'architecture'
+    },
+    {
+      text: '最佳实践',
+      link: '/guide/best-practices',
+      icon: 'star'
+    },
+    {
+      text: '安全机制',
+      link: '/guide/security',
+      icon: 'shield'
+    },
+    {
+      text: 'Puppet 签名工具',
+      link: '/guide/puppet-sign',
+      icon: 'key'
+    }
+  ]
 })
 
 // API 文档 - doc 类型，该类型带有侧边栏
@@ -88,6 +139,11 @@ const zhApiDoc = defineCollection({
       text: '设备系统',
       link: '/api/device',
       icon: 'devices'
+    },
+    {
+      text: '持久化存储',
+      link: '/api/storage',
+      icon: 'database'
     }
   ]
 })

@@ -1,5 +1,5 @@
 import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/pup-format.html.vue"
-const data = JSON.parse("{\"path\":\"/guide/pup-format.html\",\"title\":\"PUP 文件格式 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"PUP 文件格式\",\"permalink\":\"/guide/pup-format.html\",\"createTime\":\"2026/03/28 14:55:17\"},\"readingTime\":{\"minutes\":5.67,\"words\":1701},\"git\":{},\"filePathRelative\":\"guide/pup-format.md\",\"headers\":[]}")
+const data = JSON.parse("{\"path\":\"/guide/pup-format.html\",\"title\":\"PUP 文件格式 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"PUP 文件格式\",\"permalink\":\"/guide/pup-format.html\",\"createTime\":\"2026/03/28 14:55:17\"},\"readingTime\":{\"minutes\":14.41,\"words\":4323},\"git\":{},\"filePathRelative\":\"guide/pup-format.md\",\"headers\":[]}")
 export { comp, data }
 
 if (import.meta.webpackHot) {

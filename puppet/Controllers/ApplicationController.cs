@@ -317,26 +317,72 @@ namespace puppet.Controllers
         }
 
         /// <summary>
-        /// 修改配置文件 puppet.json
+        /// 修改配置文件 puppet.ini（全局配置）
         /// </summary>
         public void SetConfig(string key, string value)
         {
-            Dictionary<string, object>? config = new Dictionary<string, object>();
+            SetConfig("file", key, value);
+        }
 
-            // 读取现有配置
-            if (File.Exists(_configFilePath))
+        /// <summary>
+        /// 修改配置文件 puppet.ini（指定节）
+        /// </summary>
+        /// <param name="section">节名</param>
+        /// <param name="key">键名</param>
+        /// <param name="value">值</param>
+        public void SetConfig(string section, string key, string value)
+        {
+            // 检查是否在UI线程
+            if (_form.InvokeRequired)
             {
-                string json = File.ReadAllText(_configFilePath);
-                config = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-                config ??= new Dictionary<string, object>();
+                _form.Invoke(new Action(() => SetConfig(section, key, value)));
+                return;
             }
 
-            // 更新配置
-            config[key] = value;
+            // 显示确认对话框
+            DialogResult result = MessageBox.Show(
+                _form,
+                $"您确定要修改配置文件吗？\n\n节: {section}\n键: {key}\n值: {value}\n\n此操作将修改 puppet.ini 文件，可能影响框架的启动行为。",
+                "确认修改配置",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2
+            );
 
-            // 写入配置文件
-            string updatedJson = JsonConvert.SerializeObject(config, Formatting.Indented);
-            File.WriteAllText(_configFilePath, updatedJson);
+            if (result == DialogResult.Cancel)
+            {
+                Console.WriteLine($"用户取消了配置修改: [{section}] {key} = {value}");
+                return;
+            }
+
+            try
+            {
+                string iniPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "puppet.ini");
+                var iniReader = new IniReader(iniPath);
+
+                // 读取现有配置（如果需要）
+                string oldValue = iniReader.GetValue(section, key, "");
+
+                // 更新配置
+                iniReader.SetValue(section, key, value);
+
+                // 保存配置
+                iniReader.Save();
+
+                Console.WriteLine($"配置已更新: [{section}] {key} = {value} (原值: {oldValue})");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    _form,
+                    $"修改配置文件失败: {ex.Message}",
+                    "错误",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                Console.WriteLine($"修改配置失败: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         /// <summary>

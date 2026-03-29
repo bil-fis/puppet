@@ -7,6 +7,97 @@
 <li>错误日志输出</li>
 </ul>
 <h2 id="方法" tabindex="-1"><a class="header-anchor" href="#方法"><span>方法</span></a></h2>
+<h3 id="setfile" tabindex="-1"><a class="header-anchor" href="#setfile"><span>setFile()</span></a></h3>
+<p>设置日志文件保存路径，支持自定义格式化字符串。</p>
+<div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">pathPattern</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">: </span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">string</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">: </span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">void</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div><p><strong>参数</strong>：</p>
+<ul>
+<li><code v-pre>pathPattern</code> (string) - 日志文件路径模式，支持日期时间格式化</li>
+</ul>
+<p><strong>支持的格式占位符</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>占位符</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code v-pre>{yyyy}</code></td>
+<td>4位年份</td>
+<td>2026</td>
+</tr>
+<tr>
+<td><code v-pre>{yy}</code></td>
+<td>2位年份</td>
+<td>26</td>
+</tr>
+<tr>
+<td><code v-pre>{MM}</code></td>
+<td>月份（01-12）</td>
+<td>03</td>
+</tr>
+<tr>
+<td><code v-pre>{dd}</code></td>
+<td>日期（01-31）</td>
+<td>29</td>
+</tr>
+<tr>
+<td><code v-pre>{HH}</code></td>
+<td>小时（00-23）</td>
+<td>14</td>
+</tr>
+<tr>
+<td><code v-pre>{mm}</code></td>
+<td>分钟（00-59）</td>
+<td>30</td>
+</tr>
+<tr>
+<td><code v-pre>{ss}</code></td>
+<td>秒（00-59）</td>
+<td>45</td>
+</tr>
+<tr>
+<td><code v-pre>{fff}</code></td>
+<td>毫秒（000-999）</td>
+<td>123</td>
+</tr>
+<tr>
+<td><code v-pre>{%i}</code></td>
+<td>自增序号</td>
+<td>839472</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>：</p>
+<div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 基础用法：设置固定日志文件</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 使用日期时间格式化</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 使用完整日期时间</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd HH-mm-ss}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 使用日期和序号</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd}_{%i}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 自定义格式</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">Puppet_log-{yy-MM-dd HH:MM:SS - %i}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 包含子目录（会自动创建）</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/2026/03/app.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>注意事项</strong>：</p>
+<div class="hint-container warning">
+<p class="hint-container-title">安全提示</p>
+<ul>
+<li>写入 Windows 系统敏感文件夹（如 Windows、Program Files）会弹出安全确认对话框</li>
+<li>用户可以取消操作，防止日志写入系统文件夹</li>
+<li>不存在子目录时会自动创建</li>
+</ul>
+</div>
 <h3 id="info" tabindex="-1"><a class="header-anchor" href="#info"><span>info()</span></a></h3>
 <p>输出信息级别日志。</p>
 <div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">message</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">: </span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">string</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">: </span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">void</span></span></code></pre>
@@ -44,7 +135,37 @@
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">error</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">网络连接失败</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">error</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">操作超时</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span></code></pre>
 <div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="使用示例" tabindex="-1"><a class="header-anchor" href="#使用示例"><span>使用示例</span></a></h2>
-<h3 id="基础日志" tabindex="-1"><a class="header-anchor" href="#基础日志"><span>基础日志</span></a></h3>
+<h3 id="日志文件配置" tabindex="-1"><a class="header-anchor" href="#日志文件配置"><span>日志文件配置</span></a></h3>
+<div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 应用启动时配置日志文件</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">async</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> function</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> initLogging</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 使用日期作为日志文件名</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">日志系统初始化完成</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">应用启动</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 使用完整的日期时间格式</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">async</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> function</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> initDetailedLogging</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd HH-mm-ss}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">详细日志系统初始化完成</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 使用日期和序号，防止文件名冲突</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">async</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> function</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> initSequencedLogging</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd}_{%i}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">序列化日志系统初始化完成</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 按月归档日志</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">async</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> function</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> initMonthlyLogging</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/{yyyy}/{MM}/app-{dd}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">按月归档的日志系统初始化完成</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="基础日志" tabindex="-1"><a class="header-anchor" href="#基础日志"><span>基础日志</span></a></h3>
 <div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 应用启动</span></span>
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">=== 应用启动 ===</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
 <span class="line"></span>
@@ -164,7 +285,26 @@
 <span class="line"><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375">    return</span><span style="--shiki-light:#1E754F;--shiki-dark:#4D9375"> await</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> loadData</span><span style="--shiki-light:#999999;--shiki-dark:#666666">();</span></span>
 <span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">});</span></span></code></pre>
 <div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="最佳实践" tabindex="-1"><a class="header-anchor" href="#最佳实践"><span>最佳实践</span></a></h2>
-<h3 id="_1-日志级别使用" tabindex="-1"><a class="header-anchor" href="#_1-日志级别使用"><span>1. 日志级别使用</span></a></h3>
+<h3 id="_1-日志文件管理" tabindex="-1"><a class="header-anchor" href="#_1-日志文件管理"><span>1. 日志文件管理</span></a></h3>
+<p>合理管理日志文件，避免日志文件过大：</p>
+<div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 按日期分割日志</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 按月归档</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/{yyyy}/{MM}/app.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 使用序号防止文件名冲突</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setFile</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">logs/app-{yyyy-MM-dd}_{%i}.log</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 定期清理旧日志（建议在外部实现）</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">async</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> function</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> cleanupOldLogs</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">daysToKeep</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#2F798A;--shiki-dark:#4C9A91"> 30</span><span style="--shiki-light:#999999;--shiki-dark:#666666">)</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> {</span></span>
+<span class="line"><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676">    const</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> cutoffDate</span><span style="--shiki-light:#999999;--shiki-dark:#666666"> =</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> new</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665"> Date</span><span style="--shiki-light:#999999;--shiki-dark:#666666">();</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">    cutoffDate</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">setDate</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">cutoffDate</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">getDate</span><span style="--shiki-light:#999999;--shiki-dark:#666666">()</span><span style="--shiki-light:#AB5959;--shiki-dark:#CB7676"> -</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A"> daysToKeep</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
+<span class="line"><span style="--shiki-light:#393A34;--shiki-dark:#DBD7CAEE">    </span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 遍历日志目录，删除旧日志</span></span>
+<span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 这需要在应用层实现</span></span>
+<span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">}</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="_2-日志级别使用" tabindex="-1"><a class="header-anchor" href="#_2-日志级别使用"><span>2. 日志级别使用</span></a></h3>
 <p>根据消息严重性选择合适的日志级别：</p>
 <div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// INFO：正常操作</span></span>
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">log</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">info</span><span style="--shiki-light:#999999;--shiki-dark:#666666">(</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#B56959;--shiki-dark:#C98A7D">应用启动</span><span style="--shiki-light:#B5695977;--shiki-dark:#C98A7D77">'</span><span style="--shiki-light:#999999;--shiki-dark:#666666">);</span></span>
@@ -218,13 +358,19 @@
 </ul>
 <h2 id="常见问题" tabindex="-1"><a class="header-anchor" href="#常见问题"><span>常见问题</span></a></h2>
 <h3 id="q-日志保存在哪里" tabindex="-1"><a class="header-anchor" href="#q-日志保存在哪里"><span>Q: 日志保存在哪里？</span></a></h3>
-<p>A: 日志会输出到控制台和应用日志文件中。</p>
+<p>A: 默认日志保存在应用目录下的 <code v-pre>puppet.log</code> 文件中。您可以使用 <code v-pre>puppet.log.setFile()</code> 方法自定义日志文件路径和格式。</p>
 <h3 id="q-如何清空日志" tabindex="-1"><a class="header-anchor" href="#q-如何清空日志"><span>Q: 如何清空日志？</span></a></h3>
-<p>A: 日志会持续追加，需要手动管理日志文件。</p>
+<p>A: 日志会持续追加到文件中。如果需要清空日志，可以：</p>
+<ul>
+<li>删除或清空日志文件</li>
+<li>使用新的日志文件名（通过日期时间格式化）</li>
+</ul>
 <h3 id="q-可以自定义日志格式吗" tabindex="-1"><a class="header-anchor" href="#q-可以自定义日志格式吗"><span>Q: 可以自定义日志格式吗？</span></a></h3>
-<p>A: 可以使用结构化日志自定义格式。</p>
+<p>A: 是的！使用 <code v-pre>puppet.log.setFile()</code> 方法可以自定义日志文件路径和格式，支持日期时间和序号占位符。</p>
 <h3 id="q-日志会影响性能吗" tabindex="-1"><a class="header-anchor" href="#q-日志会影响性能吗"><span>Q: 日志会影响性能吗？</span></a></h3>
-<p>A: 日志操作对性能影响很小，但应避免在循环中频繁输出日志。</p>
+<p>A: 日志操作使用线程安全的文件写入，对性能影响很小。但应避免在循环中频繁输出日志。</p>
+<h3 id="q-为什么写入系统文件夹会弹出确认对话框" tabindex="-1"><a class="header-anchor" href="#q-为什么写入系统文件夹会弹出确认对话框"><span>Q: 为什么写入系统文件夹会弹出确认对话框？</span></a></h3>
+<p>A: 为了安全起见，写入 Windows 系统敏感文件夹（如 Windows、Program Files）会弹出安全确认对话框，防止误操作影响系统安全。</p>
 </div></template>
 
 

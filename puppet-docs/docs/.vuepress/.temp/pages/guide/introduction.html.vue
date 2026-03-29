@@ -54,6 +54,8 @@
 <li><strong>权限确认</strong>：危险操作前弹出用户确认对话框</li>
 <li><strong>路径规范化</strong>：防止路径遍历攻击</li>
 <li><strong>PUP 加密</strong>：支持密码加密的 PUP 文件格式</li>
+<li><strong>数字签名</strong>（V1.2）：支持基于 X.509 证书的数字签名，确保应用完整性和来源可信度</li>
+<li><strong>数据库签名</strong>（V1.2）：支持数据库签名验证，防止数据被篡改</li>
 </ul>
 <h3 id="_5-独特的-pup-打包格式" tabindex="-1"><a class="header-anchor" href="#_5-独特的-pup-打包格式"><span>5. 独特的 PUP 打包格式</span></a></h3>
 <p>Puppet 提供了独特的 <code v-pre>.pup</code> 文件格式：</p>
@@ -62,6 +64,13 @@
 <li><strong>密码保护</strong>：支持 AES-256 加密保护源代码</li>
 <li><strong>单文件分发</strong>：所有资源打包为一个文件，便于分发</li>
 <li><strong>快速加载</strong>：优化的文件结构和加载机制</li>
+<li><strong>多版本支持</strong>：
+<ul>
+<li><strong>V1.0</strong>：基础功能，支持加密</li>
+<li><strong>V1.1</strong>：支持启动脚本</li>
+<li><strong>V1.2</strong>：支持数字签名和证书验证</li>
+</ul>
+</li>
 </ul>
 <h2 id="技术架构" tabindex="-1"><a class="header-anchor" href="#技术架构"><span>技术架构</span></a></h2>
 <h3 id="整体架构" tabindex="-1"><a class="header-anchor" href="#整体架构"><span>整体架构</span></a></h3>

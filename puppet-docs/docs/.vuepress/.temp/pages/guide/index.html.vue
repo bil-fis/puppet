@@ -9,6 +9,18 @@
 <li><VPLink href="./cli-parameters.md">命令行参数</VPLink> - 命令行工具使用说明</li>
 <li><VPLink href="./security.md">安全机制</VPLink> - 框架的安全特性和最佳实践</li>
 <li><VPLink href="./best-practices.md">最佳实践</VPLink> - 开发高质量 Puppet 应用的建议</li>
+<li><VPLink href="./puppet-sign.md">Puppet 签名工具</VPLink> - 使用 puppet-sign 进行签名和验证</li>
+</ul>
+<h2 id="相关工具" tabindex="-1"><a class="header-anchor" href="#相关工具"><span>相关工具</span></a></h2>
+<ul>
+<li><strong>puppet-sign</strong> - 独立的签名工具，用于生成签名密钥对、签名数据库和验证签名
+<ul>
+<li>支持生成自签名 X.509 证书</li>
+<li>支持 RSA 2048/4096 位密钥</li>
+<li>支持数据库签名和验证</li>
+<li>详见 <VPLink href="./puppet-sign.md">Puppet 签名工具</VPLink></li>
+</ul>
+</li>
 </ul>
 <h2 id="什么是-puppet" tabindex="-1"><a class="header-anchor" href="#什么是-puppet"><span>什么是 Puppet？</span></a></h2>
 <p>Puppet 是一个基于 <strong>WebView2</strong> 的 Windows 桌面应用开发框架，允许开发者使用熟悉的 Web 技术（HTML、CSS、JavaScript）构建功能强大的桌面应用程序。</p>

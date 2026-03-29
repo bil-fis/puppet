@@ -640,6 +640,101 @@ async function encryptData(data, key) {
 }
 ```
 
+### 4. PUP 文件签名
+
+使用 V1.2 格式的数字签名功能确保应用完整性和来源可信度。
+
+```javascript
+// 检查 PUP 文件是否已签名
+async function checkPupSignature() {
+    try {
+        const appInfo = await puppet.application.getAppInfo();
+        
+        if (appInfo.hasSignature) {
+            console.log('PUP 文件已签名');
+            console.log('证书指纹:', appInfo.certificateThumbprint);
+            console.log('证书颁发者:', appInfo.certificateIssuer);
+            return true;
+        } else {
+            console.warn('PUP 文件未签名，可能存在安全风险');
+            return false;
+        }
+    } catch (error) {
+        console.error('检查签名失败:', error.message);
+        return false;
+    }
+}
+
+// 应用启动时验证签名
+window.addEventListener('DOMContentLoaded', async () => {
+    const isSigned = await checkPupSignature();
+    
+    if (!isSigned) {
+        // 可以选择拒绝运行未签名的应用
+        // document.body.innerHTML = '<h1>安全警告：应用未签名</h1>';
+    }
+});
+```
+
+**创建带签名的 PUP 文件**：
+
+```bash
+# 1. 使用 puppet-sign 生成签名密钥对
+puppet-sign.exe --generate-signing-key --alias MyApp --key-size 2048
+
+# 2. 创建带签名的 PUP 文件
+puppet.exe --create-pup -i "C:\MyProject" -o "C:\MyProject.pup" -v 1.2 --certificate "app.crt" --private-key "app.key" --private-key-password "MyPassword"
+
+# 3. 对数据库进行签名（可选）
+puppet-sign.exe --sign-database --database "C:\MyProject\data.db" --private-key "app.key" --private-key-password "MyPassword"
+```
+
+**安全建议**：
+
+- 始终为生产环境的 PUP 文件创建数字签名
+- 使用强密码保护私钥文件
+- 定期轮换签名密钥对
+- 在应用启动时验证签名状态
+- 拒绝运行来自不可信来源的 PUP 文件
+
+### 5. 数据库签名验证
+
+确保数据库未被篡改。
+
+```javascript
+// 检查数据库签名状态
+async function checkDatabaseSignature(databaseName) {
+    try {
+        const result = await puppet.storage.verifyDatabaseSignature(databaseName);
+        
+        if (result.isValid) {
+            console.log(`数据库 ${databaseName} 签名验证通过`);
+            return true;
+        } else {
+            console.error(`数据库 ${databaseName} 签名验证失败: ${result.message}`);
+            return false;
+        }
+    } catch (error) {
+        console.error('检查数据库签名失败:', error.message);
+        return false;
+    }
+}
+
+// 使用签名数据库
+async function useSecureDatabase() {
+    // 首先检查签名
+    const isSecure = await checkDatabaseSignature('main');
+    
+    if (!isSecure) {
+        throw new Error('数据库签名验证失败，拒绝访问');
+    }
+    
+    // 验证通过后正常使用
+    const result = await puppet.storage.executeSQL('main', 'SELECT * FROM users');
+    return result;
+}
+```
+
 ## 调试技巧
 
 ### 1. 日志记录

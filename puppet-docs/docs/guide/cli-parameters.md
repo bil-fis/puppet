@@ -64,22 +64,36 @@ puppet.exe --create-pup -i <输入文件夹> -o <输出文件.pup> [-p <密码>]
 | `-i` 或 `--input` | 是 | 源文件夹路径 |
 | `-o` 或 `--output` | 是 | 输出 PUP 文件路径 |
 | `-p` 或 `--password` | 否 | ZIP 密码（可选） |
+| `-v` 或 `--version` | 否 | PUP 版本（1.0、1.1 或 1.2，默认 1.0） |
+| `--script` | 否 | 启动脚本文件（V1.1/V1.2 版本支持） |
+| `--certificate` | 否 | 证书文件路径（V1.2 版本必需） |
+| `--private-key` | 否 | 私钥文件路径（V1.2 版本必需） |
+| `--private-key-password` | 否 | 私钥加密密码（V1.2 版本必需） |
 
 **示例**：
 
 ```bash
-# 基本用法
+# 基本用法（V1.0）
 puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup"
 
-# 使用密码
+# 使用密码（V1.0）
 puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -p "MySecretPassword"
 
+# V1.1 格式（带启动脚本）
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.1 --script "C:\script.txt"
+
+# V1.2 格式（带签名支持）
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:\app.crt" --private-key "C:\app.key" --private-key-password "MyKeyPassword"
+
 # 使用长参数名
-puppet.exe --create-pup --input "C:\MyApp" --output "C:\MyApp.pup" --password "MySecretPassword"
+puppet.exe --create-pup --input "C:\MyApp" --output "C:\MyApp.pup" --password "MySecretPassword" --version 1.2 --certificate "C:\app.crt" --private-key "C:\app.key" --private-key-password "MyKeyPassword"
 ```
 
 ::: tip 提示
-如果未指定密码，系统会自动生成随机密码。
+- 如果未指定密码，系统会自动生成随机密码
+- V1.1 和 V1.2 版本需要指定 `-v` 参数
+- V1.2 版本必须提供证书、私钥和私钥密码参数
+- 使用 puppet-sign 工具生成签名密钥对：`puppet-sign.exe --generate-signing-key --alias MyApp`
 :::
 
 ### 3. 加载 PUP 模式
@@ -189,6 +203,86 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -p "MyPassword"
 - 如果未指定，系统会自动生成随机密码
 - 加载 PUP 文件时不需要提供密码（密码已加密存储在文件中）
 
+### 版本参数（-v, --version）
+
+指定 PUP 文件格式版本。
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2
+```
+
+**注意事项**：
+
+- 支持的版本：1.0、1.1、1.2
+- 默认版本：1.0
+- 不同版本功能支持差异：
+  - V1.0：基本功能，支持加密
+  - V1.1：支持启动脚本
+  - V1.2：支持数字签名和证书验证
+
+### 启动脚本参数（--script）
+
+指定 V1.1/V1.2 版本的启动脚本文件。
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.1 --script "C:\script.txt"
+```
+
+**注意事项**：
+
+- 仅 V1.1 和 V1.2 版本支持
+- 脚本文件必须存在
+- 脚本会在应用启动时自动执行
+- 支持 JavaScript 和 SQL 语句
+
+### 证书参数（--certificate）
+
+指定 V1.2 版本的数字证书文件路径。
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:\app.crt"
+```
+
+**注意事项**：
+
+- 仅 V1.2 版本支持
+- 必须与 `--private-key` 和 `--private-key-password` 配合使用
+- 证书格式：X.509 自签名证书
+- 建议使用 puppet-sign 工具生成密钥对
+- 证书用于验证 PUP 文件的完整性和来源
+
+### 私钥参数（--private-key）
+
+指定 V1.2 版本的私钥文件路径。
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --private-key "C:\app.key"
+```
+
+**注意事项**：
+
+- 仅 V1.2 版本支持
+- 必须与 `--certificate` 和 `--private-key-password` 配合使用
+- 私钥格式：PKCS#8 格式，使用 AES-256-GCM 加密
+- 私钥用于生成数字签名
+- 私钥会被安全存储在 PUP 文件中
+
+### 私钥密码参数（--private-key-password）
+
+指定 V1.2 版本私钥的解密密码。
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --private-key-password "MyKeyPassword"
+```
+
+**注意事项**：
+
+- 仅 V1.2 版本支持
+- 用于解密私钥文件
+- 密码区分大小写
+- 支持特殊字符
+- 私钥密码不会存储在 PUP 文件中
+
 ## 配置文件
 
 除了命令行参数，Puppet 还支持通过配置文件设置默认值。
@@ -238,11 +332,29 @@ puppet.exe
 # 1. 开发时使用裸文件夹模式
 puppet.exe --nake-load "C:\MyProject"
 
-# 2. 测试打包
+# 2. 测试打包（V1.0）
 puppet.exe --create-pup -i "C:\MyProject\dist" -o "C:\MyProject\app.pup"
 
-# 3. 测试 PUP 文件
+# 3. 测试打包（V1.1 - 带启动脚本）
+puppet.exe --create-pup -i "C:\MyProject\dist" -o "C:\MyProject\app.pup" -v 1.1 --script "C:\script.txt"
+
+# 4. 测试打包（V1.2 - 带签名）
+puppet.exe --create-pup -i "C:\MyProject\dist" -o "C:\MyProject\app.pup" -v 1.2 --certificate "C:\app.crt" --private-key "C:\app.key" --private-key-password "MyKeyPassword"
+
+# 5. 测试 PUP 文件
 puppet.exe --load-pup "C:\MyProject\app.pup"
+```
+
+#### 使用 puppet-sign 生成密钥对
+
+```bash
+# 1. 生成签名密钥对
+puppet-sign.exe --generate-signing-key --alias MyApp --key-size 2048
+
+# 2. 这会在当前目录生成 app.crt 和 app.key 文件
+
+# 3. 使用生成的密钥对创建带签名的 PUP 文件
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "app.crt" --private-key "app.key" --private-key-password "MyPassword"
 ```
 
 #### 批量打包
@@ -323,6 +435,63 @@ puppet.exe --load-pup "invalid.pup"
 
 **解决方案**：系统会自动尝试下一个端口，或手动指定其他端口
 
+#### 5. "证书文件不存在"
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:\missing.crt"
+```
+
+**原因**：指定的证书文件不存在
+
+**解决方案**：
+- 检查证书文件路径是否正确
+- 使用 puppet-sign 生成密钥对：`puppet-sign.exe --generate-signing-key --alias MyApp`
+
+#### 6. "私钥文件不存在"
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --private-key "C:\missing.key"
+```
+
+**原因**：指定的私钥文件不存在
+
+**解决方案**：
+- 检查私钥文件路径是否正确
+- 确保证书和私钥是同一对密钥
+
+#### 7. "私钥密码错误"
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:\app.crt" --private-key "C:\app.key" --private-key-password "WrongPassword"
+```
+
+**原因**：提供的私钥密码不正确
+
+**解决方案**：使用生成密钥对时设置的正确密码
+
+#### 8. "版本参数无效"
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.3
+```
+
+**原因**：指定的版本不受支持
+
+**解决方案**：使用支持的版本（1.0、1.1 或 1.2）
+
+#### 9. "V1.2 版本缺少必需参数"
+
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2
+```
+
+**原因**：V1.2 版本必须提供证书、私钥和私钥密码参数
+
+**解决方案**：
+```bash
+puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:\app.crt" --private-key "C:\app.key" --private-key-password "MyPassword"
+```
+
 ## 环境变量
 
 Puppet 支持使用环境变量指定路径：
@@ -382,16 +551,39 @@ Puppet 命令行工具返回以下退出码：
 | 4 | 权限错误 |
 | 5 | 格式错误 |
 
+**返回码说明**：
+
+Puppet 的 `Main` 方法返回 `void`，因此程序本身不会直接返回退出码。当程序在 Windows 中执行时，返回值（如果有）会被存储在环境变量中：
+
+- **批处理文件**：可以使用 `%ERRORLEVEL%` 检查上一个命令的退出码
+- **PowerShell**：可以使用 `$LastExitCode` 检查上一个命令的退出码
+
+**注意**：对于 Windows Forms GUI 应用程序，通常返回 `void`，因为它们主要通过用户界面交互。如果需要在批处理脚本中检查操作状态，建议使用 puppet-sign 工具，它是一个控制台应用程序，可以正确返回退出码。
+
 **示例**：
 
 ```bash
-puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup"
+# 使用 puppet-sign 工具（控制台应用程序）
+puppet-sign.exe --generate-signing-key --alias MyApp
 
 if %ERRORLEVEL% EQU 0 (
-    echo 打包成功
+    echo 密钥生成成功
 ) else (
-    echo 打包失败，错误码：%ERRORLEVEL%
+    echo 密钥生成失败，错误码：%ERRORLEVEL%
 )
+```
+
+**PowerShell 示例**：
+
+```powershell
+# 使用 puppet-sign 工具
+puppet-sign.exe --sign-database default.db --certificate app.crt --private-key app.key
+
+if ($LastExitCode -eq 0) {
+    Write-Host "签名成功"
+} else {
+    Write-Host "签名失败，错误码：$LastExitCode"
+}
 ```
 
 ## 最佳实践

@@ -1,5 +1,5 @@
 import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/api/log.html.vue"
-const data = JSON.parse("{\"path\":\"/api/log.html\",\"title\":\"日志 API | API 文档\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"日志 API\",\"permalink\":\"/api/log.html\",\"createTime\":\"2026/03/28 15:07:28\"},\"readingTime\":{\"minutes\":3.29,\"words\":987},\"git\":{},\"filePathRelative\":\"api/log.md\",\"headers\":[]}")
+const data = JSON.parse("{\"path\":\"/api/log.html\",\"title\":\"日志 API | API 文档\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"日志 API\",\"permalink\":\"/api/log.html\",\"createTime\":\"2026/03/28 15:07:28\"},\"readingTime\":{\"minutes\":5.62,\"words\":1687},\"git\":{},\"filePathRelative\":\"api/log.md\",\"headers\":[]}")
 export { comp, data }
 
 if (import.meta.webpackHot) {

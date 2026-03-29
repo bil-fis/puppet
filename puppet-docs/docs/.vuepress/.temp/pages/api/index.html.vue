@@ -8,8 +8,9 @@
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">system</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">     // 系统功能</span></span>
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">tray</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">       // 托盘图标</span></span>
 <span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">events</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">     // 事件系统</span></span>
-<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">device</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">     // 设备系统</span></span></code></pre>
-<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="api-特性" tabindex="-1"><a class="header-anchor" href="#api-特性"><span>API 特性</span></a></h2>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">device</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">     // 设备系统</span></span>
+<span class="line"><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">puppet</span><span style="--shiki-light:#999999;--shiki-dark:#666666">.</span><span style="--shiki-light:#B07D48;--shiki-dark:#BD976A">storage</span><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">    // 持久化存储</span></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="api-特性" tabindex="-1"><a class="header-anchor" href="#api-特性"><span>API 特性</span></a></h2>
 <h3 id="异步操作" tabindex="-1"><a class="header-anchor" href="#异步操作"><span>异步操作</span></a></h3>
 <p>大多数 API 方法都是异步的，返回 Promise 对象。</p>
 <div class="language-javascript line-numbers-mode" data-highlighter="shiki" data-ext="javascript" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-javascript"><span class="line"><span style="--shiki-light:#A0ADA0;--shiki-dark:#758575DD">// 异步调用</span></span>
@@ -160,8 +161,28 @@
 <ul>
 <li><VPLink href="./device.md">设备系统 API 详细文档</VPLink></li>
 </ul>
+<h3 id="持久化存储-api" tabindex="-1"><a class="header-anchor" href="#持久化存储-api"><span>持久化存储 API</span></a></h3>
+<p>提供基于 SQLite 的键值对存储功能，用于数据持久化。</p>
+<ul>
+<li><VPLink href="./storage.md">持久化存储 API 详细文档</VPLink></li>
+</ul>
 <h2 id="版本兼容性" tabindex="-1"><a class="header-anchor" href="#版本兼容性"><span>版本兼容性</span></a></h2>
-<p>当前 API 版本：v1.0</p>
+<p>当前 API 版本：v1.2</p>
+<h3 id="pup-格式版本" tabindex="-1"><a class="header-anchor" href="#pup-格式版本"><span>PUP 格式版本</span></a></h3>
+<p>Puppet 框架支持多种 PUP 文件格式：</p>
+<ul>
+<li><strong>V1.0</strong>：基础功能，支持加密</li>
+<li><strong>V1.1</strong>：支持启动脚本</li>
+<li><strong>V1.2</strong>：支持数字签名和证书验证</li>
+</ul>
+<h3 id="v1-2-新增功能" tabindex="-1"><a class="header-anchor" href="#v1-2-新增功能"><span>V1.2 新增功能</span></a></h3>
+<p>V1.2 版本在 V1.1 基础上增加了以下安全功能：</p>
+<ul>
+<li><strong>数字签名</strong>：基于 X.509 证书的数字签名</li>
+<li><strong>签名验证</strong>：应用和数据库签名验证</li>
+<li><strong>证书管理</strong>：证书指纹、颁发者、有效期等信息查询</li>
+<li><strong>数据库签名</strong>：数据库内容签名验证，防止篡改</li>
+</ul>
 <h3 id="向后兼容性" tabindex="-1"><a class="header-anchor" href="#向后兼容性"><span>向后兼容性</span></a></h3>
 <p>Puppet 框架承诺在主版本号不变的情况下保持 API 向后兼容。</p>
 <h3 id="废弃的-api" tabindex="-1"><a class="header-anchor" href="#废弃的-api"><span>废弃的 API</span></a></h3>

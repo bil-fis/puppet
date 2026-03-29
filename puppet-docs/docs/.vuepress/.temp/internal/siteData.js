@@ -1,4 +1,4 @@
-export const siteData = JSON.parse("{\"base\":\"/\",\"lang\":\"zh-CN\",\"title\":\"\",\"description\":\"\",\"head\":[[\"link\",{\"rel\":\"icon\",\"type\":\"image/png\",\"href\":\"https://theme-plume.vuejs.press/favicon-32x32.png\"}]],\"locales\":{\"/\":{\"title\":\"Puppet Document\",\"lang\":\"zh-CN\",\"description\":\"Puppet Framework Document\"},\"/en/\":{\"title\":\"Puppet Document\",\"lang\":\"en-US\",\"description\":\"Puppet Framework Document\"}}}")
+export const siteData = JSON.parse("{\"base\":\"/\",\"lang\":\"zh-CN\",\"title\":\"\",\"description\":\"\",\"head\":[[\"link\",{\"rel\":\"icon\",\"type\":\"image/x-icon\",\"href\":\"/puppet.ico\"}],[\"link\",{\"rel\":\"icon\",\"type\":\"image/png\",\"sizes\":\"32x32\",\"href\":\"/puppet.png\"}]],\"locales\":{\"/\":{\"title\":\"Puppet Document\",\"lang\":\"zh-CN\",\"description\":\"Puppet Framework Document\"},\"/en/\":{\"title\":\"Puppet Document\",\"lang\":\"en-US\",\"description\":\"Puppet Framework Document\"}}}")
 
 if (import.meta.webpackHot) {
   import.meta.webpackHot.accept()

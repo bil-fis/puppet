@@ -8,9 +8,38 @@
 <span class="line"><span>- 0：次版本号（向下兼容的功能新增）</span></span>
 <span class="line"><span>- 0：修订号（向下兼容的问题修正）</span></span></code></pre>
 <div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="版本历史" tabindex="-1"><a class="header-anchor" href="#版本历史"><span>版本历史</span></a></h2>
-<h3 id="v1-0-0-2024-01-01" tabindex="-1"><a class="header-anchor" href="#v1-0-0-2024-01-01"><span>v1.0.0 (2024-01-01)</span></a></h3>
+<h3 id="v1-1-0-2026-03-29" tabindex="-1"><a class="header-anchor" href="#v1-1-0-2026-03-29"><span>v1.1.0 (2026-03-29)</span></a></h3>
 <h4 id="新增功能" tabindex="-1"><a class="header-anchor" href="#新增功能"><span>新增功能</span></a></h4>
 <ul>
+<li>
+<p><strong>PUP V1.2 格式</strong></p>
+<ul>
+<li>支持数字签名和证书验证</li>
+<li>集成自签名 X.509 证书</li>
+<li>数据库签名和验证功能</li>
+<li>证书指纹验证</li>
+<li>私钥加密存储（AES-256-GCM）</li>
+<li>PBKDF2 密钥派生（100,000次迭代）</li>
+</ul>
+</li>
+<li>
+<p><strong>签名工具</strong></p>
+<ul>
+<li>新增 puppet-sign 独立签名工具</li>
+<li>支持生成签名密钥对</li>
+<li>支持数据库签名和验证</li>
+<li>交互式和命令行两种模式</li>
+</ul>
+</li>
+<li>
+<p><strong>安全增强</strong></p>
+<ul>
+<li>SHA256withRSA 签名算法</li>
+<li>RSA 2048/4096 位密钥支持</li>
+<li>数据库完整性保护</li>
+<li>签名验证失败警告机制</li>
+</ul>
+</li>
 <li>
 <p><strong>核心框架</strong></p>
 <ul>
@@ -97,17 +126,63 @@
 <li>自定义打包格式</li>
 <li>AES-256 加密支持</li>
 <li>单文件分发</li>
+<li><strong>新增 PUP V1.1 格式</strong>
+<ul>
+<li>支持启动脚本功能</li>
+<li>在 PUP 加载后自动执行预设脚本</li>
+<li>支持窗口启动位置设置</li>
+<li>支持无边框模式设置</li>
+<li>支持窗口大小设置</li>
+<li>命令行参数：<code v-pre>-v</code> 指定版本，<code v-pre>--script</code> 指定脚本文件</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>
 <p><strong>命令行工具</strong></p>
 <ul>
 <li>GUI 模式</li>
-<li>创建 PUP 文件</li>
-<li>加载 PUP 文件</li>
+<li>创建 PUP 文件（支持 V1.0 和 V1.1 格式）</li>
+<li>加载 PUP 文件（自动识别版本）</li>
 <li>裸文件夹模式</li>
+<li><strong>新增版本参数 <code v-pre>-v</code></strong>
+<ul>
+<li><code v-pre>-v 1.0</code>：创建 V1.0 格式的 PUP 文件（默认）</li>
+<li><code v-pre>-v 1.1</code>：创建 V1.1 格式的 PUP 文件，需配合 <code v-pre>--script</code> 参数</li>
+<li><code v-pre>-v 1.2</code>：创建 V1.2 格式的 PUP 文件，需配合签名参数</li>
 </ul>
 </li>
+<li><strong>新增脚本参数 <code v-pre>--script</code></strong>
+<ul>
+<li>指定启动脚本文件路径（V1.1/V1.2 格式支持）</li>
+</ul>
+</li>
+<li><strong>新增签名参数 <code v-pre>--certificate</code></strong>
+<ul>
+<li>指定证书文件路径（仅 V1.2 格式需要）</li>
+</ul>
+</li>
+<li><strong>新增私钥参数 <code v-pre>--private-key</code></strong>
+<ul>
+<li>指定私钥文件路径（仅 V1.2 格式需要）</li>
+</ul>
+</li>
+<li><strong>新增私钥密码参数 <code v-pre>--private-key-password</code></strong>
+<ul>
+<li>指定私钥加密密码（仅 V1.2 格式需要）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="改进-changed" tabindex="-1"><a class="header-anchor" href="#改进-changed"><span>改进 (Changed)</span></a></h4>
+<ul>
+<li>PUP 文件格式更新至 V1.2</li>
+<li>新增数据库签名功能（Storage API）</li>
+<li>新增自动签名验证功能</li>
+<li>新增证书指纹验证</li>
+<li>项目文件结构重组</li>
+<li>提升安全性和数据完整性保护</li>
 </ul>
 <h4 id="安全特性" tabindex="-1"><a class="header-anchor" href="#安全特性"><span>安全特性</span></a></h4>
 <ul>
@@ -115,6 +190,9 @@
 <li>文件系统路径保护</li>
 <li>危险操作权限确认</li>
 <li>PUP 文件加密</li>
+<li><strong>新增数据签名和验证（V1.2）</strong></li>
+<li><strong>新增证书指纹验证（V1.2）</strong></li>
+<li><strong>新增私钥加密存储（V1.2）</strong></li>
 </ul>
 <h4 id="技术栈" tabindex="-1"><a class="header-anchor" href="#技术栈"><span>技术栈</span></a></h4>
 <ul>
@@ -123,11 +201,17 @@
 <li>Microsoft WebView2</li>
 <li>COM Interop</li>
 <li>WMI（设备监控）</li>
+<li>SharpZipLib（ZIP 文件处理）</li>
+<li>System.Security.Cryptography（加密和签名）</li>
+<li>System.Security.Cryptography.X509Certificates（证书处理）</li>
+<li>AES-256-GCM（对称加密）</li>
+<li>PBKDF2（密钥派生）</li>
+<li>RSA（非对称加密和签名）</li>
 </ul>
 <h2 id="变更类型说明" tabindex="-1"><a class="header-anchor" href="#变更类型说明"><span>变更类型说明</span></a></h2>
 <h3 id="新增功能-added" tabindex="-1"><a class="header-anchor" href="#新增功能-added"><span>新增功能 (Added)</span></a></h3>
 <p>新增的功能和特性。</p>
-<h3 id="改进-changed" tabindex="-1"><a class="header-anchor" href="#改进-changed"><span>改进 (Changed)</span></a></h3>
+<h3 id="改进-changed-1" tabindex="-1"><a class="header-anchor" href="#改进-changed-1"><span>改进 (Changed)</span></a></h3>
 <p>对现有功能的改进和优化。</p>
 <h3 id="废弃-deprecated" tabindex="-1"><a class="header-anchor" href="#废弃-deprecated"><span>废弃 (Deprecated)</span></a></h3>
 <p>即将移除的功能，建议迁移到替代方案。</p>

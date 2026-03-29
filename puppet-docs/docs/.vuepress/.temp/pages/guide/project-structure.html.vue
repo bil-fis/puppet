@@ -141,11 +141,14 @@
 <span class="line"><span>├── Form1.resx                 # 资源文件</span></span>
 <span class="line"><span>├── PupServer.cs               # PUP 服务器</span></span>
 <span class="line"><span>├── PupCreator.cs              # PUP 创建器</span></span>
-<span class="line"><span>├── AesHelper.cs               # 加密工具</span></span>
-<span class="line"><span>├── SecretKey.cs               # 密钥管理</span></span>
-<span class="line"><span>├── IniReader.cs               # INI 读取器</span></span>
-<span class="line"><span>├── PortSelector.cs            # 端口选择器</span></span>
-<span class="line"><span>├── PermissionDialog.cs        # 权限对话框</span></span>
+<span class="line"><span>├── AesHelper.cs               # 加密工具（已移动到 Core/）</span></span>
+<span class="line"><span>├── SecretKey.cs               # 密钥管理（已移动到 Core/）</span></span>
+<span class="line"><span>├── IniReader.cs               # INI 读取器（已移动到 Core/）</span></span>
+<span class="line"><span>├── PortSelector.cs            # 端口选择器（已移动到 Core/）</span></span>
+<span class="line"><span>├── PermissionDialog.cs        # 权限对话框（已移动到 UI/）</span></span>
+<span class="line"><span>├── PupCreator.cs              # PUP 文件创建器（已移动到 PUP/）</span></span>
+<span class="line"><span>├── PupServer.cs               # PUP 服务器（已移动到 PUP/）</span></span>
+<span class="line"><span>├── StorageController.cs        # 持久化存储控制器</span></span>
 <span class="line"><span>├── puppet.ini                 # 框架配置</span></span>
 <span class="line"><span>├── puppet.csproj              # 项目文件</span></span>
 <span class="line"><span>├── Controllers/               # 控制器目录</span></span>
@@ -156,11 +159,34 @@
 <span class="line"><span>│   ├── LogController.cs</span></span>
 <span class="line"><span>│   ├── SystemController.cs</span></span>
 <span class="line"><span>│   └── TrayController.cs</span></span>
+<span class="line"><span>├── Core/                     # 核心工具类</span></span>
+<span class="line"><span>│   ├── AesHelper.cs</span></span>
+<span class="line"><span>│   ├── IniReader.cs</span></span>
+<span class="line"><span>│   ├── PortSelector.cs</span></span>
+<span class="line"><span>│   ├── SecretKey.cs</span></span>
+<span class="line"><span>│   └── Security/            # 签名和安全工具类</span></span>
+<span class="line"><span>│       ├── AppSignatureValidator.cs</span></span>
+<span class="line"><span>│       ├── CertificateUtils.cs</span></span>
+<span class="line"><span>│       ├── CryptoUtils.cs</span></span>
+<span class="line"><span>│       └── SecurityException.cs</span></span>
+<span class="line"><span>├── PUP/                      # PUP 文件处理</span></span>
+<span class="line"><span>│   ├── PupCreator.cs</span></span>
+<span class="line"><span>│   ├── PupServer.cs</span></span>
+<span class="line"><span>│   └── PupScriptExecutor.cs</span></span>
+<span class="line"><span>├── UI/                       # 用户界面组件</span></span>
+<span class="line"><span>│   └── PermissionDialog.cs</span></span>
 <span class="line"><span>└── test-htmls/                # 测试页面</span></span>
 <span class="line"><span>    ├── index.html</span></span>
 <span class="line"><span>    ├── event-test.html</span></span>
 <span class="line"><span>    └── device-test.html</span></span></code></pre>
-<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="配置文件" tabindex="-1"><a class="header-anchor" href="#配置文件"><span>配置文件</span></a></h2>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>目录组织说明</strong>：</p>
+<ul>
+<li><strong>Controllers/</strong> - 控制器类，处理 API 请求</li>
+<li><strong>Core/</strong> - 核心工具类，包括加密、配置、安全等</li>
+<li><strong>PUP/</strong> - PUP 文件格式处理，支持 V1.0、V1.1、V1.2 格式</li>
+<li><strong>UI/</strong> - 用户界面组件，如权限对话框</li>
+</ul>
+<h2 id="配置文件" tabindex="-1"><a class="header-anchor" href="#配置文件"><span>配置文件</span></a></h2>
 <h3 id="puppet-ini" tabindex="-1"><a class="header-anchor" href="#puppet-ini"><span>puppet.ini</span></a></h3>
 <p>框架的配置文件，通常位于 Puppet.exe 同级目录：</p>
 <div class="language-ini line-numbers-mode" data-highlighter="shiki" data-ext="ini" style="--shiki-light:#393a34;--shiki-dark:#dbd7caee;--shiki-light-bg:#ffffff;--shiki-dark-bg:#121212"><pre class="shiki shiki-themes vitesse-light vitesse-dark vp-code" v-pre=""><code class="language-ini"><span class="line"><span style="--shiki-light:#999999;--shiki-dark:#666666">[</span><span style="--shiki-light:#59873A;--shiki-dark:#80A665">file</span><span style="--shiki-light:#999999;--shiki-dark:#666666">]</span></span>

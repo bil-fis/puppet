@@ -158,72 +158,139 @@ API 会自动检测命令类型：
 
 ### setConfig()
 
-设置配置值。
+设置配置值（修改 puppet.ini 文件）。
+
+**方法 1：修改全局配置**
 
 ```javascript
-await puppet.application.setConfig(key: string, value: any): Promise<void>
+await puppet.application.setConfig(key: string, value: string): Promise<void>
 ```
 
 **参数**：
 
 - `key` (string) - 配置键名
-- `value` (any) - 配置值（支持字符串、数字、布尔值、对象、数组）
+- `value` (string) - 配置值（仅支持字符串）
 
-**示例**：
-
-```javascript
-// 设置字符串配置
-await puppet.application.setConfig('username', 'john');
-
-// 设置数字配置
-await puppet.application.setConfig('fontSize', 14);
-
-// 设置布尔配置
-await puppet.application.setConfig('darkMode', true);
-
-// 设置对象配置
-await puppet.application.setConfig('preferences', {
-    theme: 'dark',
-    language: 'zh-CN',
-    autoUpdate: true
-});
-
-// 设置数组配置
-await puppet.application.setConfig('recentFiles', [
-    'file1.txt',
-    'file2.txt',
-    'file3.txt'
-]);
-```
-
-### getConfig()
-
-获取配置值。
+**方法 2：修改指定节的配置**
 
 ```javascript
-await puppet.application.getConfig(key: string): Promise<any>
+await puppet.application.setConfig(section: string, key: string, value: string): Promise<void>
 ```
 
 **参数**：
 
+- `section` (string) - 节名（如 "file"、"window" 等）
 - `key` (string) - 配置键名
+- `value` (string) - 配置值（仅支持字符串）
 
-**返回值**：
+**说明**：
 
-配置值，如果不存在则返回 `null`。
+- 修改 `puppet.ini` 配置文件
+- 修改前会弹出确认对话框
+- 每次修改都会创建备份文件（.backup）
+- 仅支持字符串类型的值
 
 **示例**：
 
 ```javascript
-// 获取配置
-const username = await puppet.application.getConfig('username');
-const fontSize = await puppet.application.getConfig('fontSize');
-const preferences = await puppet.application.getConfig('preferences');
+// 修改全局配置（等同于修改 [file] 节）
+await puppet.application.setConfig('file', 'C:\\MyApp\\app.pup');
 
-console.log('用户名:', username);
-console.log('字体大小:', fontSize);
-console.log('偏好设置:', preferences);
+// 修改指定节的配置
+await puppet.application.setConfig('file', 'file', 'C:\\MyApp\\app.pup');
+await puppet.application.setConfig('window', 'startup_position', '100,100');
+await puppet.application.setConfig('app', 'language', 'zh-CN');
 ```
+
+**puppet.ini 文件格式**：
+
+```ini
+[file]
+file=C:\MyApp\app.pup
+
+[window]
+startup_position=100,100
+borderless=true
+window_size=800,600
+
+[app]
+language=zh-CN
+theme=dark
+```
+
+**安全提示**：
+
+
+
+- 修改配置前会弹出确认对话框
+
+- 用户可以取消修改操作
+
+- 错误操作会显示错误信息
+
+
+
+::: warning 警告
+
+配置文件 `puppet.ini` 是 Puppet 框架的全局配置文件，修改可能影响框架的启动行为。请谨慎操作。
+
+:::
+
+
+
+::: tip 推荐用法
+
+**重要区别**：`puppet.application.setConfig()` 用于框架配置，`puppet.storage` 用于应用数据。
+
+
+
+- **setConfig** - 框架配置（如默认 PUP 文件路径）
+
+  - 修改 `puppet.ini` 文件
+
+  - 需要用户确认
+
+  - 影响框架启动行为
+
+  
+
+- **storage** - 应用数据（如用户设置、应用状态）
+
+  - 使用 SQLite 数据库
+
+  - 直接存储，无需确认
+
+  - 应用间可隔离或共享
+
+
+
+**示例对比**：
+
+
+
+```javascript
+
+// ❌ 错误：使用 setConfig 存储应用数据
+
+await puppet.application.setConfig('myapp', 'username', 'john');
+
+
+
+// ✅ 正确：使用 storage 存储应用数据
+
+await puppet.storage.setItem('default', 'username', 'john');
+
+
+
+// ✅ 正确：使用 setConfig 修改框架配置
+
+await puppet.application.setConfig('file', 'file', 'C:\\MyApp\\app.pup');
+
+```
+
+
+
+:::
 
 ### getAssemblyDirectory()
 
@@ -301,6 +368,56 @@ console.log('域名:', user.domain);
 console.log('主目录:', user.homeDirectory);
 ```
 
+### getAppInfo()
+
+获取应用信息，包括签名状态（V1.2 格式）。
+
+```javascript
+await puppet.application.getAppInfo(): Promise<AppInfo>
+```
+
+**返回值**：
+
+```typescript
+interface AppInfo {
+    name: string;                    // 应用名称
+    version: string;                 // PUP 文件版本
+    hasSignature: boolean;           // 是否已签名（V1.2）
+    certificateThumbprint?: string;  // 证书指纹（V1.2）
+    certificateIssuer?: string;      // 证书颁发者（V1.2）
+    certificateSubject?: string;     // 证书主题（V1.2）
+    certificateValidFrom?: Date;     // 证书生效时间（V1.2）
+    certificateValidTo?: Date;       // 证书过期时间（V1.2）
+}
+```
+
+**示例**：
+
+```javascript
+// 获取应用信息
+const appInfo = await puppet.application.getAppInfo();
+console.log('应用名称:', appInfo.name);
+console.log('PUP 版本:', appInfo.version);
+
+// 检查签名状态（V1.2 格式）
+if (appInfo.hasSignature) {
+    console.log('✓ 应用已签名');
+    console.log('证书指纹:', appInfo.certificateThumbprint);
+    console.log('证书颁发者:', appInfo.certificateIssuer);
+    console.log('证书主题:', appInfo.certificateSubject);
+    console.log('有效期:', appInfo.certificateValidFrom, '至', appInfo.certificateValidTo);
+} else {
+    console.warn('✗ 应用未签名');
+}
+```
+
+**注意事项**：
+
+- `hasSignature`、`certificateThumbprint` 等字段仅 V1.2 格式可用
+- V1.0 和 V1.1 格式这些字段将为 `undefined`
+- 用于应用安全验证和完整性检查
+- 建议在生产环境中使用带签名的 PUP 文件
+
 ## 使用示例
 
 ### 应用初始化
@@ -328,40 +445,33 @@ window.addEventListener('DOMContentLoaded', initializeApp);
 ### 配置管理
 
 ```javascript
-// 配置管理类
+// 配置管理类（基于 puppet.ini）
 class ConfigManager {
     constructor() {
         this.defaults = {
-            theme: 'light',
-            language: 'zh-CN',
-            fontSize: 14,
-            autoUpdate: true
+            'file': '',
+            'app.language': 'zh-CN',
+            'app.theme': 'light',
+            'window.startup_position': 'center',
+            'window.borderless': 'false',
+            'window.window_size': '800,600'
         };
     }
     
-    async load() {
-        const config = { ...this.defaults };
-        
-        // 加载保存的配置
-        for (const key of Object.keys(this.defaults)) {
-            const value = await puppet.application.getConfig(key);
-            if (value !== null) {
-                config[key] = value;
+    async save(section, key, value) {
+        // 设置配置（会弹出确认对话框）
+        await puppet.application.setConfig(section, key, value);
+    }
+    
+    async resetToDefaults() {
+        // 重置为默认值（每个都会弹出确认）
+        for (const [configKey, defaultValue] of Object.entries(this.defaults)) {
+            const parts = configKey.split('.');
+            if (parts.length === 2) {
+                await this.save(parts[0], parts[1], defaultValue);
+            } else {
+                await this.save('file', parts[0], defaultValue);
             }
-        }
-        
-        return config;
-    }
-    
-    async save(config) {
-        for (const [key, value] of Object.entries(config)) {
-            await puppet.application.setConfig(key, value);
-        }
-    }
-    
-    async reset() {
-        for (const key of Object.keys(this.defaults)) {
-            await puppet.application.setConfig(key, this.defaults[key]);
         }
     }
 }
@@ -369,18 +479,14 @@ class ConfigManager {
 // 使用配置管理器
 const configManager = new ConfigManager();
 
-// 加载配置
-const config = await configManager.load();
-console.log('当前配置:', config);
+// 修改 PUP 文件路径
+await configManager.save('file', 'file', 'C:\\MyApp\\app.pup');
 
-// 保存配置
-await configManager.save({
-    theme: 'dark',
-    fontSize: 16
-});
+// 修改应用语言
+await configManager.save('app', 'language', 'en-US');
 
-// 重置配置
-await configManager.reset();
+// 修改窗口启动位置
+await configManager.save('window', 'startup_position', '100,100');
 ```
 
 ### 文件关联打开
@@ -432,7 +538,8 @@ await openFile('data.json');
 
 ```javascript
 async function checkForUpdates() {
-    const currentVersion = await puppet.application.getConfig('version');
+    const currentVersionJson = await puppet.storage.getItem('default', 'version');
+    const currentVersion = currentVersionJson ? JSON.parse(currentVersionJson) : '1.0.0';
     const latestVersion = await fetchLatestVersion();
     
     if (compareVersions(latestVersion, currentVersion) > 0) {
@@ -494,12 +601,12 @@ class AppConfig {
     }
     
     async load() {
-        const data = await puppet.application.getConfig('appConfig');
-        return data || {};
+        const dataJson = await puppet.storage.getItem('default', 'appConfig');
+        return dataJson ? JSON.parse(dataJson) : {};
     }
     
     async save() {
-        await puppet.application.setConfig('appConfig', this.config);
+        await puppet.storage.setItem('default', 'appConfig', JSON.stringify(this.config));
     }
     
     get(key, defaultValue) {
@@ -592,19 +699,41 @@ A: 在权限对话框中选择"永久阻止"，该选择会被记住。
 
 ### Q: 配置数据保存在哪里？
 
-A: 配置数据保存在应用目录下的 `puppet.json` 文件中。
+A: 配置数据保存在应用目录下的 `puppet.ini` 文件中，这是 Puppet 框架的全局配置文件。
+
+### Q: 修改配置时为什么会弹出确认对话框？
+
+A: 为了防止误操作，修改 `puppet.ini` 文件时会弹出确认对话框，用户可以取消修改。
+
+### Q: setConfig 支持哪些数据类型？
+
+A: 目前仅支持字符串类型。如果需要存储复杂数据，请先转换为 JSON 字符串：
+
+```javascript
+// ✅ 推荐：使用 storage 存储对象
+const obj = { theme: 'dark', fontSize: 16 };
+await puppet.storage.setItem('default', 'preferences', JSON.stringify(obj));
+
+// 读取对象
+const content = await puppet.storage.getItem('default', 'preferences');
+const preferences = JSON.parse(content);
+```
 
 ### Q: 如何在应用重启后保留状态？
 
-A: 使用 `setConfig()` 和 `getConfig()` 保存和恢复状态：
+A: 使用 `puppet.storage` 保存状态：
 
 ```javascript
 // 保存状态
-await puppet.application.setConfig('lastPage', currentPage);
+await puppet.storage.setItem('default', 'lastPage', currentPage);
 
 // 恢复状态
-const lastPage = await puppet.application.getConfig('lastPage');
+const lastPage = await puppet.storage.getItem('default', 'lastPage');
 if (lastPage) {
     navigateTo(lastPage);
 }
 ```
+
+::: tip 说明
+`puppet.storage` 专为应用数据持久化设计，比 `setConfig()` 更方便、更安全。
+:::

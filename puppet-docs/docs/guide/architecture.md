@@ -134,6 +134,7 @@ Web API 路由
 | `LogController` | 日志输出 | `Controllers/LogController.cs` |
 | `SystemController` | 系统信息、输入模拟 | `Controllers/SystemController.cs` |
 | `TrayController` | 托盘图标管理 | `Controllers/TrayController.cs` |
+| `StorageController` | 持久化存储（支持签名验证） | `StorageController.cs` |
 
 ### 4. PUP 服务器（PupServer.cs）
 
@@ -146,9 +147,12 @@ Web API 路由
 ```csharp
 // PUP 文件结构
 [PUP V1.0 标识头 8 字节] + [AES 加密的 ZIP 密码 32 字节] + [ZIP 数据]
+// PUP V1.1/V1.2 结构：
+[PUP V1.1/V1.2 标识头 8 字节] + [脚本长度 4 字节] + [脚本内容] + [证书长度 4 字节] + [证书数据] + [加密私钥长度 4 字节] + [加密私钥数据] + [加密密码 32 字节] + [ZIP 数据]
 ```
 
-- 解析自定义的 PUP 文件格式
+- 解析自定义的 PUP 文件格式（支持 V1.0、V1.1、V1.2）
+- V1.2 格式支持加载证书和加密私钥
 - 解密 ZIP 密钥
 - 从内存中读取文件内容
 
@@ -209,6 +213,25 @@ public static void Initialize()
 ```csharp
 // 从 7738 开始，递增直到找到可用端口
 public static int SelectAvailablePort(int startPort = 7738)
+```
+
+#### 签名工具类（Core/Security/）
+
+位于 `Core/Security/` 目录下，提供完整的签名和验证功能：
+
+- **AppSignatureValidator.cs** - 数据库签名验证器
+- **CertificateUtils.cs** - 证书工具类（证书导入、导出、验证）
+- **CryptoUtils.cs** - 加密工具类（AES-256-GCM、PBKDF2 密钥派生）
+- **SecurityException.cs** - 安全异常类
+
+**签名流程**：
+```
+数据库内容 → SHA256 哈希 → RSA 私钥签名 → 存储到 puppet_metadata 表
+```
+
+**验证流程**：
+```
+数据库内容 → SHA256 哈希 → 证书公钥验证 → 对比签名数据
 ```
 
 ## 数据流详解

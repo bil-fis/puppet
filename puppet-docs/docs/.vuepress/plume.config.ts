@@ -18,12 +18,12 @@ import { enNavbar, zhNavbar } from './navbar'
  * @see https://theme-plume.vuejs.press/config/theme/
  */
 export default defineThemeConfig({
-  logo: 'https://theme-plume.vuejs.press/plume.png',
+  logo: '/puppet.png',
 
   appearance: true,  // 配置 深色模式
 
   social: [
-    { icon: 'github', link: '/' },
+    { icon: 'github', link: 'https://github.com/bil-fis/puppet' },
   ],
   // navbarSocialInclude: ['github'], // 允许显示在导航栏的 social 社交链接
   // aside: true, // 页内侧边栏， 默认显示在右侧
@@ -40,10 +40,10 @@ export default defineThemeConfig({
   // createTime: true, // 是否显示文章创建时间
 
   /* 站点页脚 */
-  // footer: {
-  //   message: 'Power by <a target="_blank" href="https://v2.vuepress.vuejs.org/">VuePress</a> & <a target="_blank" href="https://theme-plume.vuejs.press">vuepress-theme-plume</a>',
-  //   copyright: '',
-  // },
+  footer: {
+    message: 'Power by <a target="_blank" href="https://v2.vuepress.vuejs.org/">VuePress</a> & <a target="_blank" href="https://theme-plume.vuejs.press">vuepress-theme-plume</a>',
+    copyright: 'Copyright © 2024-2026 <a target="_blank" href="https://github.com/bil-fis">林晚晚ss.</a> | Licensed under <a target="_blank" href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>',
+  },
 
   /* 过渡动画 @see https://theme-plume.vuejs.press/config/theme/#transition */
   // transition: {
@@ -58,7 +58,7 @@ export default defineThemeConfig({
        * @see https://theme-plume.vuejs.press/config/theme/#profile
        */
       profile: {
-        avatar: 'https://theme-plume.vuejs.press/plume.png',
+        avatar: '/puppet.png',
         name: 'Puppet Document',
         description: 'Puppet Framework Document',
         // circle: true,
@@ -85,7 +85,7 @@ export default defineThemeConfig({
        * @see https://theme-plume.vuejs.press/config/theme/#profile
        */
       profile: {
-        avatar: 'https://theme-plume.vuejs.press/plume.png',
+        avatar: '/puppet.png',
         name: 'Puppet Document',
         description: 'Puppet Framework Document',
         // circle: true,

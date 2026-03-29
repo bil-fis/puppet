@@ -20,6 +20,7 @@ namespace puppet
         private SystemController _systemController;
         private TrayController _trayController;
         private EventController _eventController;
+        private StorageController _storageController;
 
         // 窗口拖动相关
         private bool _isDraggable = false;
@@ -72,6 +73,9 @@ namespace puppet
             _trayController = null; // 将在 WebView2 初始化完成后创建
             _eventController = null; // 将在 WebView2 初始化完成后创建
 
+            // 初始化 StorageController
+            _storageController = new StorageController(this);
+
             // 初始化 WebView2
             webView21.CoreWebView2InitializationCompleted += WebView_CoreWebView2InitializationCompleted;
             webView21.NavigationStarting += WebView_NavigationStarting;
@@ -119,6 +123,7 @@ namespace puppet
                 webView21.CoreWebView2.AddHostObjectToScript("system", _systemController);
                 webView21.CoreWebView2.AddHostObjectToScript("tray", _trayController);
                 webView21.CoreWebView2.AddHostObjectToScript("eventController", _eventController);
+                webView21.CoreWebView2.AddHostObjectToScript("storage", _storageController);
 
                 // 注入 puppet 命名空间到所有页面
                 // 根据 Microsoft Learn 文档，AddScriptToExecuteOnDocumentCreatedAsync 会在每个新文档创建时运行 JavaScript
@@ -136,7 +141,8 @@ namespace puppet
                             fs: chrome.webview.hostObjects.sync.fs,
                             log: chrome.webview.hostObjects.sync.log,
                             system: chrome.webview.hostObjects.sync.system,
-                            tray: chrome.webview.hostObjects.sync.tray
+                            tray: chrome.webview.hostObjects.sync.tray,
+                            storage: chrome.webview.hostObjects.sync.storage
                         };
 
                         // 窗口方法包装
@@ -197,7 +203,15 @@ namespace puppet
                             restart: async function() { return await chrome.webview.hostObjects.sync.application.Restart(); },
                             getWindowInfo: async function() { return await chrome.webview.hostObjects.sync.application.GetWindowInfo(); },
                             execute: async function(cmd) { return await chrome.webview.hostObjects.sync.application.Execute(String(cmd)); },
-                            setConfig: async function(k, v) { return await chrome.webview.hostObjects.sync.application.SetConfig(String(k), String(v)); },
+                            setConfig: async function(section, key, value) {
+                                if (arguments.length === 2) {
+                                    // setConfig(key, value) - 修改全局配置
+                                    return await chrome.webview.hostObjects.sync.application.SetConfig(String(section), String(key));
+                                } else if (arguments.length === 3) {
+                                    // setConfig(section, key, value) - 修改指定节的配置
+                                    return await chrome.webview.hostObjects.sync.application.SetConfig(String(section), String(key), String(value));
+                                }
+                            },
                             getAssemblyDirectory: async function() { return await chrome.webview.hostObjects.sync.application.GetAssemblyDirectory(); },
                             getAppDataDirectory: async function() { return await chrome.webview.hostObjects.sync.application.GetAppDataDirectory(); },
                             getCurrentUser: async function() { return await chrome.webview.hostObjects.sync.application.GetCurrentUser(); }
@@ -224,7 +238,8 @@ namespace puppet
                         window.puppet.log = {
                             info: async function(m) { return await chrome.webview.hostObjects.sync.log.Info('[info]: ' + String(m)); },
                             warn: async function(m) { return await chrome.webview.hostObjects.sync.log.Warn('[warn]: ' + String(m)); },
-                            error: async function(m) { return await chrome.webview.hostObjects.sync.log.Error('[error]: ' + String(m)); }
+                            error: async function(m) { return await chrome.webview.hostObjects.sync.log.Error('[error]: ' + String(m)); },
+                            setFile: async function(pathPattern) { return await chrome.webview.hostObjects.sync.log.SetFile(String(pathPattern)); }
                         };
 
                         // 系统方法包装
@@ -352,9 +367,42 @@ namespace puppet
                                 undefined: 10,
                                 partiallyCharged: 11
                             }
-                        };
-
-                        // 监听 DOM 变化，确保 puppet 命名空间始终存在
+                                                    };
+                            
+                                                    // 存储系统包装
+                                                    window.puppet.storage = {
+                                                        setItem: async function(database, key, value) {
+                                                            return await chrome.webview.hostObjects.sync.storage.SetItem(String(database), String(key), String(value));
+                                                        },
+                                                        getItem: async function(database, key) {
+                                                            return await chrome.webview.hostObjects.sync.storage.GetItem(String(database), String(key));
+                                                        },
+                                                        removeItem: async function(database, key) {
+                                                            return await chrome.webview.hostObjects.sync.storage.RemoveItem(String(database), String(key));
+                                                        },
+                                                        clear: async function(database) {
+                                                            return await chrome.webview.hostObjects.sync.storage.Clear(String(database));
+                                                        },
+                                                        getKeys: async function(database) {
+                                                            const result = await chrome.webview.hostObjects.sync.storage.GetKeys(String(database));
+                                                            return JSON.parse(result);
+                                                        },
+                                                        hasItem: async function(database, key) {
+                                                            return await chrome.webview.hostObjects.sync.storage.HasItem(String(database), String(key));
+                                                        },
+                                                        getSize: async function(database) {
+                                                            return await chrome.webview.hostObjects.sync.storage.GetSize(String(database));
+                                                        },
+                                                        deleteDatabase: async function(database) {
+                                                            return await chrome.webview.hostObjects.sync.storage.DeleteDatabase(String(database));
+                                                        },
+                                                        getDatabases: async function() {
+                                                            const result = await chrome.webview.hostObjects.sync.storage.GetDatabases();
+                                                            return JSON.parse(result);
+                                                        }
+                                                    };
+                            
+                                                    // 监听 DOM 变化，确保 puppet 命名空间始终存在
                         // 防止其他脚本覆盖
                         Object.defineProperty(window, 'puppet', {
                             configurable: false,
@@ -380,6 +428,9 @@ namespace puppet
                     // 服务器未启动，启动 PUP 服务器
                     await Program.StartPupServerAsync();
                 }
+
+                // 执行启动脚本（如果有）
+                ExecuteStartupScript();
 
                 // 等待服务器启动（如果服务器已存在，也等待一小段时间确保完全启动）
                 if (Program.Server != null)
@@ -1251,6 +1302,53 @@ namespace puppet
             </html>";
         }
 
+        /// <summary>
+        /// 执行 PUP 启动脚本（V1.1版本）
+        /// </summary>
+        private void ExecuteStartupScript()
+        {
+            // 线程安全检查：如果当前不在UI线程，使用Invoke在UI线程上执行
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(ExecuteStartupScript));
+                return;
+            }
+
+            try
+            {
+                // 检查是否有 PUP 服务器
+                if (Program.Server == null)
+                {
+                    Console.WriteLine("No PUP server found, skipping startup script execution");
+                    return;
+                }
+
+                // 检查是否是 V1.1 版本
+                if (Program.Server.PupVersion != "1.1")
+                {
+                    Console.WriteLine($"PUP version is {Program.Server.PupVersion}, no startup script to execute");
+                    return;
+                }
+
+                // 获取启动脚本
+                string? scriptContent = Program.Server.StartupScript;
+                if (string.IsNullOrWhiteSpace(scriptContent))
+                {
+                    Console.WriteLine("No startup script content found in PUP V1.1 file");
+                    return;
+                }
+
+                // 创建脚本执行器并执行脚本
+                PupScriptExecutor scriptExecutor = new PupScriptExecutor(this, _windowController);
+                scriptExecutor.ExecuteScript(scriptContent);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error executing startup script: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
         // 窗口拖动相关方法
         public void SetDraggable(bool draggable)
         {
@@ -1467,6 +1565,29 @@ namespace puppet
             {
                 NativeMethods.SetWindowLong(this.Handle, (int)GetWindowLongIndex.GWL_EXSTYLE, (int)value);
             }
+        }
+
+        /// <summary>
+        /// 辅助方法：从主题字符串中提取CN（Common Name）
+        /// </summary>
+        private static string ExtractCommonName(string subject)
+        {
+            if (string.IsNullOrEmpty(subject))
+            {
+                return "";
+            }
+
+            string[] parts = subject.Split(',');
+            foreach (string part in parts)
+            {
+                string trimmed = part.Trim();
+                if (trimmed.StartsWith("CN=", StringComparison.OrdinalIgnoreCase))
+                {
+                    return trimmed.Substring(3);
+                }
+            }
+
+            return "";
         }
     }
 
@@ -2438,5 +2559,6 @@ namespace puppet
     #endregion
 
     #endregion
+
 }
  
