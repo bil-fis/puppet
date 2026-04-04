@@ -1,0 +1,179 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore puppet.sln
+
+      - name: Build Solution
+        run: dotnet build puppet.sln --configuration Release --no-restore
+
+      - name: Publish Puppet (Framework-dependent)
+        run: dotnet publish puppet/puppet.csproj --configuration Release --output puppet-release/framework-dependent --self-contained false --no-restore
+
+      - name: Publish Puppet-Sign (Framework-dependent)
+        run: dotnet publish puppet-sign/puppet-sign.csproj --configuration Release --output puppet-sign-release/framework-dependent --self-contained false --no-restore
+
+      - name: Publish Puppet (Self-contained)
+        run: dotnet publish puppet/puppet.csproj --configuration Release --output puppet-release/self-contained --self-contained true --runtime win-x64 --no-restore
+
+      - name: Publish Puppet-Sign (Self-contained)
+        run: dotnet publish puppet-sign/puppet-sign.csproj --configuration Release --output puppet-sign-release/self-contained --self-contained true --runtime win-x64 --no-restore
+
+      - name: Create Puppet ZIP (Framework-dependent)
+        run: |
+          cd puppet-release/framework-dependent
+          7z a -tzip ../../puppet-windows-framework-dependent.zip *
+          cd ../..
+
+      - name: Create Puppet-Sign ZIP (Framework-dependent)
+        run: |
+          cd puppet-sign-release/framework-dependent
+          7z a -tzip ../../puppet-sign-windows-framework-dependent.zip *
+          cd ../..
+
+      - name: Create Puppet ZIP (Self-contained)
+        run: |
+          cd puppet-release/self-contained
+          7z a -tzip ../../puppet-windows-self-contained.zip *
+          cd ../..
+
+      - name: Create Puppet-Sign ZIP (Self-contained)
+        run: |
+          cd puppet-sign-release/self-contained
+          7z a -tzip ../../puppet-sign-windows-self-contained.zip *
+          cd ../..
+
+      - name: Upload Puppet (Framework-dependent)
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppet-windows-framework-dependent
+          path: puppet-windows-framework-dependent.zip
+
+      - name: Upload Puppet-Sign (Framework-dependent)
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppet-sign-windows-framework-dependent
+          path: puppet-sign-windows-framework-dependent.zip
+
+      - name: Upload Puppet (Self-contained)
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppet-windows-self-contained
+          path: puppet-windows-self-contained.zip
+
+      - name: Upload Puppet-Sign (Self-contained)
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppet-sign-windows-self-contained
+          path: puppet-sign-windows-self-contained.zip
+
+  create-prerelease:
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate Prerelease Version
+        id: version
+        run: |
+          $date = Get-Date -Format "yyyyMMdd.HHmm"
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $version = "preview-$date-$shortSha"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Create Pre-release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Puppet Framework Prerelease (${{ steps.version.outputs.version }})
+          prerelease: true
+          draft: false
+          files: |
+            artifacts/puppet-windows-framework-dependent/puppet-windows-framework-dependent.zip
+            artifacts/puppet-sign-windows-framework-dependent/puppet-sign-windows-framework-dependent.zip
+            artifacts/puppet-windows-self-contained/puppet-windows-self-contained.zip
+            artifacts/puppet-sign-windows-self-contained/puppet-sign-windows-self-contained.zip
+          body: |
+            ## Puppet Framework Prerelease ${{ steps.version.outputs.version }}
+
+            > **注意**: 这是预发布版本，可能包含不稳定的功能。请仅用于测试目的。
+
+            ### 下载
+
+            **Framework-dependent 版本（需要安装 .NET 10.0 运行时）**:
+            - [puppet-windows-framework-dependent.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/puppet-windows-framework-dependent.zip)
+            - [puppet-sign-windows-framework-dependent.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/puppet-sign-windows-framework-dependent.zip)
+
+            **Self-contained 版本（包含 .NET 运行时，无需额外安装）**:
+            - [puppet-windows-self-contained.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/puppet-windows-self-contained.zip)
+            - [puppet-sign-windows-self-contained.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/puppet-sign-windows-self-contained.zip)
+
+            ### 系统要求
+
+            - Windows 10 或更高版本
+            - WebView2 运行时（通常已随 Edge 浏览器安装）
+            - Framework-dependent 版本还需要 .NET 10.0 运行时
+
+            ### 快速开始
+
+            1. 下载并解压对应的 zip 文件
+            2. 运行 `puppet.exe` 启动应用
+            3. 使用 `puppet-sign.exe` 进行签名操作
+
+            ### 使用示例
+
+            ```bash
+            # 创建 PUP 文件
+            puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup"
+
+            # 生成签名密钥对
+            puppet-sign.exe --generate-signing-key --interactive
+
+            # 创建带签名的 PUP 文件
+            puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup" -v 1.2 --certificate "app.crt" --private-key "app.key" --private-key-password "MyPassword"
+            ```
+
+            ### 文档
+
+            完整文档请访问：[Puppet 文档](https://github.com/${{ github.repository }}/blob/main/puppet-docs/docs/README.md)
+
+            ### 更新日志
+
+            详细更新日志请查看：[CHANGELOG](https://github.com/${{ github.repository }}/blob/main/puppet-docs/docs/changelog/README.md)
+
+            ### 构建信息
+
+            - **Commit**: ${{ github.sha }}
+            - **Branch**: ${{ github.ref_name }}
+            - **Workflow**: ${{ github.workflow }}
+            - **Run ID**: ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
