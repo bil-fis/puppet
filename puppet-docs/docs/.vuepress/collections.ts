@@ -32,7 +32,7 @@ import { defineCollection, defineCollections } from 'vuepress-theme-plume'
 const zhGuideDoc = defineCollection({
   type: 'doc',
   dir: 'guide',
-  linkPrefix: '/guide',
+  link: '/guide/',
   title: '指南',
   sidebar: [
     {
@@ -42,52 +42,52 @@ const zhGuideDoc = defineCollection({
     },
     {
       text: '介绍',
-      link: '/guide/introduction',
+      link: '/guide/introduction.html',
       icon: 'book'
     },
     {
       text: '快速开始',
-      link: '/guide/getting-started',
+      link: '/guide/getting-started.html',
       icon: 'rocket'
     },
     {
       text: '项目结构',
-      link: '/guide/project-structure',
+      link: '/guide/project-structure.html',
       icon: 'folder-tree'
     },
     {
       text: '命令行参数',
-      link: '/guide/cli-parameters',
+      link: '/guide/cli-parameters.html',
       icon: 'terminal'
     },
     {
       text: 'PUP 文件格式',
-      link: '/guide/pup-format',
+      link: '/guide/pup-format.html',
       icon: 'file-zip'
     },
     {
       text: 'PUP 启动脚本',
-      link: '/guide/pup-script',
+      link: '/guide/pup-script.html',
       icon: 'code'
     },
     {
       text: '架构设计',
-      link: '/guide/architecture',
+      link: '/guide/architecture.html',
       icon: 'architecture'
     },
     {
       text: '最佳实践',
-      link: '/guide/best-practices',
+      link: '/guide/best-practices.html',
       icon: 'star'
     },
     {
       text: '安全机制',
-      link: '/guide/security',
+      link: '/guide/security.html',
       icon: 'shield'
     },
     {
       text: 'Puppet 签名工具',
-      link: '/guide/puppet-sign',
+      link: '/guide/puppet-sign.html',
       icon: 'key'
     }
   ]
@@ -97,57 +97,57 @@ const zhGuideDoc = defineCollection({
 const zhApiDoc = defineCollection({
   type: 'doc',
   dir: 'api',
-  linkPrefix: '/api',
+  link: '/api/',
   title: 'API 文档',
   sidebar: [
     {
       text: '概述',
-      link: '/api/index',
+      link: '/api/index.html',
       icon: 'info'
     },
     {
       text: '窗口控制',
-      link: '/api/window',
+      link: '/api/window.html',
       icon: 'window'
     },
     {
       text: '应用控制',
-      link: '/api/application',
+      link: '/api/application.html',
       icon: 'apps'
     },
     {
       text: '文件系统',
-      link: '/api/fs',
+      link: '/api/fs.html',
       icon: 'folder'
     },
     {
       text: '日志',
-      link: '/api/log',
+      link: '/api/log.html',
       icon: 'note'
     },
     {
       text: '系统',
-      link: '/api/system',
+      link: '/api/system.html',
       icon: 'setting'
     },
     {
       text: '托盘图标',
-      link: '/api/tray',
+      link: '/api/tray.html',
       icon: 'menu'
     },
     {
       text: '事件系统',
-      link: '/api/events',
+      link: '/api/events.html',
       icon: 'bolt'
     },
     {
       text: '设备系统',
-      link: '/api/device',
+      link: '/api/device.html',
       icon: 'devices'
     },
     {
       text: '持久化存储',
-      link: '/api/storage',
+      link: '/api/storage.html',
       icon: 'database'
     }
   ]
@@ -157,7 +157,7 @@ const zhApiDoc = defineCollection({
 const zhChangelogDoc = defineCollection({
   type: 'doc',
   dir: 'changelog',
-  linkPrefix: '/changelog',
+  link: '/changelog/',
   title: '更新日志',
   sidebar: 'auto'
 })
@@ -176,64 +176,75 @@ export const zhCollections = defineCollections([
 // Guide documentation - doc type with sidebar
 const enGuideDoc = defineCollection({
   type: 'doc',
-  dir: 'en/guide',
-  linkPrefix: '/en/guide',
+  dir: 'guide',
+  link: '/en/guide/',
   title: 'Guide',
   sidebar: [
     {
       text: 'Overview',
       link: '/en/guide/',
-      icon: 'info'
+      icon: 'info',
+      target: '_self'
     },
     {
       text: 'Introduction',
-      link: '/en/guide/introduction',
-      icon: 'book'
+      link: '/en/guide/introduction.html',
+      icon: 'book',
+      target: '_self'
     },
     {
       text: 'Getting Started',
-      link: '/en/guide/getting-started',
-      icon: 'rocket'
+      link: '/en/guide/getting-started.html',
+      icon: 'rocket',
+      target: '_self'
     },
     {
       text: 'Project Structure',
-      link: '/en/guide/project-structure',
-      icon: 'folder-tree'
+      link: '/en/guide/project-structure.html',
+      icon: 'folder-tree',
+      target: '_self'
     },
     {
       text: 'Command Line Parameters',
-      link: '/en/guide/cli-parameters',
-      icon: 'terminal'
+      link: '/en/guide/cli-parameters.html',
+      icon: 'terminal',
+      target: '_self'
     },
     {
       text: 'PUP File Format',
-      link: '/en/guide/pup-format',
-      icon: 'file-zip'
+      link: '/en/guide/pup-format.html',
+      icon: 'file-zip',
+      target: '_self'
     },
     {
       text: 'PUP Startup Script',
-      link: '/en/guide/pup-script',
-      icon: 'code'
+      link: '/en/guide/pup-script.html',
+      icon: 'code',
+      target: '_self'
     },
     {
       text: 'Architecture',
-      link: '/en/guide/architecture',
-      icon: 'architecture'
+      link: '/en/guide/architecture.html',
+      icon: 'architecture',
+      target: '_self'
     },
     {
       text: 'Best Practices',
-      link: '/en/guide/best-practices',
-      icon: 'star'
+      link: '/en/guide/best-practices.html',
+      icon: 'star',
+      target: '_self'
     },
     {
       text: 'Security',
-      link: '/en/guide/security',
-      icon: 'shield'
+      link: '/en/guide/security.html',
+      icon: 'shield',
+      target: '_self'
     },
     {
       text: 'Puppet Signing Tool',
-      link: '/en/guide/puppet-sign',
-      icon: 'key'
+      link: '/en/guide/puppet-sign.html',
+      icon: 'key',
+      target: '_self'
     }
   ]
 })
@@ -241,59 +252,69 @@ const enGuideDoc = defineCollection({
 // API documentation - doc type with sidebar
 const enApiDoc = defineCollection({
   type: 'doc',
-  dir: 'en/api',
-  linkPrefix: '/en/api',
+  dir: 'api',
+  link: '/en/api/',
   title: 'API Documentation',
   sidebar: [
     {
       text: 'Overview',
-      link: '/en/api/index',
-      icon: 'info'
+      link: '/en/api/index.html',
+      icon: 'info',
+      target: '_self'
     },
     {
       text: 'Window Control',
-      link: '/en/api/window',
-      icon: 'window'
+      link: '/en/api/window.html',
+      icon: 'window',
+      target: '_self'
     },
     {
       text: 'Application Control',
-      link: '/en/api/application',
-      icon: 'apps'
+      link: '/en/api/application.html',
+      icon: 'apps',
+      target: '_self'
     },
     {
       text: 'File System',
-      link: '/en/api/fs',
-      icon: 'folder'
+      link: '/en/api/fs.html',
+      icon: 'folder',
+      target: '_self'
     },
     {
-      text: 'Logging',
-      link: '/en/api/log',
-      icon: 'note'
+      text: 'Log',
+      link: '/en/api/log.html',
+      icon: 'note',
+      target: '_self'
     },
     {
       text: 'System',
-      link: '/en/api/system',
-      icon: 'setting'
+      link: '/en/api/system.html',
+      icon: 'setting',
+      target: '_self'
     },
     {
       text: 'Tray Icon',
-      link: '/en/api/tray',
-      icon: 'menu'
+      link: '/en/api/tray.html',
+      icon: 'menu',
+      target: '_self'
     },
     {
       text: 'Event System',
-      link: '/en/api/events',
-      icon: 'bolt'
+      link: '/en/api/events.html',
+      icon: 'bolt',
+      target: '_self'
     },
     {
       text: 'Device System',
-      link: '/en/api/device',
-      icon: 'devices'
+      link: '/en/api/device.html',
+      icon: 'devices',
+      target: '_self'
     },
     {
       text: 'Persistent Storage',
-      link: '/en/api/storage',
-      icon: 'database'
+      link: '/en/api/storage.html',
+      icon: 'database',
+      target: '_self'
     }
   ]
 })
@@ -301,8 +322,8 @@ const enApiDoc = defineCollection({
 // Changelog - doc type with sidebar
 const enChangelogDoc = defineCollection({
   type: 'doc',
-  dir: 'en/changelog',
-  linkPrefix: '/en/changelog',
+  dir: 'changelog',
+  link: '/en/changelog/',
   title: 'Changelog',
   sidebar: 'auto'
 })

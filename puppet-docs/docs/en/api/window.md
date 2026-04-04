@@ -1,7 +1,7 @@
 ---
-title: Window Control API
+title: Window Control
 permalink: /en/api/window.html
-createTime: 2026/03/28 15:02:53
+createTime: 2026/03/28 15:02:11
 ---
 
 # Window Control API

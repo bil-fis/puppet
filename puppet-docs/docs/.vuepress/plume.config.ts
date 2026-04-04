@@ -57,6 +57,7 @@ export default defineThemeConfig({
       /**
        * @see https://theme-plume.vuejs.press/config/theme/#profile
        */
+      home: '/',
       profile: {
         avatar: '/puppet.png',
         name: 'Puppet Document',
@@ -84,6 +85,7 @@ export default defineThemeConfig({
       /**
        * @see https://theme-plume.vuejs.press/config/theme/#profile
        */
+      home: '/en/',
       profile: {
         avatar: '/puppet.png',
         name: 'Puppet Document',
