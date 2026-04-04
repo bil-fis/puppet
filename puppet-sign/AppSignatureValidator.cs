@@ -182,9 +182,10 @@ namespace puppet
                 }
 
                 // 验证密钥长度
-                if (certificate.PublicKey.Key.KeySize < 2048)
+                var rsa = certificate.GetRSAPublicKey();
+                if (rsa != null && rsa.KeySize < 2048)
                 {
-                    return (false, $"密钥长度不足: {certificate.PublicKey.Key.KeySize}位（至少需要2048位）");
+                    return (false, $"密钥长度不足: {rsa.KeySize}位（至少需要2048位）");
                 }
 
                 return (true, "自签名证书验证通过");
@@ -317,7 +318,7 @@ namespace puppet
             string databasePath,
             byte[] signature,
             X509Certificate2 certificate,
-            string expectedAppId = null)
+            string? expectedAppId = null)
         {
             var (isValid, message) = ValidateDatabaseSignature(databasePath, certificate, signature);
 

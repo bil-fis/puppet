@@ -9,7 +9,7 @@
 用熟悉的 Web 技术构建功能强大的桌面应用程序
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://www.microsoft.com/windows)
 [![Documentation](https://img.shields.io/badge/docs-latest-green.svg)](https://puppet.ifiss.eu.org)
 
@@ -45,7 +45,7 @@
 1. **下载最新版本**
 
    访问 [Releases](https://github.com/your-username/puppet/releases) 下载适合的版本：
-   - **Framework-dependent**（需要 .NET 9.0）：体积小，适合开发者
+   - **Framework-dependent**（需要 .NET 10.0）：体积小，适合开发者
    - **Self-contained**（包含运行时）：开箱即用，适合普通用户
 
 2. **解压并运行**
@@ -149,7 +149,7 @@ await puppet.events.addEventListener('window-maximize', () => {
 #### 系统要求
 
 - **操作系统**: Windows 10 或更高版本
-- **.NET 运行时**: .NET 9.0 或更高版本（Framework-dependent 版本需要）
+- **.NET 运行时**: .NET 10.0 或更高版本（Framework-dependent 版本需要）
 - **WebView2**: 通常已随 Edge 浏览器安装
 
 #### 构建项目
@@ -243,7 +243,7 @@ Puppet 使用独特的 `.pup` 文件格式：
 1. **Download Latest Release**
 
    Visit [Releases](https://github.com/your-username/puppet/releases) and download:
-   - **Framework-dependent** (requires .NET 9.0): Smaller size, for developers
+   - **Framework-dependent** (requires .NET 10.0): Smaller size, for developers
    - **Self-contained** (includes runtime): Ready to use, for end users
 
 2. **Extract and Run**
@@ -347,7 +347,7 @@ await puppet.events.addEventListener('window-maximize', () => {
 #### System Requirements
 
 - **OS**: Windows 10 or higher
-- **.NET Runtime**: .NET 9.0 or higher (required for Framework-dependent version)
+- **.NET Runtime**: .NET 10.0 or higher (required for Framework-dependent version)
 - **WebView2**: Usually installed with Edge browser
 
 #### Build Project

@@ -24,7 +24,7 @@ namespace puppet
         /// <returns>派生密钥和盐值的元组</returns>
         public static (byte[] Key, byte[] Salt) DeriveKey(
             string password,
-            byte[] salt = null,
+            byte[]? salt = null,
             int keySize = DefaultKeySize,
             int iterationCount = DefaultIterationCount)
         {
@@ -44,11 +44,8 @@ namespace puppet
             }
 
             // 使用PBKDF2派生密钥
-            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterationCount, HashAlgorithmName.SHA256))
-            {
-                byte[] key = pbkdf2.GetBytes(keySize / 8);
-                return (key, salt);
-            }
+            byte[] key = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterationCount, HashAlgorithmName.SHA256, keySize / 8);
+            return (key, salt);
         }
 
         /// <summary>
@@ -58,7 +55,7 @@ namespace puppet
         /// <param name="key">密钥（32字节）</param>
         /// <param name="nonce">Nonce（12字节，如果为null则生成随机nonce）</param>
         /// <returns>加密数据（包含nonce和认证标签）</returns>
-        public static byte[] EncryptAesGcm(byte[] plaintext, byte[] key, byte[] nonce = null)
+        public static byte[] EncryptAesGcm(byte[] plaintext, byte[] key, byte[]? nonce = null)
         {
             if (plaintext == null)
             {

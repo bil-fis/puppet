@@ -153,7 +153,7 @@ namespace puppet
                 .Trim();
 
             byte[] certBytes = Convert.FromBase64String(cleaned);
-            return new X509Certificate2(certBytes);
+            return System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadCertificate(certBytes);
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace puppet
                 return false;
             }
 
-            if (hashAlgorithm == default || hashAlgorithm == null)
+            if (hashAlgorithm == default)
             {
                 hashAlgorithm = HashAlgorithmName.SHA256;
             }
@@ -264,7 +264,12 @@ namespace puppet
             RSAParameters publicKey;
             try
             {
-                publicKey = certificate.GetRSAPublicKey().ExportParameters(false);
+                var rsa = certificate.GetRSAPublicKey();
+                if (rsa == null)
+                {
+                    return false;
+                }
+                publicKey = rsa.ExportParameters(false);
             }
             catch
             {
@@ -287,15 +292,20 @@ namespace puppet
                 throw new ArgumentNullException(nameof(data));
             }
 
-            if (hashAlgorithm == default || hashAlgorithm == null)
+            if (hashAlgorithm == default)
             {
                 hashAlgorithm = HashAlgorithmName.SHA256;
             }
 
-            using (var hash = HashAlgorithm.Create(hashAlgorithm.Name))
+            return hashAlgorithm.Name switch
             {
-                return hash.ComputeHash(data);
-            }
+                "SHA256" => System.Security.Cryptography.SHA256.HashData(data),
+                "SHA384" => System.Security.Cryptography.SHA384.HashData(data),
+                "SHA512" => System.Security.Cryptography.SHA512.HashData(data),
+                "SHA1" => System.Security.Cryptography.SHA1.HashData(data),
+                "MD5" => System.Security.Cryptography.MD5.HashData(data),
+                _ => throw new NotSupportedException($"不支持的哈希算法: {hashAlgorithm.Name}")
+            };
         }
     }
 }

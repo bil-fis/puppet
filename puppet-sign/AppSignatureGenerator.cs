@@ -134,7 +134,7 @@ namespace puppet
                 throw new ArgumentNullException(nameof(data));
             }
 
-            if (hashAlgorithm == default || hashAlgorithm == null)
+            if (hashAlgorithm == default)
             {
                 hashAlgorithm = HashAlgorithmName.SHA256;
             }
@@ -170,12 +170,18 @@ namespace puppet
                 throw new ArgumentException("证书必须包含私钥才能签名", nameof(certificate));
             }
 
-            if (hashAlgorithm == default || hashAlgorithm == null)
+            if (hashAlgorithm == default)
             {
                 hashAlgorithm = HashAlgorithmName.SHA256;
             }
 
-            using (var rsa = certificate.GetRSAPrivateKey())
+            var rsa = certificate.GetRSAPrivateKey();
+            if (rsa == null)
+            {
+                throw new InvalidOperationException("无法从证书中获取私钥");
+            }
+
+            using (rsa)
             {
                 return rsa.SignData(data, hashAlgorithm, RSASignaturePadding.Pkcs1);
             }

@@ -94,7 +94,7 @@ namespace puppet
         /// <param name="message">错误消息</param>
         /// <param name="code">错误代码</param>
         /// <param name="innerException">内部异常</param>
-        public SecurityException(string message, ErrorCode code, Exception innerException)
+        public SecurityException(string message, ErrorCode code, Exception? innerException)
             : base(message, innerException)
         {
             Code = code;
@@ -176,7 +176,7 @@ namespace puppet
         /// <param name="message">错误消息</param>
         /// <param name="innerException">内部异常</param>
         /// <returns>SecurityException实例</returns>
-        public static SecurityException DecryptionFailedException(string message = "解密失败", Exception innerException = null)
+        public static SecurityException DecryptionFailedException(string message = "解密失败", Exception? innerException = null)
         {
             return new SecurityException(message, ErrorCode.DecryptionFailed, innerException);
         }
