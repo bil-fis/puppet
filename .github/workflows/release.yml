@@ -16,7 +16,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restore dependencies
         run: dotnet restore puppet.sln
@@ -79,7 +79,7 @@ jobs:
 
             ### 下载
 
-            **Framework-dependent 版本（需要安装 .NET 9.0 运行时）**:
+            **Framework-dependent 版本（需要安装 .NET 10.0 运行时）**:
             - [puppet-windows-framework-dependent.zip](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/puppet-windows-framework-dependent.zip)
             - [puppet-sign-windows-framework-dependent.zip](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/puppet-sign-windows-framework-dependent.zip)
 
@@ -91,7 +91,7 @@ jobs:
 
             - Windows 10 或更高版本
             - WebView2 运行时（通常已随 Edge 浏览器安装）
-            - Framework-dependent 版本还需要 .NET 9.0 运行时
+            - Framework-dependent 版本还需要 .NET 10.0 运行时
 
             ### 快速开始
 
