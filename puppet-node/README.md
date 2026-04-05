@@ -283,6 +283,75 @@ async function loadConfig(): Promise<AppConfig | null> {
 }
 ```
 
+### 5. 透明窗口背景
+
+如果要使用透明背景窗口，需要在 HTML 或 body 元素上设置透明背景：
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transparent Window</title>
+    <style>
+        /* 设置 html 和 body 背景为透明 */
+        html {
+            background: transparent;
+        }
+        
+        body {
+            background: transparent;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        /* 可选：添加渐变背景到内容区域 */
+        .content {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Transparent Window</h1>
+        <p>This window has a transparent background.</p>
+    </div>
+    
+    <script src="puppet.js"></script>
+    <script>
+        async function init() {
+            // 启用透明背景
+            await puppet.window.setTransparent(true);
+            
+            // 设置窗口为无边框
+            await puppet.window.setBorderless(true);
+            
+            // 设置透明度（可选）
+            await puppet.window.setOpacity(0.95);
+            
+            // 设置透明颜色
+            await puppet.window.setTransparentColor('#000000');
+            
+            // 启用鼠标穿透（可选）
+            await puppet.window.setMouseThroughTransparency(true);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
+```
+
+**重要提示：**
+- 必须同时在 `html` 和 `body` 元素上设置 `background: transparent`
+- 使用 `setTransparentColor()` 设置需要透明的颜色
+- 使用 `setMouseThroughTransparency()` 让鼠标点击穿透透明区域
+- 使用 `setOpacity()` 调整整体透明度（0.0 - 1.0）
+
 ## 常见问题
 
 ### Q: 为什么在浏览器中调用 puppet API 没有实际效果？

@@ -20,6 +20,7 @@ createTime: 2026/03/28 14:50:37
 - [安全机制](./security.md) - 框架的安全特性和最佳实践
 - [最佳实践](./best-practices.md) - 开发高质量 Puppet 应用的建议
 - [Puppet 签名工具](./puppet-sign.md) - 使用 puppet-sign 进行签名和验证
+- [TypeScript 类型定义](./typescript.md) - TypeScript 类型定义和测试支持
 
 ## 相关工具
 

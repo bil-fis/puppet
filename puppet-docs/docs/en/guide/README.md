@@ -20,6 +20,7 @@ Welcome to the Puppet Framework documentation. This guide will help you understa
 - [Security Mechanisms](./security.md) - Framework security features and best practices
 - [Best Practices](./best-practices.md) - Recommendations for developing high-quality Puppet applications
 - [Puppet Signing Tool](./puppet-sign.md) - Use puppet-sign for signing and verification
+- [TypeScript Type Definitions](./typescript.md) - TypeScript type definitions and testing support
 
 ## Related Tools
 
