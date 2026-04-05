@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Authors>林晚晚ss</Authors>
     <Description>Puppet 签名工具 - 用于生成签名密钥、签名数据库和验证签名</Description>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
