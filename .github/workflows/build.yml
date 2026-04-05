@@ -35,6 +35,12 @@ jobs:
       - name: Publish Puppet-Sign (Framework-dependent)
         run: dotnet publish puppet-sign/puppet-sign.csproj --configuration Release --output puppet-sign-release/framework-dependent --self-contained false --no-restore
 
+      - name: Publish Puppet (Self-contained)
+        run: dotnet publish puppet/puppet.csproj --configuration Release --output puppet-release/self-contained --self-contained true --runtime win-x64 --no-restore
+
+      - name: Publish Puppet-Sign (Self-contained)
+        run: dotnet publish puppet-sign/puppet-sign.csproj --configuration Release --output puppet-sign-release/self-contained --self-contained true --runtime win-x64 --no-restore
+
       - name: Create Puppet ZIP (Framework-dependent)
         run: |
           cd puppet-release/framework-dependent
@@ -45,6 +51,18 @@ jobs:
         run: |
           cd puppet-sign-release/framework-dependent
           7z a -tzip ../../puppet-sign-windows-framework-dependent.zip *
+          cd ../..
+
+      - name: Create Puppet ZIP (Self-contained)
+        run: |
+          cd puppet-release/self-contained
+          7z a -tzip ../../puppet-windows-self-contained.zip *
+          cd ../..
+
+      - name: Create Puppet-Sign ZIP (Self-contained)
+        run: |
+          cd puppet-sign-release/self-contained
+          7z a -tzip ../../puppet-sign-windows-self-contained.zip *
           cd ../..
 
       - name: Upload Puppet (Framework-dependent)
@@ -58,6 +76,18 @@ jobs:
         with:
           name: puppet-sign-windows-framework-dependent
           path: puppet-sign-windows-framework-dependent.zip
+
+      - name: Upload Puppet (Self-contained)
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppet-windows-self-contained
+          path: puppet-windows-self-contained.zip
+
+      - name: Upload Puppet-Sign (Self-contained)
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppet-sign-windows-self-contained
+          path: puppet-sign-windows-self-contained.zip
 
   create-prerelease:
     needs: build
@@ -81,6 +111,8 @@ jobs:
           files: |
             artifacts/puppet-windows-framework-dependent/puppet-windows-framework-dependent.zip
             artifacts/puppet-sign-windows-framework-dependent/puppet-sign-windows-framework-dependent.zip
+            artifacts/puppet-windows-self-contained/puppet-windows-self-contained.zip
+            artifacts/puppet-sign-windows-self-contained/puppet-sign-windows-self-contained.zip
           body: |
             ## Puppet Framework Prerelease ${{ github.ref_name }}
 
@@ -91,6 +123,10 @@ jobs:
             **Framework-dependent 版本（需要安装 .NET 10.0 运行时）**:
             - [puppet-windows-framework-dependent.zip](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/puppet-windows-framework-dependent.zip)
             - [puppet-sign-windows-framework-dependent.zip](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/puppet-sign-windows-framework-dependent.zip)
+
+            **Self-contained 版本（包含 .NET 运行时，无需额外安装）**:
+            - [puppet-windows-self-contained.zip](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/puppet-windows-self-contained.zip)
+            - [puppet-sign-windows-self-contained.zip](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/puppet-sign-windows-self-contained.zip)
 
             ### 系统要求
 
