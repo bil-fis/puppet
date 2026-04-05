@@ -319,6 +319,103 @@ A: 确保已正确导入类型定义：
 }
 ```
 
+## 测试
+
+### 运行测试
+
+```bash
+# 运行所有测试
+npm test
+
+# 运行测试并监听文件变化
+npm run test:watch
+
+# 运行测试并生成覆盖率报告
+npm run test:coverage
+
+# 手动运行测试（需要先构建）
+npm run build
+npm run test:manual
+```
+
+### 编写测试
+
+使用提供的测试工具编写测试：
+
+```typescript
+import {
+    setupTestEnvironment,
+    cleanupTestEnvironment,
+    assertEqual,
+    assertTruthy
+} from '@puppet-framework/types/test-utils';
+
+describe('My Feature', () => {
+    let puppet: any;
+
+    beforeEach(() => {
+        // 设置测试环境
+        puppet = setupTestEnvironment({ enableLogging: false, resetState: true });
+    });
+
+    afterEach(() => {
+        // 清理测试环境
+        cleanupTestEnvironment();
+    });
+
+    it('should do something', async () => {
+        // 测试代码
+        await puppet.window.setBorderless(true);
+        
+        // 验证结果
+        const state = puppet.__getMockState?.();
+        assertEqual(state?.window.borderless, true);
+    });
+});
+```
+
+### Mock 功能
+
+库提供了完整的 mock 实现，用于测试：
+
+```typescript
+import { createMockPuppetNamespace, getMockState } from '@puppet-framework/types/mock';
+
+// 创建 mock puppet
+const mockPuppet = createMockPuppetNamespace(false);
+
+// 获取 mock 状态
+const state = getMockState();
+
+// 访问内部状态
+console.log(state.window.borderless);
+console.log(state.application.config);
+```
+
+### 测试工具
+
+可用的测试工具函数：
+
+- `setupTestEnvironment()` - 设置测试环境
+- `cleanupTestEnvironment()` - 清理测试环境
+- `getMockState()` - 获取 mock 状态
+- `resetMockState()` - 重置 mock 状态
+- `simulateEvent()` - 模拟事件
+- `assertEqual()` - 断言相等
+- `assertTruthy()` - 断言为真
+- `assertFalsy()` - 断言为假
+- `wait()` - 等待指定时间
+- `createSpy()` - 创建 spy 函数
+
+### 测试覆盖率
+
+测试目标覆盖率：
+
+- 分支覆盖率：80%
+- 函数覆盖率：80%
+- 行覆盖率：80%
+- 语句覆盖率：80%
+
 ## 许可证
 
 Copyright © 2024-2026 林晚晚ss.

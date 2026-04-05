@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppet Framework Test Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+        }
+
+        .test-section h2 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .test-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .test-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .test-card p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .test-card button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .test-card button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .console-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .console-output::-webkit-scrollbar-track {
+            background: #2d2d2d;
+            border-radius: 4px;
+        }
+
+        .console-output::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .status.passed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .action-button.secondary {
+            background: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Puppet Framework</h1>
+        <p class="subtitle">TypeScript 类型定义和测试套件</p>
+
+        <div class="actions">
+            <button class="action-button" onclick="runAllTests()">🚀 运行所有测试</button>
+            <button class="action-button secondary" onclick="clearConsole()">🗑️ 清空控制台</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 测试套件</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>🪟 窗口控制器</h3>
+                    <p>测试窗口控制功能，包括边框、拖动、透明度等</p>
+                    <button onclick="runWindowTests()">运行测试</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>⚙️ 应用控制器</h3>
+                    <p>测试应用控制功能，包括配置、窗口信息等</p>
+                    <button onclick="runApplicationTests()">运行测试</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>📁 文件系统</h3>
+                    <p>测试文件系统功能，包括文件读写、对话框等</p>
+                    <button onclick="alert('文件系统测试即将推出')">即将推出</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>💻 系统功能</h3>
+                    <p>测试系统功能，包括系统信息、截图等</p>
+                    <button onclick="alert('系统功能测试即将推出')">即将推出</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 测试输出</h2>
+            <div class="console-output" id="console">
+                <div style="color: #4ec9b0;">// 测试输出将显示在这里</div>
+                <div style="color: #6a9955;">// 点击上方按钮开始测试</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="puppet.js"></script>
+    <script>
+        // ============================================================================
+        // Console Capture
+        // ============================================================================
+
+        const consoleOutput = document.getElementById('console');
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        function formatMessage(args) {
+            return args.map(arg => {
+                if (typeof arg === 'object') {
+                    return JSON.stringify(arg, null, 2);
+                }
+                return String(arg);
+            }).join(' ');
+        }
+
+        function addToConsole(message, type = 'info') {
+            const colors = {
+                info: '#d4d4d4',
+                success: '#4ec9b0',
+                error: '#f48771',
+                warning: '#dcdcaa'
+            };
+            
+            const line = document.createElement('div');
+            line.style.color = colors[type] || colors.info;
+            line.style.marginBottom = '5px';
+            line.textContent = message;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(formatMessage(args), 'info');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(formatMessage(args), 'warning');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(formatMessage(args), 'error');
+        };
+
+        // ============================================================================
+        // Test Functions
+        // ============================================================================
+
+        async function runWindowTests() {
+            console.log('\n=== Running Window Controller Tests ===\n');
+            
+            // Test setBorderless
+            try {
+                await puppet.window.setBorderless(true);
+                addToConsole('✓ Test 1 passed: setBorderless(true)', 'success');
+            } catch (error) {
+                addToConsole('✗ Test 1 failed: ' + error.message, 'error');
+            }
+            
+            // Test setOpacity
+            try {
+                await puppet.window.setOpacity(0.5);
+                addToConsole('✓ Test 2 passed: setOpacity(0.5)', 'success');
+            } catch (error) {
+                addToConsole('✗ Test 2 failed: ' + error.message, 'error');
+            }
+            
+            // Test moveWindow
+            try {
+                await puppet.window.moveWindow(100, 200);
+                addToConsole('✓ Test 3 passed: moveWindow(100, 200)', 'success');
+            } catch (error) {
+                addToConsole('✗ Test 3 failed: ' + error.message, 'error');
+            }
+            
+            // Test resizeWindow
+            try {
+                await puppet.window.resizeWindow(800, 600);
+                addToConsole('✓ Test 4 passed: resizeWindow(800, 600)', 'success');
+            } catch (error) {
+                addToConsole('✗ Test 4 failed: ' + error.message, 'error');
+            }
+            
+            // Test centerWindow
+            try {
+                await puppet.window.resizeWindow(800, 600);
+                await puppet.window.centerWindow();
+                addToConsole('✓ Test 5 passed: centerWindow()', 'success');
+            } catch (error) {
+                addToConsole('✗ Test 5 failed: ' + error.message, 'error');
+            }
+        }
+
+        async function runApplicationTests() {
+            console.log('\n=== Running Application Controller Tests ===\n');
+            
+            // Test setConfig and getConfig
+            try {
+                await puppet.application.setConfig('test-key', 'test-value');
+                const value = await puppet.application.getConfig('test-key');
+                if (value === 'test-value') {
+                    addToConsole('✓ Test 1 passed: setConfig/getConfig', 'success');
+                } else {
+                    addToConsole('✗ Test 1 failed: setConfig/getConfig', 'error');
+                }
+            } catch (error) {
+                addToConsole('✗ Test 1 failed: ' + error.message, 'error');
+            }
+            
+            // Test getWindowInfo
+            try {
+                const info = await puppet.application.getWindowInfo();
+                if (info && typeof info.handle === 'number') {
+                    addToConsole('✓ Test 2 passed: getWindowInfo', 'success');
+                } else {
+                    addToConsole('✗ Test 2 failed: getWindowInfo', 'error');
+                }
+            } catch (error) {
+                addToConsole('✗ Test 2 failed: ' + error.message, 'error');
+            }
+            
+            // Test getCurrentUser
+            try {
+                const user = await puppet.application.getCurrentUser();
+                if (user && typeof user.name === 'string') {
+                    addToConsole('✓ Test 3 passed: getCurrentUser', 'success');
+                } else {
+                    addToConsole('✗ Test 3 failed: getCurrentUser', 'error');
+                }
+            } catch (error) {
+                addToConsole('✗ Test 3 failed: ' + error.message, 'error');
+            }
+        }
+
+        async function runAllTests() {
+            addToConsole('\n╔═══════════════════════════════════════════════════════════╗', 'info');
+            addToConsole('║   Puppet Framework Test Suite                            ║', 'info');
+            addToConsole('╚═══════════════════════════════════════════════════════════╝\n', 'info');
+            
+            await runWindowTests();
+            await runApplicationTests();
+            
+            addToConsole('\n╔═══════════════════════════════════════════════════════════╗', 'info');
+            addToConsole('║   All tests completed                                       ║', 'info');
+            addToConsole('╚═══════════════════════════════════════════════════════════╝', 'info');
+        }
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '<div style="color: #4ec9b0;">// 控制台已清空</div>';
+        }
+    </script>
+</body>
+</html>
