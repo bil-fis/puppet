@@ -110,7 +110,7 @@ namespace puppet.Controllers
         /// <summary>
         /// 设备ID
         /// </summary>
-        public string DeviceID { get; set; }
+        public string DeviceID { get; set; } = string.Empty;
 
         /// <summary>
         /// 设备类型
@@ -125,32 +125,32 @@ namespace puppet.Controllers
         /// <summary>
         /// 设备名称
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// 设备描述
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// 制造商
         /// </summary>
-        public string Manufacturer { get; set; }
+        public string Manufacturer { get; set; } = string.Empty;
 
         /// <summary>
         /// PNP设备ID
         /// </summary>
-        public string PNPDeviceID { get; set; }
+        public string PNPDeviceID { get; set; } = string.Empty;
 
         /// <summary>
         /// 盘符 (仅可移动存储设备)
         /// </summary>
-        public string DriveLetter { get; set; }
+        public string DriveLetter { get; set; } = string.Empty;
 
         /// <summary>
         /// 卷标 (仅磁盘设备)
         /// </summary>
-        public string VolumeName { get; set; }
+        public string VolumeName { get; set; } = string.Empty;
 
         /// <summary>
         /// 总容量 (字节) (仅存储设备)
@@ -165,7 +165,7 @@ namespace puppet.Controllers
         /// <summary>
         /// 文件系统 (仅磁盘设备)
         /// </summary>
-        public string FileSystem { get; set; }
+        public string FileSystem { get; set; } = string.Empty;
 
         /// <summary>
         /// 配置管理器错误代码
@@ -195,40 +195,44 @@ namespace puppet.Controllers
     public class EventController
     {
         private CoreWebView2 _webview;
-        private Form _form;
+                private Form _form;
+                
+                // 事件监听器存储
+                // 内存优化：预分配容量，减少动态扩容
+                private ConcurrentDictionary<string, List<ulong>> _eventListeners = 
+                    new ConcurrentDictionary<string, List<ulong>>();
+                
+                // 回调函数存储
+                // 内存优化：预分配容量，减少动态扩容
+                private ConcurrentDictionary<ulong, string> _callbacks = 
+                    new ConcurrentDictionary<ulong, string>();
+                
+                // 回调ID计数器
+                private ulong _nextCallbackId = 1;
+                
+                // 事件监听状态
+                // 内存优化：预分配容量，减少动态扩容
+                private ConcurrentDictionary<string, bool> _eventMonitoringStatus = 
+                    new ConcurrentDictionary<string, bool>();
+                
+                // USB设备监控
+                private ManagementEventWatcher? _usbArrivalWatcher;
+                private ManagementEventWatcher? _usbRemovalWatcher;
+                // 内存优化：预分配容量，减少动态扩容
+                private HashSet<string> _existingUSBDevices = new HashSet<string>(capacity: 32);
         
-        // 事件监听器存储
-        private ConcurrentDictionary<string, List<ulong>> _eventListeners = 
-            new ConcurrentDictionary<string, List<ulong>>();
-        
-        // 回调函数存储
-        private ConcurrentDictionary<ulong, string> _callbacks = 
-            new ConcurrentDictionary<ulong, string>();
-        
-        // 回调ID计数器
-        private ulong _nextCallbackId = 1;
-        
-        // 事件监听状态
-        private ConcurrentDictionary<string, bool> _eventMonitoringStatus = 
-            new ConcurrentDictionary<string, bool>();
-        
-        // USB设备监控
-        private ManagementEventWatcher _usbArrivalWatcher;
-        private ManagementEventWatcher _usbRemovalWatcher;
-        private HashSet<string> _existingUSBDevices = new HashSet<string>();
-        
-        // 磁盘监控
-        private ManagementEventWatcher _diskArrivalWatcher;
-        private ManagementEventWatcher _diskRemovalWatcher;
-        private HashSet<string> _existingDisks = new HashSet<string>();
-        
-        // 电源监控
-        private ManagementEventWatcher _powerStatusWatcher;
-        
-        // 窗口状态
-        private bool _isWindowActive = false;
-        private FormWindowState _lastWindowState = FormWindowState.Normal;
-
+                // 磁盘监控
+                        private ManagementEventWatcher? _diskArrivalWatcher;
+                        private ManagementEventWatcher? _diskRemovalWatcher;
+                        // 内存优化：预分配容量，减少动态扩容
+                        private HashSet<string> _existingDisks = new HashSet<string>(capacity: 32);
+                
+                        // 电源监控
+                                private ManagementEventWatcher? _powerStatusWatcher;
+                        
+                                // 窗口状态
+                                private bool _isWindowActive = false;
+                                private FormWindowState _lastWindowState = FormWindowState.Normal;
         public EventController(CoreWebView2 webview, Form form)
         {
             _webview = webview;
@@ -251,7 +255,7 @@ namespace puppet.Controllers
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        string deviceId = obj["DeviceID"]?.ToString();
+                        string deviceId = obj["DeviceID"]?.ToString() ?? string.Empty;
                         if (!string.IsNullOrEmpty(deviceId))
                         {
                             _existingUSBDevices.Add(deviceId);
@@ -265,7 +269,7 @@ namespace puppet.Controllers
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        string deviceId = obj["DeviceID"]?.ToString();
+                        string deviceId = obj["DeviceID"]?.ToString() ?? string.Empty;
                         if (!string.IsNullOrEmpty(deviceId))
                         {
                             _existingDisks.Add(deviceId);
@@ -631,13 +635,13 @@ namespace puppet.Controllers
                 {
                     _usbArrivalWatcher.Stop();
                     _usbArrivalWatcher.Dispose();
-                    _usbArrivalWatcher = null;
+                    _usbArrivalWatcher = null!;
                 }
                 if (_usbRemovalWatcher != null)
                 {
                     _usbRemovalWatcher.Stop();
                     _usbRemovalWatcher.Dispose();
-                    _usbRemovalWatcher = null;
+                    _usbRemovalWatcher = null!;
                 }
             }
         }
@@ -661,8 +665,8 @@ namespace puppet.Controllers
                     return;
                 }
                 
-                string deviceId = obj["DeviceID"]?.ToString();
-                string name = obj["Name"]?.ToString();
+                string deviceId = obj["DeviceID"]?.ToString() ?? string.Empty;
+                string name = obj["Name"]?.ToString() ?? string.Empty;
                 uint driveType = Convert.ToUInt32(obj["DriveType"] ?? 0);
                 
                 System.Diagnostics.Debug.WriteLine($"USB设备插入（U盘）: {name} ({deviceId}), DriveType: {driveType}");
@@ -715,8 +719,8 @@ namespace puppet.Controllers
             try
             {
                 ManagementBaseObject obj = (ManagementBaseObject)e.NewEvent["TargetInstance"];
-                string deviceId = obj["DeviceID"]?.ToString();
-                string name = obj["Name"]?.ToString();
+                string deviceId = obj["DeviceID"]?.ToString() ?? string.Empty;
+                string name = obj["Name"]?.ToString() ?? string.Empty;
                 uint driveType = Convert.ToUInt32(obj["DriveType"] ?? 0);
                 
                 System.Diagnostics.Debug.WriteLine($"USB设备拔出（U盘）: {name} ({deviceId}), DriveType: {driveType}");
@@ -755,11 +759,11 @@ namespace puppet.Controllers
             {
                 _usbArrivalWatcher?.Stop();
                 _usbArrivalWatcher?.Dispose();
-                _usbArrivalWatcher = null;
-                
+                _usbArrivalWatcher = null!;
+
                 _usbRemovalWatcher?.Stop();
                 _usbRemovalWatcher?.Dispose();
-                _usbRemovalWatcher = null;
+                _usbRemovalWatcher = null!;
             }
             catch (Exception ex)
             {
@@ -806,7 +810,7 @@ namespace puppet.Controllers
             try
             {
                 ManagementBaseObject obj = (ManagementBaseObject)e.NewEvent["TargetInstance"];
-                string deviceId = obj["DeviceID"]?.ToString();
+                string deviceId = obj["DeviceID"]?.ToString() ?? string.Empty;
                 
                 if (!string.IsNullOrEmpty(deviceId) && !_existingDisks.Contains(deviceId))
                 {
@@ -835,7 +839,7 @@ namespace puppet.Controllers
             try
             {
                 ManagementBaseObject obj = (ManagementBaseObject)e.NewEvent["TargetInstance"];
-                string deviceId = obj["DeviceID"]?.ToString();
+                string deviceId = obj["DeviceID"]?.ToString() ?? string.Empty;
                 
                 if (!string.IsNullOrEmpty(deviceId) && _existingDisks.Contains(deviceId))
                 {
@@ -865,11 +869,11 @@ namespace puppet.Controllers
             {
                 _diskArrivalWatcher?.Stop();
                 _diskArrivalWatcher?.Dispose();
-                _diskArrivalWatcher = null;
-                
+                _diskArrivalWatcher = null!;
+
                 _diskRemovalWatcher?.Stop();
                 _diskRemovalWatcher?.Dispose();
-                _diskRemovalWatcher = null;
+                _diskRemovalWatcher = null!;
             }
             catch (Exception ex)
             {
@@ -931,7 +935,7 @@ namespace puppet.Controllers
             {
                 _powerStatusWatcher?.Stop();
                 _powerStatusWatcher?.Dispose();
-                _powerStatusWatcher = null;
+                _powerStatusWatcher = null!;
             }
             catch (Exception ex)
             {
@@ -954,7 +958,7 @@ namespace puppet.Controllers
         /// <summary>
         /// 窗口激活事件
         /// </summary>
-        private void OnWindowActivated(object sender, EventArgs e)
+        private void OnWindowActivated(object? sender, EventArgs e)
         {
             if (!_isWindowActive)
             {
@@ -966,7 +970,7 @@ namespace puppet.Controllers
         /// <summary>
         /// 窗口失焦事件
         /// </summary>
-        private void OnWindowDeactivate(object sender, EventArgs e)
+        private void OnWindowDeactivate(object? sender, EventArgs e)
         {
             if (_isWindowActive)
             {
@@ -1014,7 +1018,7 @@ namespace puppet.Controllers
                         FormWindowState.Maximized => "window-maximize",
                         FormWindowState.Minimized => "window-minimize",
                         FormWindowState.Normal => "window-restore",
-                        _ => null
+                        _ => null!
                     };
                     
                     if (eventName != null)
@@ -1102,11 +1106,11 @@ namespace puppet.Controllers
         {
             Device device = new Device
             {
-                DeviceID = obj["DeviceID"]?.ToString(),
-                Name = obj["Name"]?.ToString(),
-                Description = obj["Description"]?.ToString(),
-                Manufacturer = obj["Manufacturer"]?.ToString(),
-                PNPDeviceID = obj["PNPDeviceID"]?.ToString(),
+                DeviceID = obj["DeviceID"]?.ToString() ?? string.Empty,
+                Name = obj["Name"]?.ToString() ?? string.Empty,
+                Description = obj["Description"]?.ToString() ?? string.Empty,
+                Manufacturer = obj["Manufacturer"]?.ToString() ?? string.Empty,
+                PNPDeviceID = obj["PNPDeviceID"]?.ToString() ?? string.Empty,
                 ConfigManagerErrorCode = Convert.ToUInt32(obj["ConfigManagerErrorCode"] ?? 0)
             };
             
@@ -1126,15 +1130,15 @@ namespace puppet.Controllers
             {
                 device.Present = true;
             }
-            
+
             // 解析状态
-            string status = obj["Status"]?.ToString();
+            string status = obj["Status"]?.ToString() ?? string.Empty;
             device.Status = ParseStatus(status, device.ConfigManagerErrorCode);
-            
+
             // 解析设备类型 - PNPClass属性在某些Windows版本中不存在
             try
             {
-                string pnpClass = obj["PNPClass"]?.ToString();
+                string pnpClass = obj["PNPClass"]?.ToString() ?? string.Empty;
                 device.Type = ParseDeviceTypeFromPNPClass(pnpClass);
             }
             catch
@@ -1153,11 +1157,11 @@ namespace puppet.Controllers
         {
             Device device = new Device
             {
-                DeviceID = obj["DeviceID"]?.ToString(),
-                DriveLetter = obj["DeviceID"]?.ToString(),
-                Name = obj["Name"]?.ToString(),
-                VolumeName = obj["VolumeName"]?.ToString(),
-                FileSystem = obj["FileSystem"]?.ToString(),
+                DeviceID = obj["DeviceID"]?.ToString() ?? string.Empty,
+                DriveLetter = obj["DeviceID"]?.ToString() ?? string.Empty,
+                Name = obj["Name"]?.ToString() ?? string.Empty,
+                VolumeName = obj["VolumeName"]?.ToString() ?? string.Empty,
+                FileSystem = obj["FileSystem"]?.ToString() ?? string.Empty,
                 ConfigManagerErrorCode = Convert.ToUInt32(obj["ConfigManagerErrorCode"] ?? 0)
             };
             
@@ -1171,9 +1175,9 @@ namespace puppet.Controllers
             {
                 device.FreeSpace = Convert.ToUInt64(obj["FreeSpace"]);
             }
-            
+
             // 解析状态
-            string status = obj["Status"]?.ToString();
+            string status = obj["Status"]?.ToString() ?? string.Empty;
             device.Status = ParseStatus(status, device.ConfigManagerErrorCode);
             
             // 解析磁盘类型

@@ -169,10 +169,10 @@ lib/
 
 ```javascript
 // 读取配置
-const config = await puppet.Application.getConfig('appName');
+const config = await puppet.application.getConfig('appName');
 
 // 写入配置
-await puppet.Application.setConfig('theme', 'light');
+await puppet.application.setConfig('theme', 'light');
 ```
 
 #### favicon.ico

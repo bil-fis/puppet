@@ -426,7 +426,3 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
-
-# Puppet Application File
-*.pup
-test-htmls

@@ -210,7 +210,7 @@ Puppet 框架基于以下技术构建：
 
 ### 核心技术
 
-- **.NET 9.0**：核心运行时框架
+- **.NET 10.0**：核心运行时框架
 - **Windows Forms**：桌面 UI 框架
 - **Microsoft WebView2**：Web 渲染引擎（基于 Edge）
 

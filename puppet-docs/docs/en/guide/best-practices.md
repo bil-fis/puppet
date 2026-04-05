@@ -6,13 +6,13 @@ createTime: 2026/03/28 15:01:04
 
 # Best Practices
 
-This chapter compiles best practices, design patterns, and performance optimization techniques for developing high-quality Puppet applications, helping you build stable and efficient applications.
+This chapter gathers best practices, design patterns, and performance optimization tips for developing high-quality Puppet applications, helping you build stable and efficient applications.
 
 ## Code Organization
 
 ### 1. Modular Design
 
-Break your application into independent modules, each responsible for a single function.
+Split applications into independent modules, with each module responsible for a single function.
 
 ```javascript
 // utils/api.js - API wrapper
@@ -69,7 +69,7 @@ async function initializeApp() {
 
 ### 3. Error Handling
 
-Implement comprehensive error handling strategy.
+Implement comprehensive error handling strategies.
 
 ```javascript
 // utils/errorHandler.js
@@ -96,128 +96,63 @@ try {
 
 ## Window Transparency Best Practices ⚠️
 
-### Important: Use CSS for Transparency Effects
+### Important: Prioritize CSS for Transparency Effects
 
-When implementing transparency effects in Puppet applications, **strongly recommend using CSS instead of JavaScript methods**.
+When implementing transparency effects in Puppet applications, **it is strongly recommended to use CSS instead of JavaScript methods**.
 
-#### Recommended Approach: Use CSS
-
-```css
-/* ✅ Recommended: Use CSS to set transparent background */
-:root {
-    background: transparent;
-}
-
-/* ✅ Recommended: Set transparency on body */
-body {
-    background: transparent;
-    margin: 0;
-    padding: 0;
-}
-
-/* ✅ Recommended: Use backdrop-filter for glass effect */
-.glass-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-/* ✅ Recommended: Use CSS transitions for smooth effects */
-.smooth-transition {
-    transition: all 0.3s ease;
-}
-
-.smooth-transition:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-}
-```
-
-#### Not Recommended Approach: Use JavaScript
-
-```javascript
-// ❌ Not recommended: Use setOpacity to set transparency
-await puppet.window.setOpacity(0.5);
-
-// ❌ Not recommended: Use setTransparent
-await puppet.window.setTransparent(true);
-```
-
-#### Why Recommend CSS Approach?
-
-| Feature | CSS Approach | JavaScript Approach |
-|---------|--------------|---------------------|
-| **Performance** | ✅ Better, GPU accelerated | ❌ Worse, frequent calls |
-| **Precise Control** | ✅ Can control each element | ❌ Only controls entire window |
-| **Animation Effects** | ✅ Native CSS transitions and animations | ❌ Requires extra code to implement |
-| **Maintainability** | ✅ CSS files centralized management | ❌ JavaScript code scattered |
-| **Standard Compliance** | ✅ Standard CSS features | ❌ Platform dependent |
-| **Flexibility** | ✅ Supports CSS variables and themes | ❌ Hardcoded, difficult to adjust |
-
-#### When to Use JavaScript Transparency Methods?
-
-Only consider using JavaScript methods in these situations:
-
-1. **Need entire window transparency control**:
-```javascript
-// Entire window transparency (not background color)
-await puppet.window.setOpacity(0.9);
-```
-
-2. **Need window completely invisible**:
-```javascript
-// Window completely hidden but running
-await puppet.window.setOpacity(0.0);
-```
-
-3. **Need transparent area click-through**:
-```javascript
-// Transparent areas can be clicked through
-await puppet.window.setTransparent(true);
-await puppet.window.setMouseThroughTransparency(true);
-```
-
-#### Mixed Usage Example
+#### Recommended Implementation
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        /* CSS handles background transparency and visual effects */
+        /* ✅ Recommended: Use CSS for transparent background */
+        :root {
+            background: transparent;
+        }
+
+        /* ✅ Recommended: Set transparency on body */
         body {
             background: transparent;
             margin: 0;
             padding: 0;
         }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.15);
+
+        /* ✅ Recommended: Use backdrop-filter for glass effect */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
             border-radius: 16px;
             padding: 24px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
+
+        /* ✅ Recommended: Use CSS transitions for smooth effects */
+        .smooth-transition {
+            transition: all 0.3s ease;
+        }
+
+        .smooth-transition:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="glass-container smooth-transition">
         <h1>My Application</h1>
-        <p>Glass effect content</p>
+        <p>Glass effect implemented with CSS</p>
     </div>
 
     <script>
-        // JavaScript only handles window-level settings
         window.addEventListener('DOMContentLoaded', async () => {
-            // Set window basic properties
+            // JavaScript only for window-level control
             await puppet.window.setBorderless(true);
             await puppet.window.setDraggable(true);
             
-            // Window overall transparency (optional, as needed)
+            // Optional: Set overall window opacity (not background)
             await puppet.window.setOpacity(0.95);
         });
     </script>
@@ -225,11 +160,212 @@ await puppet.window.setMouseThroughTransparency(true);
 </html>
 ```
 
-::: tip Best Practice Summary
-- **Background transparency**: Use CSS `background: transparent` on `:root` or `body`
-- **Visual effects**: Use CSS `backdrop-filter` for glass effects
-- **Window control**: Use JavaScript `setOpacity()` only for overall window transparency
-- **Avoid mixing**: Don't use CSS background and JavaScript window transparency together, it causes confusion
+#### Not Recommended
+
+```javascript
+// ❌ Not recommended: Use JavaScript to set background transparency
+await puppet.window.setTransparent(true);
+
+// ❌ Not recommended: Use JavaScript to set opacity for background effects
+await puppet.window.setOpacity(0.5);
+```
+
+#### Why Must Use CSS?
+
+| Comparison | CSS Method | JavaScript Method |
+|------------|------------|-------------------|
+| **Performance** | ✅ GPU accelerated, excellent performance | ❌ Frequent calls, poor performance |
+| **Precise Control** | ✅ Can control each element | ❌ Only controls entire window |
+| **Animation Effects** | ✅ Native CSS transitions and animations | ❌ Requires additional code implementation |
+| **Maintainability** | ✅ CSS files centrally managed | ❌ JavaScript code scattered |
+| **Standard** | ✅ Standard web technology | ❌ Platform-specific implementation |
+| **Flexibility** | ✅ Supports CSS variables and themes | ❌ Hardcoded, difficult to adjust |
+
+#### Correct Transparency Implementation Hierarchy
+
+```
+┌─────────────────────────────────────────┐
+│  Layer 1: CSS Background (Recommended) │
+│  background: transparent               │
+│  backdrop-filter: blur(10px)           │
+├─────────────────────────────────────────┤
+│  Layer 2: CSS Element Styles (Recommended) │
+│  background: rgba(255, 255, 255, 0.1)  │
+│  border-radius, box-shadow             │
+├─────────────────────────────────────────┤
+│  Layer 3: JavaScript Window Control (Use Carefully) │
+│  puppet.window.setOpacity(0.95)        │
+│  Only for overall window opacity, not background │
+└─────────────────────────────────────────┘
+```
+
+#### Usage Scenario Guide
+
+**✅ Use CSS (Recommended)**:
+
+```css
+/* 1. Background transparency */
+body {
+    background: transparent;
+}
+
+/* 2. Glass effect */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+}
+
+/* 3. Element opacity */
+.element {
+    opacity: 0.8;
+}
+
+/* 4. Transition animations */
+.element {
+    transition: opacity 0.3s ease;
+}
+```
+
+**⚠️ Use JavaScript (Special Needs)**:
+
+```javascript
+// 1. Overall window opacity control (not background)
+await puppet.window.setOpacity(0.95);
+
+// 2. Window completely hidden but running
+await puppet.window.setOpacity(0.0);
+
+// 3. Transparent area click-through (use with CSS)
+await puppet.window.setTransparent(true);
+await puppet.window.setMouseThroughTransparency(true);
+```
+
+#### Complete Example
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* CSS for transparent background */
+        :root {
+            background: transparent;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Main container - glass effect */
+        .app-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            min-height: 400px;
+        }
+
+        /* Title bar */
+        .title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: move;
+        }
+
+        /* Content area */
+        .content {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Button styles */
+        .button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="title-bar">
+            <div class="title" id="drag-handle">🎭 Puppet Application</div>
+            <button class="button" onclick="closeApp()">Close</button>
+        </div>
+        
+        <div class="content">
+            <h2>Welcome to Puppet</h2>
+            <p>This is an example using CSS for glass effects.</p>
+            <p>Background transparency and visual effects are entirely controlled by CSS, offering better performance and easier maintenance.</p>
+            
+            <div style="margin-top: 20px;">
+                <button class="button" onclick="showInfo()">View Info</button>
+                <button class="button" onclick="changeTheme()">Switch Theme</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript only handles window-level control
+        window.addEventListener('DOMContentLoaded', async () => {
+            await puppet.window.setBorderless(true);
+            await puppet.window.setDraggable(true);
+            await puppet.window.mountMovableElement('drag-handle');
+            
+            // Optional: overall window opacity
+            await puppet.window.setOpacity(0.95);
+            
+            // Window always on top
+            await puppet.window.setTopmost(true);
+        });
+
+        async function closeApp() {
+            await puppet.application.close();
+        }
+
+        function showInfo() {
+            alert('This application uses CSS for transparency effects!');
+        }
+
+        function changeTheme() {
+            document.body.style.filter = 
+                document.body.style.filter ? '' : 'hue-rotate(180deg)';
+        }
+    </script>
+</body>
+</html>
+```
+
+::: tip Remember
+- **Background transparency**: Use `background: transparent` attached to `:root` or `body`
+- **Visual effects**: Use CSS `backdrop-filter` and `rgba` colors
+- **Animation effects**: Use CSS `transition` and `animation`
+- **Window control**: JavaScript's `setOpacity()` only for overall window opacity
 :::
 
 ## Performance Optimization
@@ -245,7 +381,7 @@ async function loadFeature(featureName) {
     return module.default;
 }
 
-// Load features on demand
+// Load functionality on demand
 button.addEventListener('click', async () => {
     const feature = await loadFeature('advanced');
     feature.initialize();
@@ -268,7 +404,7 @@ Optimize image and media file sizes.
 <link rel="preload" href="fonts/Roboto-Regular.woff2" as="font" type="font/woff2" crossorigin>
 ```
 
-### 3. Caching Strategy
+### 3. Cache Strategy
 
 Reasonably use caching to reduce repeated loading.
 
@@ -315,7 +451,7 @@ async function batchReadFiles(files) {
 
 ### 1. Responsive Design
 
-Ensure application displays correctly on different window sizes.
+Ensure applications display correctly in windows of different sizes.
 
 ```css
 /* Responsive layout */
@@ -363,7 +499,7 @@ function hideLoading() {
 
 ### 3. Error Prompts
 
-Provide clear, friendly error messages.
+Provide clear, user-friendly error messages.
 
 ```javascript
 function showError(message, details = '') {
@@ -376,7 +512,7 @@ function showError(message, details = '') {
     
     document.body.appendChild(toast);
     
-    // Auto disappear after 3 seconds
+    // Auto-disappear after 3 seconds
     setTimeout(() => toast.remove(), 3000);
 }
 
@@ -461,13 +597,13 @@ async function safeReadFile(path) {
 Principle of least privilege, only request necessary permissions.
 
 ```javascript
-// Only request permissions when needed
+// Only request file access permissions when needed
 async function saveConfig(config) {
     const configPath = await getConfigPath();
     return await puppet.fs.writeTextToFile(configPath, JSON.stringify(config));
 }
 
-// Avoid direct system file operations
+// Avoid directly operating system files
 // Not recommended:
 // await puppet.fs.writeTextToFile('C:\\Windows\\config.ini', data);
 ```
@@ -504,9 +640,9 @@ async function encryptData(data, key) {
 }
 ```
 
-### 4. PUP File Signature
+### 4. PUP File Signing
 
-Use digital signature functionality of V1.2 format to ensure application integrity and source credibility.
+Use V1.2 format digital signature functionality to ensure application integrity and source trustworthiness.
 
 ```javascript
 // Check if PUP file is signed
@@ -520,7 +656,7 @@ async function checkPupSignature() {
             console.log('Certificate issuer:', appInfo.certificateIssuer);
             return true;
         } else {
-            console.warn('PUP file is not signed, may have security risks');
+            console.warn('PUP file is unsigned, may pose security risks');
             return false;
         }
     } catch (error) {
@@ -535,15 +671,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     if (!isSigned) {
         // Can choose to refuse running unsigned applications
-        // document.body.innerHTML = '<h1>Security Warning: Application Not Signed</h1>';
+        // document.body.innerHTML = '<h1>Security Warning: Application Unsigned</h1>';
     }
 });
 ```
 
-**Create Signed PUP File**:
+**Creating Signed PUP Files**:
 
 ```bash
-# 1. Use puppet-sign to generate signing key pair
+# 1. Use puppet-sign to generate signing key pairs
 puppet-sign.exe --generate-signing-key --alias MyApp --key-size 2048
 
 # 2. Create signed PUP file
@@ -563,7 +699,7 @@ puppet-sign.exe --sign-database --database "C:\MyProject\data.db" --private-key 
 
 ### 5. Database Signature Verification
 
-Ensure database has not been tampered with.
+Ensure databases haven't been tampered with.
 
 ```javascript
 // Check database signature status
@@ -599,7 +735,7 @@ async function useSecureDatabase() {
 }
 ```
 
-## Debugging Tips
+## Debugging Techniques
 
 ### 1. Logging
 
@@ -648,7 +784,6 @@ function log(level, message, data = null) {
 log(LogLevel.INFO, 'Application started', { version: '1.0.0' });
 log(LogLevel.WARN, 'Configuration missing', { key: 'apiKey' });
 log(LogLevel.ERROR, 'Operation failed', { error: error.message });
-}
 ```
 
 ### 2. Performance Monitoring
@@ -711,7 +846,7 @@ class ErrorTracker {
         // Log error
         puppet.log.error(JSON.stringify(errorInfo));
         
-        // Display error
+        // Show error
         showError(error.message);
         
         // Report error (optional)
@@ -735,7 +870,7 @@ try {
 }
 ```
 
-## Testing Strategy
+## Testing Strategies
 
 ### 1. Unit Testing
 
@@ -760,11 +895,11 @@ describe('ApiClient', () => {
 
 ### 2. Integration Testing
 
-Test interactions between modules.
+Test module interactions.
 
 ```javascript
-describe('Application Integration Test', () => {
-    it('should completely load application', async () => {
+describe('Application integration test', () => {
+    it('should fully load application', async () => {
         await initializeApp();
         const isLoaded = checkAppLoaded();
         expect(isLoaded).toBe(true);
@@ -774,16 +909,16 @@ describe('Application Integration Test', () => {
 
 ### 3. Manual Testing
 
-Test key features and user workflows.
+Test key features and user flows.
 
 **Test Checklist**:
 
 - [ ] Application starts normally
-- [ ] All function buttons are available
+- [ ] All function buttons available
 - [ ] File read/write works normally
-- [ ] Error handling is correct
-- [ ] Performance is acceptable
-- [ ] Window style is correct
+- [ ] Error handling correct
+- [ ] Performance acceptable
+- [ ] Window style correct
 
 ## Deployment Recommendations
 
@@ -792,12 +927,12 @@ Test key features and user workflows.
 Use semantic versioning.
 
 ```
-MAJOR.MINOR.PATCH
+Major.Minor.Patch (MAJOR.MINOR.PATCH)
 
 Example: 1.2.3
 - 1: Major version (incompatible API changes)
-- 2: Minor version (backward compatible feature additions)
-- 3: Patch version (backward compatible bug fixes)
+- 2: Minor version (backward-compatible feature additions)
+- 3: Patch version (backward-compatible bug fixes)
 ```
 
 ### 2. Release Process
@@ -811,7 +946,7 @@ Standard release process:
 
 2. **Testing Phase**
    - Create PUP file
-   - Perform functional testing
+   - Conduct functional testing
    - Performance testing
 
 3. **Release Phase**
@@ -862,7 +997,7 @@ Add comments for complex logic.
  * Read and parse configuration file
  * @param {string} path - Configuration file path
  * @returns {Promise<Object>} Configuration object
- * @throws {Error} Throws exception when file doesn't exist or format is incorrect
+ * @throws {Error} Throws exception when file doesn't exist or format error
  */
 async function loadConfig(path) {
     try {
@@ -889,7 +1024,7 @@ Write documentation for public APIs.
 ```javascript
 /**
  * @module ApiClient
- * @description Provides Puppet API wrapper
+ * @description Provides wrapper for Puppet API
  */
 
 /**
@@ -906,14 +1041,14 @@ async function readFile(path) {
 
 ### 3. README
 
-Write detailed README for your project.
+Write detailed README for projects.
 
 ```markdown
 # My Puppet App
 
 ## Introduction
 
-This is a desktop application based on the Puppet framework.
+This is a desktop application based on the Puppet Framework.
 
 ## Features
 
@@ -928,7 +1063,7 @@ This is a desktop application based on the Puppet framework.
 
 ## Usage
 
-For detailed usage instructions, please refer to [Documentation](./docs/)
+For detailed usage instructions, refer to [Documentation](./docs/)
 
 ## Development
 
@@ -948,8 +1083,8 @@ MIT
 ## Related Resources
 
 - [API Documentation](../api/) - Complete API reference
-- [Security Mechanisms](./security.html) - Security best practices
-- [Quick Start](./getting-started.html) - Quick start guide
+- [Security Mechanisms](./security.md) - Security best practices
+- [Getting Started](./getting-started.md) - Quick start guide
 
 ## Next Steps
 
@@ -957,5 +1092,5 @@ After following best practices, it is recommended to:
 
 1. Regularly review and optimize code
 2. Continuously learn new technologies and patterns
-3. Collect user feedback and improve
-4. Get inspiration from open source projects
+3. Collect user feedback and make improvements
+4. Reference open source projects for inspiration

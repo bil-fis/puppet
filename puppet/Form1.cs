@@ -4,13 +4,20 @@ using System.Runtime.InteropServices;
 using System.Net.Http;
 using System.Drawing;
 using System.Drawing.Imaging;
+using puppet.Core;
 
 namespace puppet
 {
-    public partial class Form1 : Form
+    public partial class Form1 : Form, IWindow
     {
         // 应用程序标识（用于 WebView2 UserAgent）
         private const string USER_AGENT_HEADER = "Puppet/1.0.11";
+
+        // 内存优化：静态 HttpClient 实例，避免重复创建导致 socket 耗用和内存泄漏
+        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient()
+        {
+            Timeout = TimeSpan.FromSeconds(1)
+        };
 
         // 控制器实例
         private WindowController _windowController;
@@ -26,17 +33,19 @@ namespace puppet
         private bool _isDraggable = false;
         private bool _isMouseDown = false;
         private Point _mouseOffset;
-        private HashSet<string> _movableElements = new HashSet<string>();
+        // 内存优化：预分配容量，减少动态扩容
+        private HashSet<string> _movableElements = new HashSet<string>(capacity: 16);
 
         // 鼠标穿透相关
         private bool _mouseThrough = false;
 
         // 透明区域缓存（用于智能点击穿透）
-        private List<Rectangle> _transparentRegions = new List<Rectangle>();
-        private object _transparentRegionsLock = new object();
+        // 内存优化：预分配容量，减少动态扩容
+        private List<Rectangle> _transparentRegions = new List<Rectangle>(capacity: 32);
+        private readonly object _transparentRegionsLock = new object();
 
         // Composition 渲染器（用于高级透明效果）
-        private CompositionRenderer _compositionRenderer;
+        private CompositionRenderer? _compositionRenderer;
 
         // 重写 CreateParams 以使用 WS_EX_NOREDIRECTIONBITMAP
         // 根据 Microsoft 文档，这样可以避免不透明的重定向表面
@@ -64,14 +73,17 @@ namespace puppet
 
             Environment.SetEnvironmentVariable("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "0x00000000");
 
+            // 将自身注册到 ServiceManager（实现解耦）
+            ServiceManager.Instance.Register<IWindow>(this);
+
             // 初始化控制器
             _windowController = new WindowController(this);
             _applicationController = new ApplicationController(this);
             _fileSystemController = new FileSystemController(this);
             _logController = new LogController();
             _systemController = new SystemController();
-            _trayController = null; // 将在 WebView2 初始化完成后创建
-            _eventController = null; // 将在 WebView2 初始化完成后创建
+            _trayController = null!; // 将在 WebView2 初始化完成后创建
+            _eventController = null!; // 将在 WebView2 初始化完成后创建
 
             // 初始化 StorageController
             _storageController = new StorageController(this);
@@ -91,12 +103,22 @@ namespace puppet
             this.UpdateStyles();
         }
 
-        private async void WebView_CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e)
+        private async void WebView_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
         {
             if (e.IsSuccess)
             {
                 // 设置背景完全透明（根据 Microsoft 官方文档，支持 Alpha=0）
                 webView21.DefaultBackgroundColor = Color.Transparent;
+
+                // 内存优化：根据 Microsoft Learn 最佳实践
+                // 设置内存使用目标级别为 Normal，在不活跃时可以降低到 Low
+                webView21.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+
+                // 订阅窗口状态变化以优化内存使用
+                // 当窗口失去焦点时，降低 WebView2 内存使用
+                // 当窗口重新获得焦点时，恢复正常内存使用
+                this.Activated += OnWindowActivatedForMemory;
+                this.Deactivate += OnWindowDeactivatedForMemory;
 
                 // 设置自定义 UserAgent
                 string currentUA = await webView21.CoreWebView2.ExecuteScriptAsync("navigator.userAgent");
@@ -198,7 +220,7 @@ namespace puppet
                         };
 
                         // 应用方法包装
-                        window.puppet.Application = {
+                        window.puppet.application = {
                             close: async function() { return await chrome.webview.hostObjects.sync.application.Close(); },
                             restart: async function() { return await chrome.webview.hostObjects.sync.application.Restart(); },
                             getWindowInfo: async function() { return await chrome.webview.hostObjects.sync.application.GetWindowInfo(); },
@@ -423,7 +445,7 @@ namespace puppet
                 webView21.CoreWebView2.DocumentTitleChanged += WebView_DocumentTitleChanged;
 
                 // 检查服务器是否已经启动（例如通过 --nake-load 命令）
-                if (Program.Server == null)
+                if (ServiceManager.Instance.Server == null)
                 {
                     // 服务器未启动，启动 PUP 服务器
                     await Program.StartPupServerAsync();
@@ -433,9 +455,9 @@ namespace puppet
                 ExecuteStartupScript();
 
                 // 等待服务器启动（如果服务器已存在，也等待一小段时间确保完全启动）
-                if (Program.Server != null)
+                if (ServiceManager.Instance.Server != null)
                 {
-                    int port = Program.Server.Port;
+                    int port = ServiceManager.Instance.Server.Port;
 
                     // 增加等待时间并添加重试机制
                     for (int retry = 0; retry < 10; retry++)
@@ -445,15 +467,12 @@ namespace puppet
                         try
                         {
                             // 尝试测试服务器是否已经启动
-                            using (var client = new System.Net.Http.HttpClient())
+                            // 内存优化：使用静态 HttpClient 实例
+                            var response = await _sharedHttpClient.GetAsync($"http://localhost:{port}/");
+                            if (response.IsSuccessStatusCode)
                             {
-                                client.Timeout = TimeSpan.FromSeconds(1);
-                                var response = await client.GetAsync($"http://localhost:{port}/");
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    Console.WriteLine($"服务器已就绪，开始导航...");
-                                    break;
-                                }
+                                Console.WriteLine($"服务器已就绪，开始导航...");
+                                break;
                             }
                         }
                         catch
@@ -484,7 +503,7 @@ namespace puppet
         /// 处理来自 JavaScript 的 WebMessage
         /// 主要用于接收透明区域数据
         /// </summary>
-        private void CoreWebView2_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+        private void CoreWebView2_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             try
             {
@@ -493,7 +512,7 @@ namespace puppet
                 // 使用 Newtonsoft.Json 解析消息
                 var messageObj = Newtonsoft.Json.Linq.JObject.Parse(message);
 
-                string type = messageObj["type"]?.ToString();
+                string type = messageObj["type"]?.ToString() ?? string.Empty;
 
                 if (type == "transparentRegions")
                 {
@@ -546,7 +565,7 @@ namespace puppet
         /// 拦截所有 WebView2 请求并添加安全头
         /// 参考 Microsoft Learn: https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2.webresourcerequested
         /// </summary>
-        private void WebView_WebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        private void WebView_WebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
             try
             {
@@ -566,7 +585,7 @@ namespace puppet
             }
         }
 
-        private void WebView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
+        private void WebView_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
         {
             // 在导航开始前，确保新页面的背景也是透明的
         }
@@ -574,7 +593,7 @@ namespace puppet
         /// <summary>
         /// 导航完成后获取网页的 favicon
         /// </summary>
-        private async void WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        private async void WebView_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             if (e.IsSuccess && webView21.CoreWebView2 != null)
             {
@@ -618,7 +637,7 @@ namespace puppet
         /// <summary>
         /// 网页标题改变时更新窗口标题
         /// </summary>
-        private void WebView_DocumentTitleChanged(object sender, object e)
+        private void WebView_DocumentTitleChanged(object? sender, object e)
         {
             if (webView21.CoreWebView2 != null && !string.IsNullOrEmpty(webView21.CoreWebView2.DocumentTitle))
             {
@@ -676,18 +695,12 @@ namespace puppet
             const int WM_NCHITTEST = 0x84;
             const int HTTRANSPARENT = -1;
             const int HTCLIENT = 1;
-            const int HTCAPTION = 2;
-            const int WM_NCLBUTTONDOWN = 0xA1;
             const int WM_SIZE = 0x0005;
             const int WM_MOVE = 0x0003;
             const int WM_SYSCOMMAND = 0x0112;
             const int SC_RESTORE = 0xF120;
             const int SC_MINIMIZE = 0xF020;
             const int SC_MAXIMIZE = 0xF030;
-            const int WM_ACTIVATE = 0x0006;
-            const int WA_INACTIVE = 0;
-            const int WA_ACTIVE = 1;
-            const int WA_CLICKACTIVE = 2;
 
             base.WndProc(ref m);
 
@@ -821,7 +834,7 @@ namespace puppet
                     centerWindow: async function() { return await chrome.webview.hostObjects.sync.window.CenterWindow(); }
                 };
 
-                window.puppet.Application = {
+                window.puppet.application = {
                     close: async function() { return await chrome.webview.hostObjects.sync.application.Close(); },
                     restart: async function() { return await chrome.webview.hostObjects.sync.application.Restart(); },
                     getWindowInfo: async function() { return await chrome.webview.hostObjects.sync.application.GetWindowInfo(); },
@@ -854,7 +867,7 @@ namespace puppet
                     error: async function(m) { return await chrome.webview.hostObjects.sync.log.Error('[error]: ' + String(m)); }
                 };
 
-                window.puppet.System = {
+                window.puppet.system = {
                     getSystemInfo: async function() { return await chrome.webview.hostObjects.sync.system.GetSystemInfo(); },
                     takeScreenShot: async function() { return await chrome.webview.hostObjects.sync.system.TakeScreenShot(); },
                     getDesktopWallpaper: async function() { return await chrome.webview.hostObjects.sync.system.GetDesktopWallpaper(); },
@@ -1234,7 +1247,7 @@ namespace puppet
 
                     async function testGetWindowInfo() {
                         try {
-                            const info = await puppet.Application.getWindowInfo();
+                            const info = await puppet.application.getWindowInfo();
                             log('窗口信息: ' + info);
                         } catch(e) {
                             log('错误: ' + e.message);
@@ -1253,7 +1266,7 @@ namespace puppet
 
                     async function testSystemAPI() {
                         try {
-                            const systemInfo = await puppet.System.getSystemInfo();
+                            const systemInfo = await puppet.system.getSystemInfo();
                             log('系统信息已获取');
                             const mousePos = await puppet.System.getMousePosition();
                             log('鼠标位置: ' + mousePos);
@@ -1264,7 +1277,7 @@ namespace puppet
 
                     async function testScreenshot() {
                         try {
-                            const screenshot = await puppet.System.takeScreenShot();
+                            const screenshot = await puppet.system.takeScreenShot();
                             log('截图成功，长度: ' + screenshot.length);
                         } catch(e) {
                             log('错误: ' + e.message);
@@ -1317,21 +1330,21 @@ namespace puppet
             try
             {
                 // 检查是否有 PUP 服务器
-                if (Program.Server == null)
+                if (ServiceManager.Instance.Server == null)
                 {
                     Console.WriteLine("No PUP server found, skipping startup script execution");
                     return;
                 }
 
                 // 检查是否是 V1.1 版本
-                if (Program.Server.PupVersion != "1.1")
+                if (ServiceManager.Instance.Server.PupVersion != "1.1")
                 {
-                    Console.WriteLine($"PUP version is {Program.Server.PupVersion}, no startup script to execute");
+                    Console.WriteLine($"PUP version is {ServiceManager.Instance.Server.PupVersion}, no startup script to execute");
                     return;
                 }
 
                 // 获取启动脚本
-                string? scriptContent = Program.Server.StartupScript;
+                string? scriptContent = ServiceManager.Instance.Server.StartupScript;
                 if (string.IsNullOrWhiteSpace(scriptContent))
                 {
                     Console.WriteLine("No startup script content found in PUP V1.1 file");
@@ -1349,13 +1362,122 @@ namespace puppet
             }
         }
 
+        /// <summary>
+        /// 清理额外资源（内存优化）
+        /// 在窗口关闭时调用
+        /// </summary>
+        private void CleanupResources()
+        {
+            try
+            {
+                // 内存优化：取消订阅窗口事件以避免内存泄漏
+                this.Activated -= OnWindowActivatedForMemory;
+                this.Deactivate -= OnWindowDeactivatedForMemory;
+
+                // 清理 CompositionRenderer
+                _compositionRenderer?.Dispose();
+                _compositionRenderer = null;
+
+                // 清理透明区域缓存
+                lock (_transparentRegionsLock)
+                {
+                    _transparentRegions.Clear();
+                }
+
+                // 清理可移动元素集合
+                _movableElements.Clear();
+
+                // 注意：不释放 _sharedHttpClient，因为它是静态共享的
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"清理资源时出错: {ex.Message}");
+            }
+        }
+
+        #region IWindow 接口实现
+
+        /// <summary>
+        /// 异步执行操作在 UI 线程上（IWindow 接口实现）
+        /// </summary>
+        public void InvokeOnUIThread(Action action)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        /// <summary>
+        /// 异步执行操作在 UI 线程上（带返回值）（IWindow 接口实现）
+        /// </summary>
+        public T InvokeOnUIThread<T>(Func<T> action)
+        {
+            if (InvokeRequired)
+            {
+                return (T)Invoke(action);
+            }
+            else
+            {
+                return action();
+            }
+        }
+
+        /// <summary>
+        /// 窗口激活时的内存优化处理
+        /// 根据 Microsoft Learn 最佳实践，恢复 WebView2 的内存使用级别
+        /// </summary>
+        private void OnWindowActivatedForMemory(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (webView21?.CoreWebView2 != null)
+                {
+                    // 恢复正常内存使用级别
+                    webView21.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+                    Console.WriteLine("[内存优化] 窗口激活，恢复 WebView2 内存使用级别为 Normal");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[内存优化] 恢复内存使用级别失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 窗口失去焦点时的内存优化处理
+        /// 根据 Microsoft Learn 最佳实践，降低 WebView2 的内存使用
+        /// </summary>
+        private void OnWindowDeactivatedForMemory(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (webView21?.CoreWebView2 != null)
+                {
+                    // 降低内存使用级别以减少内存占用
+                    webView21.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+                    Console.WriteLine("[内存优化] 窗口失去焦点，降低 WebView2 内存使用级别为 Low");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[内存优化] 降低内存使用级别失败: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         // 窗口拖动相关方法
         public void SetDraggable(bool draggable)
         {
             _isDraggable = draggable;
         }
 
-        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        private void Form1_MouseDown(object? sender, MouseEventArgs e)
         {
             if (_isDraggable && e.Button == MouseButtons.Left)
             {
@@ -1364,7 +1486,7 @@ namespace puppet
             }
         }
 
-        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        private void Form1_MouseMove(object? sender, MouseEventArgs e)
         {
             if (_isMouseDown && _isDraggable)
             {
@@ -1374,7 +1496,7 @@ namespace puppet
             }
         }
 
-        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        private void Form1_MouseUp(object? sender, MouseEventArgs e)
         {
             _isMouseDown = false;
         }
@@ -1418,13 +1540,13 @@ namespace puppet
                         if (!_compositionRenderer.Initialize())
                         {
                             _logController?.Warn("CompositionRenderer 初始化失败，将使用基础透明模式");
-                            _compositionRenderer = null;
+                            _compositionRenderer = null!;
                         }
                     }
                     catch (Exception ex)
                     {
                         _logController?.Error($"CompositionRenderer 初始化异常: {ex.Message}");
-                        _compositionRenderer = null;
+                        _compositionRenderer = null!;
                     }
                 }
                 
@@ -1478,7 +1600,7 @@ namespace puppet
                 if (_compositionRenderer != null)
                 {
                     _compositionRenderer.Dispose();
-                    _compositionRenderer = null;
+                    _compositionRenderer = null!;
                 }
                 
                 // 强制刷新
@@ -1717,10 +1839,10 @@ namespace puppet
 
         #region COM 互操作
 
-        public static IntPtr QueryInterface(IntPtr pUnk, ref Guid iid)
+        public static IntPtr QueryInterface(IntPtr pUnk, in Guid iid)
         {
             IntPtr result = IntPtr.Zero;
-            Marshal.QueryInterface(pUnk, ref iid, out result);
+            Marshal.QueryInterface(pUnk, in iid, out result);
             return result;
         }
 
@@ -1825,7 +1947,7 @@ namespace puppet
 
     #endregion
 
-    #region 枚举定义
+    #region DirectComposition 渲染器
 
     internal enum GetWindowLongIndex
     {
@@ -2036,9 +2158,6 @@ namespace puppet
         private IntPtr _d2d1Factory;
         private IntPtr _d2d1Device;
         private IntPtr _d2d1DeviceContext;
-        private IntPtr _d2d1Bitmap;
-        private IntPtr _dxgiSurface;
-        private bool _isInitialized;
         private bool _disposed;
         private Size _windowSize;
         private object _lockObject = new object();
@@ -2047,7 +2166,9 @@ namespace puppet
         private List<Rectangle> _transparentRegions = new List<Rectangle>();
 
         // 事件
+#pragma warning disable CS0067
         public event EventHandler<HitTestEventArgs> HitTest;
+#pragma warning restore CS0067
 
         // GUID 定义
         private static Guid IID_IDXGIDevice = new Guid("54ec77fa-1377-44e6-8c32-88fd5f44c84c");
@@ -2109,7 +2230,6 @@ namespace puppet
                         return false;
                     }
 
-                    _isInitialized = true;
                     return true;
                 }
                 catch (Exception ex)
@@ -2164,7 +2284,7 @@ namespace puppet
             }
 
             // 获取 DXGI 设备
-            _dxgiDevice = NativeMethods.QueryInterface(_d3d11Device, ref IID_IDXGIDevice);
+            _dxgiDevice = NativeMethods.QueryInterface(_d3d11Device, in IID_IDXGIDevice);
 
             return _dxgiDevice != IntPtr.Zero;
         }
@@ -2537,7 +2657,7 @@ namespace puppet
     public class HitTestEventArgs : EventArgs
     {
         public Point Point { get; set; }
-        public HitTestResult Result { get; set; }
+        public HitTestResult Result { get; set; } = new HitTestResult();
     }
 
     public class HitTestResult

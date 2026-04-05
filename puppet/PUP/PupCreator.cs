@@ -112,7 +112,7 @@ namespace puppet.PUP
 
                 // 2. 验证输出目录
                 Console.WriteLine("步骤 2/7: 验证输出目录...");
-                string outputDir = Path.GetDirectoryName(outputPupFile);
+                string outputDir = Path.GetDirectoryName(outputPupFile) ?? Directory.GetCurrentDirectory();
                 Console.WriteLine($"  输出目录: {outputDir}");
                 
                 if (string.IsNullOrEmpty(outputDir))

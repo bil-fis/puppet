@@ -154,7 +154,7 @@ Puppet 遵循语义化版本规范（Semantic Versioning）：
 
 #### 技术栈
 
-- .NET 9.0
+- .NET 10.0
 - Windows Forms
 - Microsoft WebView2
 - COM Interop

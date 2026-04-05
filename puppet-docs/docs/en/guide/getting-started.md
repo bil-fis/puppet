@@ -8,16 +8,16 @@ createTime: 2026/03/28 14:51:54
 
 This guide will help you create your first Puppet application in 5 minutes.
 
-## Requirements
+## Environment Requirements
 
-Before you begin, make sure your system meets the following requirements:
+Before starting, ensure your system meets the following requirements:
 
 - **Operating System**: Windows 10 or higher
-- **.NET Runtime**: .NET 9.0 or higher
-- **WebView2 Runtime**: Usually installed with Edge browser, if not installed you can download from [Microsoft official website](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+- **.NET Runtime**: .NET 10.0 or higher
+- **WebView2 Runtime**: Usually installed with Edge browser. If not installed, download from [Microsoft Official Website](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
 
 ::: tip Tip
-Puppet Framework will automatically check and prompt you to install required runtime environments.
+The Puppet Framework will automatically check and prompt for installation of required runtime environments.
 :::
 
 ## Creating Your First Application
@@ -33,7 +33,7 @@ cd MyFirstPuppetApp
 
 ### 2. Create Main Page
 
-Create `index.html` file:
+Create an `index.html` file:
 
 ```html
 <!DOCTYPE html>
@@ -41,14 +41,14 @@ Create `index.html` file:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My First Puppet App</title>
+    <title>My First Puppet Application</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -58,7 +58,7 @@ Create `index.html` file:
             align-items: center;
             color: white;
         }
-
+        
         .container {
             text-align: center;
             padding: 40px;
@@ -67,17 +67,17 @@ Create `index.html` file:
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-
+        
         h1 {
             font-size: 2.5em;
             margin-bottom: 20px;
         }
-
+        
         p {
             font-size: 1.2em;
             margin-bottom: 30px;
         }
-
+        
         button {
             padding: 12px 24px;
             font-size: 16px;
@@ -89,16 +89,16 @@ Create `index.html` file:
             transition: transform 0.2s, box-shadow 0.2s;
             margin: 0 10px;
         }
-
+        
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-
+        
         button:active {
             transform: translateY(0);
         }
-
+        
         .info {
             margin-top: 20px;
             font-size: 14px;
@@ -109,11 +109,11 @@ Create `index.html` file:
 <body>
     <div class="container">
         <h1>🎭 Puppet Framework</h1>
-        <p>Welcome to Puppet Framework!</p>
+        <p>Welcome to the Puppet Framework!</p>
         <button onclick="testWindow()">Window Control</button>
         <button onclick="testSystem()">System Info</button>
         <button onclick="testLog()">Test Log</button>
-        <div class="info" id="info">Click buttons to test features</div>
+        <div class="info" id="info">Click buttons to test functionality</div>
     </div>
 
     <script>
@@ -122,10 +122,10 @@ Create `index.html` file:
             try {
                 // Set opacity
                 await puppet.window.setOpacity(0.9);
-
+                
                 // Show info
                 showInfo('Window opacity set to 90%');
-
+                
                 // Restore after 2 seconds
                 setTimeout(async () => {
                     await puppet.window.setOpacity(1.0);
@@ -134,25 +134,25 @@ Create `index.html` file:
                 showInfo('Error: ' + error.message);
             }
         }
-
+        
         // System info test
         async function testSystem() {
             try {
                 const sysInfo = await puppet.system.getSystemInfo();
-                showInfo('OS: ' + sysInfo.osName);
+                showInfo('Operating System: ' + sysInfo.osName);
             } catch (error) {
                 showInfo('Error: ' + error.message);
             }
         }
-
+        
         // Log test
         function testLog() {
             puppet.log.info('This is an info log');
             puppet.log.warn('This is a warning log');
             puppet.log.error('This is an error log');
-            showInfo('Logs have been output, check console');
+            showInfo('Logs output, check console');
         }
-
+        
         // Show info
         function showInfo(message) {
             document.getElementById('info').textContent = message;
@@ -166,16 +166,16 @@ Create `index.html` file:
 
 There are two ways to run a Puppet application:
 
-#### Method 1: Bare Folder Mode (Recommended for Development)
+#### Method 1: Bare Folder Mode (for development)
 
-This is the recommended method during development, allowing you to see code changes in real-time:
+This is the recommended way during development, allowing you to see code changes in real-time:
 
 ```bash
 # Assuming puppet.exe is in E:\puppet\puppet\bin\Debug\ directory
 E:\puppet\puppet\bin\Debug\puppet.exe --nake-load "C:\MyFirstPuppetApp"
 ```
 
-#### Method 2: PUP File Mode (For Release)
+#### Method 2: PUP File Mode (for distribution)
 
 First create a PUP file:
 
@@ -189,23 +189,23 @@ Then run the PUP file:
 E:\puppet\puppet\bin\Debug\puppet.exe --load-pup "C:\MyFirstPuppetApp.pup"
 ```
 
-### 4. Test Features
+### 4. Test Functionality
 
 Click the buttons in the application to test the following features:
 
 - **Window Control**: Window opacity will briefly change
-- **System Info**: Display current operating system name
-- **Test Log**: Output different levels of logs to console
+- **System Info**: Display the current operating system name
+- **Test Log**: Output logs of different levels to the console
 
 ## Next Steps
 
-Congratulations! You have successfully created your first Puppet application. Next you can:
+Congratulations! You have successfully created your first Puppet application. Next steps:
 
-1. **Learn API**: View [API Documentation](../api/) to learn about all available features
+1. **Deep Dive into API**: View [API Documentation](../api/) to learn about all available features
 2. **Window Control**: Learn how to create borderless, transparent windows
-3. **File Operations**: Learn how to read and write local files
-4. **Event System**: Implement device plug/unplug, window event monitoring
-5. **System Functions**: Get system information, simulate keystrokes
+3. **File Operations**: Understand how to read and write local files
+4. **Event System**: Implement device plug/unplug, window events, and other monitoring
+5. **System Functions**: Get system information, simulate keystrokes, etc.
 
 ## Common Questions
 
@@ -214,22 +214,22 @@ Congratulations! You have successfully created your first Puppet application. Ne
 A: Add the following code to your HTML:
 
 ```javascript
-// Set immediately after page loads
+// Set immediately after page load
 window.addEventListener('DOMContentLoaded', async () => {
     await puppet.window.setBorderless(true);
     await puppet.window.setDraggable(true);
 });
 ```
 
-For details, see [Window Control API](../api/window.md).
+For detailed instructions, refer to [Window Control API](../api/window.md).
 
 ### Q: How to debug applications?
 
 A: You can:
 
-1. Use browser developer tools (right-click in Puppet app -> Inspect)
+1. Use browser developer tools (right-click in Puppet application -> Inspect)
 2. Use `puppet.log.info()` and other methods to output logs
-3. In bare folder mode, you can directly modify HTML files to see changes in real-time
+3. In bare folder mode, directly modify HTML files to see changes in real-time
 
 ### Q: Can PUP files be encrypted?
 
@@ -239,14 +239,28 @@ A: Yes. Specify a password when creating a PUP file:
 puppet.exe --create-pup -i "C:\MyProject" -o "C:\MyProject.pup" -p "mypassword"
 ```
 
-For details, see [PUP File Format](./pup-format.md).
+For detailed instructions, refer to [PUP File Format](./pup-format.md).
+
+### Q: How to create a signed PUP file?
+
+A: Use V1.2 format and puppet-sign tool:
+
+```bash
+# 1. Generate signing key pair
+puppet-sign.exe --generate-signing-key --alias MyApp --key-size 2048
+
+# 2. Create signed PUP file
+puppet.exe --create-pup -i "C:\MyProject" -o "C:\MyProject.pup" -v 1.2 --certificate "app.crt" --private-key "app.key" --private-key-password "mypassword"
+```
+
+Signed PUP files ensure application integrity and source trustworthiness. For detailed instructions, refer to [Security Mechanisms](./security.md) and [PUP File Format](./pup-format.md).
 
 ### Q: How to make the application start automatically on boot?
 
-A: Use the `execute` method in Application API to create a shortcut:
+A: Use the `execute` method of the Application API to create a shortcut:
 
 ```javascript
-await puppet.Application.execute(
+await puppet.application.execute(
     'cmd /c mkshortcut /target:"C:\\MyApp\\puppet.exe" /shortcut:"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"'
 );
 ```
@@ -254,14 +268,14 @@ await puppet.Application.execute(
 ## Related Resources
 
 - [Framework Introduction](./introduction.md) - Learn about Puppet's core features
-- [Architecture Design](./architecture.md) - Deep dive into framework internals
-- [Command Line Parameters](./cli-parameters.md) - All command line options
+- [Architecture Design](./architecture.md) - Deep dive into framework internal principles
+- [Command Line Parameters](./cli-parameters.md) - All command line option instructions
 - [API Documentation](../api/) - Complete API reference manual
 
 ## Getting Help
 
 If you encounter issues during development:
 
-1. Consult relevant sections of this documentation
-2. Check [API Documentation](../api/) for specific usage
-3. Submit issues in [GitHub Issues](#)
+1. Check relevant sections of this documentation
+2. View [API Documentation](../api/) for specific usage
+3. Submit issues on [GitHub Issues](#)

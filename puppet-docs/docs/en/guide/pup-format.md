@@ -6,16 +6,16 @@ createTime: 2026/03/28 14:55:17
 
 # PUP File Format
 
-PUP (Puppet Package) is a dedicated application packaging format for the Puppet framework. It packages an entire web application into a single file, supports encryption protection, and facilitates distribution and deployment.
+PUP (Puppet Package) is a proprietary application packaging format for the Puppet Framework. It packages an entire web application into a single file with encryption support for easy distribution and deployment.
 
 ## Overview
 
-PUP file is a custom packaging format that combines ZIP compression and AES encryption technology, with the following features:
+PUP file is a custom packaging format combining ZIP compression and AES encryption with the following features:
 
-- **Single file distribution**: All resources packaged into one file
-- **Password protection**: Supports AES-256 encryption
-- **Fast loading**: Optimized file structure and loading mechanism
-- **Cross-version compatibility**: Version identifiers ensure compatibility
+- **Single File Distribution**: All resources packaged into one file
+- **Password Protection**: Supports AES-256 encryption
+- **Fast Loading**: Optimized file structure and loading mechanism
+- **Cross-Version Compatibility**: Version identifiers ensure compatibility
 
 ## File Structure
 
@@ -31,7 +31,7 @@ PUP file format supports multiple versions:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│           PUP V1.0 Header (8 bytes)                  │
+│           PUP V1.0 Identifier Header (8 bytes)       │
 ├─────────────────────────────────────────────────────┤
 │           AES Encrypted ZIP Password (32 bytes)      │
 ├─────────────────────────────────────────────────────┤
@@ -43,7 +43,7 @@ PUP file format supports multiple versions:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│           PUP V1.1 Header (8 bytes)                  │
+│           PUP V1.1 Identifier Header (8 bytes)       │
 ├─────────────────────────────────────────────────────┤
 │           Script Length (4 bytes, int32)             │
 ├─────────────────────────────────────────────────────┤
@@ -55,11 +55,11 @@ PUP file format supports multiple versions:
 └─────────────────────────────────────────────────────┘
 ```
 
-### V1.2 Binary Structure (with signature support)
+### V1.2 Binary Structure (with Signature Support)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│           PUP V1.2 Header (8 bytes)                  │
+│           PUP V1.2 Identifier Header (8 bytes)       │
 ├─────────────────────────────────────────────────────┤
 │           Script Length (4 bytes, int32)             │
 ├─────────────────────────────────────────────────────┤
@@ -69,7 +69,7 @@ PUP file format supports multiple versions:
 ├─────────────────────────────────────────────────────┤
 │           Certificate Data (variable length, DER)    │
 ├─────────────────────────────────────────────────────┤
-│           Encrypted Private Key Length (4 bytes)    │
+│           Encrypted Private Key Length (4 bytes)     │
 ├─────────────────────────────────────────────────────┤
 │           Encrypted Private Key Data (variable)      │
 ├─────────────────────────────────────────────────────┤
@@ -81,30 +81,28 @@ PUP file format supports multiple versions:
 
 **V1.2 Security Features**:
 
-- **Certificate Protection**: Uses self-signed X.509 certificate for signature verification
-- **Private Key Encryption**: Private key encrypted with AES-256-GCM, key derived via PBKDF2
-- **Database Signature**: Supports signing and verifying SQLite databases
-- **Fingerprint Verification**: Verifies certificate has not been replaced via certificate fingerprint
+- **Certificate Protection**: Uses self-signed X.509 certificates for signature verification
+- **Private Key Encryption**: Private key encrypted using AES-256-GCM, key derived via PBKDF2
+- **Database Signature**: Supports signing and verification of SQLite databases
+- **Fingerprint Verification**: Ensures certificate hasn't been replaced via certificate fingerprint
 
 ### Detailed Description
 
-#### 1. Header (8 bytes)
+#### 1. Identifier Header (8 bytes)
 
-Fixed string used to identify file format and version.
+Fixed string for identifying file format and version.
 
 - V1.0: `"PUP V1.0"`
 - V1.1: `"PUP V1.1"`
-- V1.2: `"PUP V1.2"`
 
 ```csharp
 private static readonly byte[] PUP_HEADER_V1_0 = Encoding.UTF8.GetBytes("PUP V1.0");
 private static readonly byte[] PUP_HEADER_V1_1 = Encoding.UTF8.GetBytes("PUP V1.1");
-private static readonly byte[] PUP_HEADER_V1_2 = Encoding.UTF8.GetBytes("PUP V1.2");
 ```
 
 #### 2. Encrypted ZIP Password (32 bytes)
 
-The decompression password for the ZIP file, encrypted with a fixed key `"ILOVEPUPPET"` using AES.
+ZIP file decompression password, encrypted using the fixed key `"ILOVEPUPPET"` with AES.
 
 ```csharp
 // Fixed encryption key
@@ -146,7 +144,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -p "MySecretPassword"
 
 #### Code Method (C#)
 
-Use `PupCreator` class to create PUP file:
+Use the `PupCreator` class to create PUP files:
 
 ```csharp
 using Puppet;
@@ -159,7 +157,7 @@ PupCreator.CreatePup(
 );
 ```
 
-### V1.1 Format (with startup script)
+### V1.1 Format (with Startup Script)
 
 #### Command Line Method
 
@@ -187,7 +185,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -p "MySecretPassword" -v
 
 #### Code Method (C#)
 
-Use `PupCreator` class to create V1.1 format PUP file:
+Use the `PupCreator` class to create V1.1 format PUP files:
 
 ```csharp
 using Puppet;
@@ -202,19 +200,19 @@ PupCreator.CreatePup(
 );
 ```
 
-### Startup Script (V1.1)
+## Startup Scripts (V1.1)
 
 ::: tip Detailed Documentation
-For complete usage instructions, syntax reference, and best practices for startup scripts, please refer to [PUP Startup Script](./pup-script.html) documentation.
+For complete usage instructions, syntax reference, and best practices for startup scripts, please refer to the [PUP Startup Script](./pup-script.md) documentation.
 :::
 
 ### Overview
 
-V1.1 format supports automatically executing preset scripts after PUP loading to quickly initialize window state.
+V1.1 format supports automatic execution of preset scripts when PUP loads, enabling quick initialization of window states.
 
 ### Script Syntax
 
-Startup script uses simple command syntax, one command per line:
+Startup scripts use a simple command syntax, one command per line:
 
 ```
 set <property> <value>
@@ -231,7 +229,7 @@ set startup_position <POSITION>
 ```
 
 **Parameters**:
-- `<x>,<y>`: Specify coordinates, e.g., `100,200`
+- `<x>,<y>`: Specified coordinates, e.g., `100,200`
 - `<POSITION>`: Predefined position, supports the following values:
   - `left-top`: Top-left corner
   - `left-bottom`: Bottom-left corner (excluding taskbar)
@@ -282,21 +280,21 @@ set window_size 1024,768
 
 ### Script Examples
 
-**Example 1: Borderless Window in Bottom Right**
+**Example 1: Bottom-right borderless window**
 ```
 set startup_position right-bottom
 set borderless true
 set window_size 400,300
 ```
 
-**Example 2: Centered Window with Border**
+**Example 2: Centered bordered window**
 ```
 set startup_position center
 set borderless false
 set window_size 1024,768
 ```
 
-**Example 3: Specific Position and Size**
+**Example 3: Specified position and size**
 ```
 set startup_position 100,100
 set borderless true
@@ -308,8 +306,8 @@ set window_size 800,600
 Create a script file named `startup.txt`:
 
 ```
-# Puppet startup script
-# Set window as borderless in bottom-right corner
+# Puppet Startup Script
+# Set window to bottom-right borderless window
 set startup_position right-bottom
 set borderless true
 set window_size 500,400
@@ -317,19 +315,34 @@ set window_size 500,400
 
 ### Script Execution Timing
 
-- Script executes after PUP file is loaded
-- Executes after WebView2 initialization is complete
-- Executes before page navigation to application URL
-- Script execution errors will not prevent application startup
+- Script executes after PUP file loads
+- Executes after WebView2 initialization completes
+- Executes before page navigates to application URL
+- Script execution errors won't prevent application startup
 
 ### Script Limitations
 
-- Only one command per line
+- Each line can only contain one command
 - Commands are case-insensitive
 - Supports comments starting with `//` or `#`
 - Empty lines are ignored
 
-### V1.2 Format (with signature support)
+### Code Method (C#)
+
+Use the `PupCreator` class to create PUP files:
+
+```csharp
+using Puppet;
+
+// Create PUP file
+PupCreator.CreatePup(
+    sourceFolder: @"C:\MyApp",
+    outputPupFile: @"C:\MyApp.pup",
+    password: "MySecretPassword"  // Optional
+);
+```
+
+### V1.2 Format (with Signature Support)
 
 #### Command Line Method
 
@@ -359,7 +372,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -p "MySecretPassword" -v
 
 #### Code Method (C#)
 
-Use `PupCreator` class to create V1.2 format PUP file:
+Use the `PupCreator` class to create V1.2 format PUP files:
 
 ```csharp
 using Puppet;
@@ -378,10 +391,10 @@ PupCreator.CreatePup(
 
 #### Certificate and Private Key Generation
 
-Use `puppet-sign` tool to generate signing key pair:
+Use the `puppet-sign` tool to generate signing key pairs:
 
 ```bash
-# Generate signing key pair
+# Generate signing key pairs
 puppet-sign.exe --generate-signing-key --alias MyApp --organization MyOrg --country CN --validity 3650
 ```
 
@@ -391,7 +404,7 @@ Generated files:
 
 #### Database Signature
 
-When using V1.2 format PUP file, database automatically supports signature functionality:
+When using V1.2 format PUP files, the database automatically supports signature functionality:
 
 ```csharp
 // Sign database in code
@@ -399,15 +412,15 @@ StorageController storage = new StorageController(form);
 storage.SignDatabase("default");
 ```
 
-Signed database will store in `puppet_metadata` table:
+After signing, the database stores the following in the `puppet_metadata` table:
 - `app_id` - Application identifier (from certificate CN)
 - `certificate_fingerprint` - Certificate fingerprint (SHA256)
-- `signature_data` - Signature data (signed with private key)
+- `signature_data` - Signature data (signed using private key)
 - `created_at` - Signature timestamp
 
 #### Signature Verification
 
-When loading V1.2 format PUP file, system automatically verifies database signature:
+When loading V1.2 format PUP files, the system automatically verifies database signatures:
 
 ```csharp
 // PupServer automatically verifies signature
@@ -417,7 +430,7 @@ var server = new PupServer("myapp.pup", 7738);
 storage.SetItem("default", "key", "value");
 ```
 
-Verification failure outputs warning message:
+Verification failure outputs warning messages:
 ```
 ✗ Database signature verification failed: default
   WARNING: Database may have been tampered with
@@ -437,7 +450,7 @@ puppet.exe --load-pup <file.pup>
 # Load V1.0 format
 puppet.exe --load-pup "C:\MyApp.pup"
 
-# Load V1.1 format (automatically executes startup script)
+# Load V1.1 format (startup script executes automatically)
 puppet.exe --load-pup "C:\MyAppV1_1.pup"
 
 # Load V1.2 format (automatically loads certificate and private key, supports database signature)
@@ -446,29 +459,29 @@ puppet.exe --load-pup "C:\MyAppV1_2.pup"
 
 **Automatic Version Recognition**:
 
-PupServer automatically recognizes PUP file version:
+PupServer automatically recognizes PUP file versions:
 
-- V1.0: Parses header `"PUP V1.0"`
-- V1.1: Parses header `"PUP V1.1"` and executes startup script
-- V1.2: Parses header `"PUP V1.2"`, loads certificate and private key, supports database signature
+- V1.0: Parses identifier header `"PUP V1.0"`
+- V1.1: Parses identifier header `"PUP V1.1"` and executes startup script
+- V1.2: Parses identifier header `"PUP V1.2"`, loads certificate and private key, supports database signature
 
 ### Configuration File Method
 
-Edit `puppet.ini` file:
+Edit the `puppet.ini` file:
 
 ```ini
 [file]
 file=C:\MyApp.pup
 ```
 
-Then run `puppet.exe` directly.
+Then simply run `puppet.exe`.
 
 ### Loading Process
 
 #### V1.0 Loading Process
 
 ```
-1. Read first 8 bytes of file, verify header "PUP V1.0"
+1. Read first 8 bytes of file, verify identifier header "PUP V1.0"
         ↓
 2. Read next 32 bytes (encrypted ZIP password)
         ↓
@@ -484,7 +497,7 @@ Then run `puppet.exe` directly.
 #### V1.1 Loading Process
 
 ```
-1. Read first 8 bytes of file, verify header "PUP V1.1"
+1. Read first 8 bytes of file, verify identifier header "PUP V1.1"
         ↓
 2. Read next 4 bytes (script length)
         ↓
@@ -503,10 +516,10 @@ Then run `puppet.exe` directly.
 9. Execute startup script (after WebView2 initialization completes)
 ```
 
-#### V1.2 Loading Process (with signature support)
+#### V1.2 Loading Process (with Signature Support)
 
 ```
-1. Read first 8 bytes of file, verify header "PUP V1.2"
+1. Read first 8 bytes of file, verify identifier header "PUP V1.2"
         ↓
 2. Read next 4 bytes (script length)
         ↓
@@ -522,7 +535,7 @@ Then run `puppet.exe` directly.
         ↓
 8. Read encrypted private key data (variable length)
         ↓
-9. Use PBKDF2 to derive key and decrypt private key (AES-256-GCM)
+9. Derive key using PBKDF2 and decrypt private key (AES-256-GCM)
         ↓
 10. Read next 32 bytes (encrypted ZIP password)
         ↓
@@ -548,9 +561,9 @@ Then run `puppet.exe` directly.
         ↓
 2. Encrypt ZIP password using fixed key "ILOVEPUPPET"
         ↓
-3. Create ZIP file (using ZIP password for encryption)
+3. Create ZIP file (encrypted using ZIP password)
         ↓
-4. Concatenate: header + encrypted ZIP password + ZIP data
+4. Concatenate: identifier header + encrypted ZIP password + ZIP data
         ↓
 5. Write to PUP file
 ```
@@ -558,7 +571,7 @@ Then run `puppet.exe` directly.
 ### Decryption Process
 
 ```
-1. Read first 8 bytes of file, verify header
+1. Read first 8 bytes of file, verify identifier header
         ↓
 2. Read next 32 bytes (encrypted ZIP password)
         ↓
@@ -581,7 +594,7 @@ PUP uses the following encryption algorithms:
 - **Padding**: PKCS7
 
 ::: tip Security Note
-The encrypted ZIP password uses a fixed key `"ILOVEPUPPET"` for encryption, which is a lightweight protection method. If stronger security is needed, it's recommended to use file system encryption (such as BitLocker) or use HTTPS for distribution.
+The encrypted ZIP password uses the fixed key `"ILOVEPUPPET"`, which is a lightweight protection method. If you need stronger security, consider using file system encryption (like BitLocker) or distribution over HTTPS.
 :::
 
 ## ZIP Password Generation
@@ -600,7 +613,7 @@ private static string GenerateRandomPassword()
 
 ## File Verification
 
-PUP server verifies file format when loading:
+The PUP server verifies file format when loading:
 
 ```csharp
 public bool LoadPupFile()
@@ -608,7 +621,7 @@ public bool LoadPupFile()
     // 1. Read file
     byte[] fileData = File.ReadAllBytes(_pupFilePath);
     
-    // 2. Verify header
+    // 2. Verify identifier header
     if (fileData.Length < 40)  // 8 (header) + 32 (encrypted password)
         return false;
     
@@ -640,11 +653,11 @@ public bool LoadPupFile()
 
 PUP file size depends on:
 
-- Total size of source files
+- Total source file size
 - ZIP compression rate (typically 30-70%)
-- Encryption overhead (about 40 bytes)
+- Encryption overhead (approximately 40 bytes)
 
-**Optimization Recommendations**:
+**Optimization Suggestions**:
 
 - Compress images and media files
 - Remove unused resources
@@ -658,7 +671,7 @@ PUP file loading speed depends on:
 - Disk read speed
 - Decryption and decompression speed
 
-**Optimization Recommendations**:
+**Optimization Suggestions**:
 
 - Keep file size reasonable (recommended < 50MB)
 - Use SSD to improve read speed
@@ -666,13 +679,13 @@ PUP file loading speed depends on:
 
 ## Version Compatibility
 
-### Header
+### Identifier Headers
 
 Currently supported versions:
 
 - V1.0: `"PUP V1.0"` - Basic version
-- V1.1: `"PUP V1.1"` - Enhanced version (supports startup script)
-- V1.2: `"PUP V1.2"` - Signature version (supports certificate and database signature)
+- V1.1: `"PUP V1.1"` - Enhanced version (supports startup scripts)
+- V1.2: `"PUP V1.2"` - Signature version (supports certificates and database signatures)
 
 ```csharp
 private static readonly byte[] PUP_HEADER_V1_0 = Encoding.UTF8.GetBytes("PUP V1.0");
@@ -682,7 +695,7 @@ private static readonly byte[] PUP_HEADER_V1_2 = Encoding.UTF8.GetBytes("PUP V1.
 
 ### Version Detection
 
-PupServer automatically detects PUP file version and uses appropriate parsing logic:
+PupServer automatically detects PUP file versions and uses appropriate parsing logic:
 
 ```csharp
 // Example: Version detection
@@ -698,7 +711,7 @@ switch (header)
         LoadPupV1_1(fileBytes);
         break;
     case "PUP V1.2":
-        // Use V1.2 parsing logic (with signature support)
+        // Use V1.2 parsing logic (supports signatures)
         LoadPupV1_2(fileBytes);
         break;
     default:
@@ -711,15 +724,15 @@ switch (header)
 - V1.1 format is fully compatible with all V1.0 features
 - V1.2 format is fully compatible with all V1.1 features
 - V1.1 files contain additional startup script data
-- V1.2 files contain certificate and encrypted private key, supporting database signature
+- V1.2 files contain certificates and encrypted private keys, supporting database signatures
 - PupServer can load and parse all versions of PUP files
 - New projects are recommended to use V1.2 format for enterprise-level security protection
 
 ### Version Selection Recommendations
 
-- **V1.0**: Suitable for simple applications that don't need startup configuration
-- **V1.1**: Suitable for applications that need preset window state
-- **V1.2**: Suitable for applications that need database signature and integrity, recommended for production environments
+- **V1.0**: Suitable for simple applications not requiring startup configuration
+- **V1.1**: Suitable for applications requiring preset window states
+- **V1.2**: Suitable for applications requiring database signatures and integrity, recommended for production environments
 
 ### Version Upgrade
 
@@ -742,17 +755,17 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyAppV1_2.pup" -v 1.2 --certificate
 | Feature | PUP V1.0 | PUP V1.1 | PUP V1.2 | Bare Folder |
 |---------|----------|----------|----------|-------------|
 | Distribution | Single file | Single file | Single file | Folder |
-| Encryption | Supported | Supported | Supported | Not supported |
+| Encryption Protection | Supported | Supported | Supported | Not supported |
 | Startup Script | Not supported | Supported | Supported | Not supported |
 | Database Signature | Not supported | Not supported | Supported | Not supported |
 | Certificate Verification | Not supported | Not supported | Supported | Not supported |
 | Window Preset | Code control | Script control | Script control | Code control |
-| Development Convenience | Low | Low | Medium | High |
+| Development Convenience | Lower | Lower | Medium | High |
 | Hot Reload | Not supported | Not supported | Not supported | Supported |
 | File Size | Smaller | Slightly larger | Larger | Larger |
 | Loading Speed | Slightly slower | Slightly slower | Slightly slower | Fast |
 | Security Level | Medium | Medium | High | Low |
-| Use Case | Simple app release | Complex app release | Production release | Development debugging |
+| Use Cases | Simple app release | Complex app release | Production release | Development debugging |
 
 ## Best Practices
 
@@ -760,7 +773,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyAppV1_2.pup" -v 1.2 --certificate
 
 - Create PUP files before release
 - Use meaningful passwords
-- Test that PUP files can be loaded normally
+- Test that PUP files load correctly
 
 ### 2. Password Management
 
@@ -772,37 +785,37 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyAppV1_2.pup" -v 1.2 --certificate
 
 - Compress images and media files
 - Remove debug code and comments
-- Use production build configuration
+- Use production build configurations
 
 ### 4. Version Control
 
-- Include version number in filename
+- Include version numbers in filenames
 - Keep historical versions of PUP files
 - Record changes for each version
 
 ### 5. Signature Management (V1.2)
 
-- Use puppet-sign tool to generate signing key pair
-- Use strong password to protect private key (at least 16 characters)
+- Use puppet-sign tool to generate signing key pairs
+- Use strong passwords to protect private keys (at least 16 characters)
 - Regularly backup certificate and private key files
-- Securely store private key password, don't commit to version control
+- Securely store private key passwords, don't commit to version control
 - Regularly check certificate validity, renew in advance
-- Backup database before signing
+- Backup databases before signing
 
 ### 6. Distribution Strategy
 
 - Use HTTPS to distribute PUP files
 - Provide file verification (such as MD5, SHA256)
-- Include detailed changelog
-- For V1.2 format, can provide certificate fingerprint for verification
+- Include detailed update logs
+- For V1.2 format, provide certificate fingerprint for verification
 
 ## Troubleshooting
 
-### Common Problems
+### Common Issues
 
 #### 1. "Invalid PUP file"
 
-**Cause**: File format is incorrect or corrupted
+**Cause**: Incorrect file format or corrupted file
 
 **Solution**:
 - Recreate PUP file
@@ -811,10 +824,10 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyAppV1_2.pup" -v 1.2 --certificate
 
 #### 2. "Decryption failed"
 
-**Cause**: Encryption password is incorrect
+**Cause**: Incorrect encryption password
 
 **Solution**:
-- Confirm password used when creating
+- Confirm password used during creation
 - Check if password contains special characters
 - Recreate PUP file
 
@@ -838,16 +851,16 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyAppV1_2.pup" -v 1.2 --certificate
 
 ## Related Resources
 
-- [Command Line Parameters](./cli-parameters.html) - Complete command-line options
-- [Project Structure](./project-structure.html) - Project directory organization
-- [Best Practices](./best-practices.html) - Development recommendations
-- [Security Mechanisms](./security.html) - Signature verification and security features (V1.2)
+- [Command Line Parameters](./cli-parameters.md) - Complete command line options
+- [Project Structure](./project-structure.md) - Project directory organization
+- [Best Practices](./best-practices.md) - Development recommendations
+- [Security Mechanisms](./security.md) - Signature verification and security features (V1.2)
 
 ## Next Steps
 
 After understanding PUP format, it is recommended to:
 
 1. Try creating your first PUP file
-2. Learn [Command Line Parameters](./cli-parameters.html) for more options
-3. Reference [Best Practices](./best-practices.html) to optimize your project
-4. Learn [Security Mechanisms](./security.html) to implement data signing and integrity protection
+2. Learn [Command Line Parameters](./cli-parameters.md) for more options
+3. Reference [Best Practices](./best-practices.md) to optimize your project
+4. Learn [Security Mechanisms](./security.md) to implement data signing and integrity protection

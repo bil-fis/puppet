@@ -6,28 +6,28 @@ createTime: 2026/03/28 14:57:15
 
 # Command Line Parameters
 
-The Puppet framework provides a flexible command-line interface that supports multiple running modes and ways of working. This chapter details all available command-line parameters and their usage.
+The Puppet Framework provides a flexible command-line interface supporting multiple running modes and working methods. This chapter details all available command-line parameters and their usage.
 
 ## Overview
 
 Puppet supports three main running modes:
 
 1. **GUI Mode**: Launch the graphical interface application
-2. **Create PUP Mode**: Create a PUP package file
-3. **Load PUP Mode**: Load and run a PUP file
-4. **Bare Folder Mode**: Load application from a folder (for development)
+2. **Create PUP Mode**: Create PUP package files
+3. **Load PUP Mode**: Load and run PUP files
+4. **Bare Folder Mode**: Load applications from folders (for development)
 
 ## Basic Syntax
 
 ```bash
-puppet.exe [options] [arguments]
+puppet.exe [options] [parameters]
 ```
 
 ## Running Modes
 
 ### 1. GUI Mode
 
-Launch Puppet's graphical interface application, typically used for debugging or manual operations.
+Launch Puppet's GUI application, usually used for debugging or manual operations.
 
 ```bash
 puppet.exe
@@ -35,8 +35,8 @@ puppet.exe
 
 **Features**:
 
-- Displays main window
-- Can load PUP files or folders through the interface
+- Display main window
+- Can select to load PUP files or folders through the interface
 - Suitable for quick testing and debugging
 
 **Configuration**:
@@ -50,7 +50,7 @@ file=app.pup
 
 ### 2. Create PUP Mode
 
-Package a web application as a PUP file.
+Package a web application into a PUP file.
 
 ```bash
 puppet.exe --create-pup -i <input_folder> -o <output_file.pup> [-p <password>]
@@ -64,11 +64,11 @@ puppet.exe --create-pup -i <input_folder> -o <output_file.pup> [-p <password>]
 | `-i` or `--input` | Yes | Source folder path |
 | `-o` or `--output` | Yes | Output PUP file path |
 | `-p` or `--password` | No | ZIP password (optional) |
-| `-v` or `--version` | No | PUP version (1.0, 1.1 or 1.2, default 1.0) |
-| `--script` | No | Startup script file (V1.1/V1.2 versions support) |
-| `--certificate` | No | Certificate file path (required for V1.2 version) |
-| `--private-key` | No | Private key file path (required for V1.2 version) |
-| `--private-key-password` | No | Private key encryption password (required for V1.2 version) |
+| `-v` or `--version` | No | PUP version (1.0, 1.1, or 1.2, default 1.0) |
+| `--script` | No | Startup script file (V1.1/V1.2 version support) |
+| `--certificate` | No | Certificate file path (V1.2 version required) |
+| `--private-key` | No | Private key file path (V1.2 version required) |
+| `--private-key-password` | No | Private key encryption password (V1.2 version required) |
 
 **Examples**:
 
@@ -93,7 +93,7 @@ puppet.exe --create-pup --input "C:\MyApp" --output "C:\MyApp.pup" --password "M
 - If no password is specified, the system will automatically generate a random password
 - V1.1 and V1.2 versions require specifying the `-v` parameter
 - V1.2 version must provide certificate, private key, and private key password parameters
-- Use puppet-sign tool to generate signing key pair: `puppet-sign.exe --generate-signing-key --alias MyApp`
+- Use the puppet-sign tool to generate signing key pairs: `puppet-sign.exe --generate-signing-key --alias MyApp`
 :::
 
 ### 3. Load PUP Mode
@@ -120,13 +120,13 @@ puppet.exe --load-pup "C:\MyApp.pup"
 # Using relative path
 puppet.exe --load-pup "app.pup"
 
-# Using environment variables
+# Using environment variable
 puppet.exe --load-pup "%APPDATA%\MyApp\app.pup"
 ```
 
 ### 4. Bare Folder Mode
 
-Load application directly from a folder (without packaging as PUP file).
+Load applications directly from folders (without packaging as PUP files).
 
 ```bash
 puppet.exe --nake-load <folder_path>
@@ -152,8 +152,8 @@ puppet.exe --nake-load ".\dist"
 puppet.exe --nake-load "C:\MyProject"
 ```
 
-::: tip Development Tip
-Bare folder mode supports hot reload. After modifying files, simply refresh to see changes, which is very suitable for development and debugging.
+::: tip Development Suggestion
+Bare folder mode supports hot reload. After modifying files, simply refresh to see changes, making it very suitable for development and debugging.
 :::
 
 ## Parameter Details
@@ -185,7 +185,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup"
 
 - Output directory must exist
 - File extension must be `.pup`
-- If the file already exists, it will be overwritten
+- If file exists, it will be overwritten
 - Path can contain spaces (use quotes)
 
 ### Password Parameter (-p, --password)
@@ -200,8 +200,8 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -p "MyPassword"
 
 - Password is case-sensitive
 - Supports special characters
-- If not specified, the system will automatically generate a random password
-- No need to provide password when loading PUP file (password is encrypted and stored in the file)
+- If not specified, system will automatically generate a random password
+- Password not required when loading PUP file (password is encrypted and stored in file)
 
 ### Version Parameter (-v, --version)
 
@@ -215,10 +215,10 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2
 
 - Supported versions: 1.0, 1.1, 1.2
 - Default version: 1.0
-- Different version feature support differences:
+- Feature support differences by version:
   - V1.0: Basic features, supports encryption
-  - V1.1: Supports startup script
-  - V1.2: Supports digital signature and certificate verification
+  - V1.1: Supports startup scripts
+  - V1.2: Supports digital signatures and certificate verification
 
 ### Startup Script Parameter (--script)
 
@@ -232,7 +232,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.1 --script "C:\scri
 
 - Only V1.1 and V1.2 versions support this
 - Script file must exist
-- Script will be automatically executed when the application starts
+- Script will be automatically executed when application starts
 - Supports JavaScript and SQL statements
 
 ### Certificate Parameter (--certificate)
@@ -246,9 +246,9 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:
 **Notes**:
 
 - Only V1.2 version supports this
-- Must be used together with `--private-key` and `--private-key-password`
+- Must be used with `--private-key` and `--private-key-password`
 - Certificate format: X.509 self-signed certificate
-- Recommended to use puppet-sign tool to generate key pair
+- Recommended to use puppet-sign tool to generate key pairs
 - Certificate is used to verify PUP file integrity and source
 
 ### Private Key Parameter (--private-key)
@@ -262,9 +262,9 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --private-key "C:
 **Notes**:
 
 - Only V1.2 version supports this
-- Must be used together with `--certificate` and `--private-key-password`
+- Must be used with `--certificate` and `--private-key-password`
 - Private key format: PKCS#8 format, encrypted using AES-256-GCM
-- Private key is used to generate digital signature
+- Private key is used to generate digital signatures
 - Private key will be securely stored in the PUP file
 
 ### Private Key Password Parameter (--private-key-password)
@@ -281,11 +281,11 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --private-key-pas
 - Used to decrypt the private key file
 - Password is case-sensitive
 - Supports special characters
-- Private key password will not be stored in the PUP file
+- Private key password is not stored in the PUP file
 
 ## Configuration File
 
-In addition to command-line parameters, Puppet also supports setting default values through configuration files.
+In addition to command-line parameters, Puppet supports setting defaults through configuration files.
 
 ### puppet.ini
 
@@ -293,11 +293,11 @@ Configuration file located in the same directory as Puppet.exe:
 
 ```ini
 [file]
-; Default loaded PUP file path
+; Default PUP file path to load
 file=app.pup
 
 [server]
-; Server port (default automatic selection)
+; Server port (default auto-select)
 port=7738
 
 [security]
@@ -309,13 +309,13 @@ strict=true
 
 | Configuration Item | Description | Default Value |
 |-------------------|-------------|---------------|
-| `file` | Default loaded PUP file | None |
-| `port` | HTTP server port | 7738 (automatic) |
+| `file` | Default PUP file to load | None |
+| `port` | HTTP server port | 7738 (auto-select) |
 | `strict` | Strict mode | true |
 
 **Usage**:
 
-Settings in the configuration file will be used in GUI mode:
+Settings in the configuration file are used in GUI mode:
 
 ```bash
 # Use settings from configuration file
@@ -345,15 +345,15 @@ puppet.exe --create-pup -i "C:\MyProject\dist" -o "C:\MyProject\app.pup" -v 1.2 
 puppet.exe --load-pup "C:\MyProject\app.pup"
 ```
 
-#### Using puppet-sign to Generate Key Pair
+#### Using puppet-sign to Generate Key Pairs
 
 ```bash
-# 1. Generate signing key pair
+# 1. Generate signing key pairs
 puppet-sign.exe --generate-signing-key --alias MyApp --key-size 2048
 
 # 2. This will generate app.crt and app.key files in current directory
 
-# 3. Use generated key pair to create signed PUP file
+# 3. Create signed PUP file using generated key pairs
 puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "app.crt" --private-key "app.key" --private-key-password "MyPassword"
 ```
 
@@ -383,9 +383,9 @@ $output = "C:\Releases\MyApp_$((Get-Date).ToString('yyyyMMdd')).pup"
 & "puppet.exe" --create-pup -i $source -o $output -p "MySecretPassword"
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Packaging successful: $output"
+    Write-Host "Build successful: $output"
 } else {
-    Write-Host "Packaging failed"
+    Write-Host "Build failed"
     exit 1
 }
 ```
@@ -402,7 +402,7 @@ puppet.exe --create-pup -i "C:\NonExistent" -o "output.pup"
 
 **Cause**: Specified input folder does not exist
 
-**Solution**: Check if the path is correct
+**Solution**: Check if path is correct
 
 #### 2. "Output directory does not exist"
 
@@ -431,9 +431,9 @@ puppet.exe --load-pup "invalid.pup"
 
 #### 4. "Port already in use"
 
-**Cause**: Specified or automatically selected port is already occupied by another program
+**Cause**: Specified or auto-selected port is already occupied by another program
 
-**Solution**: System will automatically try the next port, or manually specify another port
+**Solution**: System will automatically try next port, or manually specify another port
 
 #### 5. "Certificate file does not exist"
 
@@ -445,7 +445,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:
 
 **Solution**:
 - Check if certificate file path is correct
-- Use puppet-sign to generate key pair: `puppet-sign.exe --generate-signing-key --alias MyApp`
+- Use puppet-sign to generate key pairs: `puppet-sign.exe --generate-signing-key --alias MyApp`
 
 #### 6. "Private key file does not exist"
 
@@ -457,9 +457,9 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --private-key "C:
 
 **Solution**:
 - Check if private key file path is correct
-- Ensure certificate and private key are a matching key pair
+- Ensure certificate and private key are the same key pair
 
-#### 7. "Private key password incorrect"
+#### 7. "Incorrect private key password"
 
 ```bash
 puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:\app.crt" --private-key "C:\app.key" --private-key-password "WrongPassword"
@@ -467,7 +467,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.2 --certificate "C:
 
 **Cause**: Provided private key password is incorrect
 
-**Solution**: Use the correct password set when generating the key pair
+**Solution**: Use the correct password set when generating key pairs
 
 #### 8. "Invalid version parameter"
 
@@ -477,7 +477,7 @@ puppet.exe --create-pup -i "C:\MyApp" -o "C:\MyApp.pup" -v 1.3
 
 **Cause**: Specified version is not supported
 
-**Solution**: Use a supported version (1.0, 1.1 or 1.2)
+**Solution**: Use supported versions (1.0, 1.1, or 1.2)
 
 #### 9. "V1.2 version missing required parameters"
 
@@ -534,33 +534,33 @@ puppet.exe --load-pup "Z:\app.pup"
 ### Special Characters
 
 ```bash
-# Paths with special characters (use quotes)
+# Path with special characters (use quotes)
 puppet.exe --create-pup -i "C:\My App (2024)" -o "C:\Output\app.pup"
 ```
 
 ## Return Codes
 
-Puppet command-line tool returns the following exit codes:
+The Puppet command-line tool returns the following exit codes:
 
 | Return Code | Description |
 |-------------|-------------|
 | 0 | Success |
 | 1 | General error |
 | 2 | Parameter error |
-| 3 | File does not exist |
+| 3 | File not found |
 | 4 | Permission error |
 | 5 | Format error |
 
 **Return Code Description**:
 
-Puppet's `Main` method returns `void`, so the program itself does not directly return an exit code. When the program is executed in Windows, the return value (if any) is stored in an environment variable:
+Puppet's `Main` method returns `void`, so the program itself does not directly return an exit code. When the program is executed in Windows, the return value (if any) is stored in environment variables:
 
-- **Batch files**: Can use `%ERRORLEVEL%` to check the previous command's exit code
-- **PowerShell**: Can use `$LastExitCode` to check the previous command's exit code
+- **Batch files**: Can use `%ERRORLEVEL%` to check the exit code of the previous command
+- **PowerShell**: Can use `$LastExitCode` to check the exit code of the previous command
 
-**Note**: For Windows Forms GUI applications, `void` is typically returned because they primarily interact through the user interface. If you need to check operation status in batch scripts, it's recommended to use the puppet-sign tool, which is a console application that can correctly return exit codes.
+**Note**: For Windows Forms GUI applications, `void` is usually returned because they mainly interact through the user interface. If you need to check operation status in batch scripts, it's recommended to use the puppet-sign tool, which is a console application that can correctly return exit codes.
 
-**Examples**:
+**Example**:
 
 ```bash
 # Use puppet-sign tool (console application)
@@ -580,9 +580,9 @@ if %ERRORLEVEL% EQU 0 (
 puppet-sign.exe --sign-database default.db --certificate app.crt --private-key app.key
 
 if ($LastExitCode -eq 0) {
-    Write-Host "Signature successful"
+    Write-Host "Signing successful"
 } else {
-    Write-Host "Signature failed, error code: $LastExitCode"
+    Write-Host "Signing failed, error code: $LastExitCode"
 }
 ```
 
@@ -590,26 +590,26 @@ if ($LastExitCode -eq 0) {
 
 ### 1. Path Handling
 
-- Use quotes for paths containing spaces
+- Use quotes to wrap paths containing spaces
 - Prefer absolute paths
 - Verify path existence before use
 
 ### 2. Password Management
 
-- Don't expose passwords in command history
+- Do not expose passwords in command history
 - Use environment variables or configuration files to store passwords
 - Change passwords regularly
 
 ### 3. Automation Scripts
 
-- Check return codes to determine operation success
+- Check return codes to determine if operations were successful
 - Add appropriate error handling
 - Log operations
 
-### 4. Development Workflow
+### 4. Development Process
 
 - Use bare folder mode during development
-- Create PUP files during testing
+- Create PUP files for testing
 - Verify PUP files before release
 
 ## Example Scripts
@@ -640,7 +640,7 @@ Write-Host "Building PUP file..." -ForegroundColor Cyan
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Build successful: $outputFile" -ForegroundColor Green
     
-    # Display file info
+    # Display file information
     $fileInfo = Get-Item $outputFile
     Write-Host "File size: $($fileInfo.Length / 1MB) MB"
 } else {
@@ -649,7 +649,7 @@ if ($LASTEXITCODE -eq 0) {
 }
 ```
 
-### Quick Start Script (Batch)
+### Quick Launch Script (Batch)
 
 ```batch
 @echo off
@@ -681,14 +681,14 @@ pause
 
 ## Related Resources
 
-- [PUP File Format](./pup-format.html) - PUP file structure description
-- [Project Structure](./project-structure.html) - Project directory organization
-- [Quick Start](./getting-started.html) - Quick start guide
+- [PUP File Format](./pup-format.md) - PUP file structure description
+- [Project Structure](./project-structure.md) - Project directory organization
+- [Getting Started](./getting-started.md) - Quick start guide
 
 ## Next Steps
 
-After learning about command-line parameters, it is recommended to:
+After understanding command-line parameters, it is recommended to:
 
 1. Try different running modes
 2. Create automated build scripts
-3. Reference [Best Practices](./best-practices.html) to optimize your workflow
+3. Reference [Best Practices](./best-practices.md) to optimize your workflow

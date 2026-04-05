@@ -1,3 +1,0 @@
-import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/api/fs.html.vue"
-const data = JSON.parse("{\"path\":\"/api/fs.html\",\"title\":\"文件系统 API | API 文档\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"文件系统 API\",\"permalink\":\"/api/fs.html\",\"createTime\":\"2026/03/28 15:07:04\"},\"readingTime\":{\"minutes\":7.02,\"words\":2106},\"git\":{\"createdTime\":1774770165000,\"updatedTime\":1774770165000,\"contributors\":[{\"name\":\"bil-fis\",\"username\":\"\",\"email\":\"lww090627@163.com\",\"commits\":1,\"avatar\":\"https://gravatar.com/avatar/806cd648ad5a58432fd10b88e274afe27f6681f329fbe28bdbad70224a67496b?d=retro\"}]},\"filePathRelative\":\"api/fs.md\",\"headers\":[]}")
-export { comp, data }

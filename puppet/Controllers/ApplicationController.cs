@@ -386,6 +386,41 @@ namespace puppet.Controllers
         }
 
         /// <summary>
+        /// 读取配置文件 puppet.ini（全局配置）
+        /// </summary>
+        /// <param name="key">键名</param>
+        /// <returns>配置值，如果不存在返回空字符串</returns>
+        public string GetConfig(string key)
+        {
+            return GetConfig("file", key);
+        }
+
+        /// <summary>
+        /// 读取配置文件 puppet.ini（指定节）
+        /// </summary>
+        /// <param name="section">节名</param>
+        /// <param name="key">键名</param>
+        /// <returns>配置值，如果不存在返回空字符串</returns>
+        public string GetConfig(string section, string key)
+        {
+            try
+            {
+                string iniPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "puppet.ini");
+                var iniReader = new IniReader(iniPath);
+
+                string value = iniReader.GetValue(section, key, "");
+                Console.WriteLine($"配置已读取: [{section}] {key} = {value}");
+                return value;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"读取配置失败: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return "";
+            }
+        }
+
+        /// <summary>
         /// 获取程序自身目录
         /// </summary>
         public string GetAssemblyDirectory()

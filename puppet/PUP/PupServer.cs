@@ -7,6 +7,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Threading.Tasks;
 using puppet.Core.Security;
+using puppet.Core;
 
 namespace puppet.PUP
 {
@@ -15,8 +16,9 @@ namespace puppet.PUP
     /// 支持两种模式：
     /// 1. PUP 文件模式（标识头 + ZIP）
     /// 2. 裸文件夹模式（直接返回文件夹中的文件）
+    /// 实现 IServer 接口以实现解耦
     /// </summary>
-    public class PupServer
+    public class PupServer : IServer
     {
         private enum ServerMode
         {
@@ -43,7 +45,6 @@ namespace puppet.PUP
 
         // V1.2 签名相关字段
         private X509Certificate2? _certificate;
-        private RSAParameters? _privateKeyParameters;
         private string? _privateKeyPassword;
 
         /// <summary>
@@ -149,6 +150,20 @@ namespace puppet.PUP
             _zipFile?.Close();
             Console.WriteLine("PUP Server stopped");
         }
+
+        /// <summary>
+        /// 异步停止服务器（IServer 接口实现）
+        /// </summary>
+        public Task StopAsync()
+        {
+            Stop();
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 获取服务器是否正在运行（IServer 接口实现）
+        /// </summary>
+        public bool IsRunning => _isRunning;
 
         /// <summary>
         /// 加载 PUP 文件
@@ -440,7 +455,9 @@ namespace puppet.PUP
                 {
                     byte[] certData = new byte[certLength];
                     Buffer.BlockCopy(fileBytes, certDataOffset, certData, 0, certLength);
+#pragma warning disable SYSLIB0057
                     _certificate = new X509Certificate2(certData);
+#pragma warning restore SYSLIB0057
                     Console.WriteLine($"Certificate loaded successfully");
                     Console.WriteLine($"  Subject: {_certificate.Subject}");
                     Console.WriteLine($"  Issuer: {_certificate.Issuer}");
@@ -758,6 +775,11 @@ namespace puppet.PUP
                 // 读取文件内容（在后台线程中执行）
                 byte[] fileBytes = await Task.Run(() =>
                 {
+                    if (_zipFile == null)
+                    {
+                        throw new InvalidOperationException("ZIP file not loaded");
+                    }
+
                     using (var entryStream = _zipFile.GetInputStream(entry))
                     using (var memoryStream = new MemoryStream())
                     {

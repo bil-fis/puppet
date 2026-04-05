@@ -6,21 +6,21 @@ createTime: 2026/03/29 19:45:00
 
 # PUP Startup Script
 
-PUP startup script is an optional feature that allows automatic configuration of window properties when the application starts. Supported from PUP V1.1 version, V1.2 version continues to be compatible and enhances signature verification functionality.
+The PUP startup script is an optional feature that allows automatic configuration of window properties when the application starts. Supported starting from PUP V1.1 version, V1.2 version continues compatibility and enhances signature verification functionality.
 
 ## Overview
 
-Startup script is a text file containing a series of commands for configuring the application window. By using startup scripts, you can:
+The startup script is a text file containing a series of commands for configuring the application window. By using startup scripts, you can:
 
-- **Preset window position**: Automatically move window to specified position on startup
-- **Configure window style**: Enable or disable borderless window
-- **Set window size**: Customize application window dimensions
+- **Preset Window Position**: Automatically move the window to a specified position on startup
+- **Configure Window Style**: Enable or disable borderless windows
+- **Set Window Size**: Customize application window dimensions
 
 ## Basic Usage
 
-### Creating Script File
+### Creating a Script File
 
-Create a text file (typically named `script.txt` or `startup.txt`) and add configuration commands:
+Create a text file (usually named `script.txt` or `startup.txt`) and add configuration commands:
 
 ```txt
 # This is a startup script example
@@ -31,7 +31,7 @@ set window_size 800,600
 
 ### Including Script When Creating PUP File
 
-Use `--script` parameter to specify the script file:
+Use the `--script` parameter to specify the script file:
 
 ```bash
 puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup" -v 1.1 --script "C:\script.txt"
@@ -44,7 +44,7 @@ puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup" -v 1.2 --script "C:\scr
 
 ### Basic Format
 
-Startup script uses simple command format:
+Startup scripts use a simple command format:
 
 ```txt
 set <property> <value>
@@ -52,14 +52,14 @@ set <property> <value>
 
 - One command per line
 - Commands are case-insensitive
-- Supports comments using `//` or `#`
+- Supports adding comments with `//` or `#`
 - Empty lines are ignored
 
 ### Supported Commands
 
 #### 1. startup_position
 
-Set window startup position.
+Set the window startup position.
 
 **Syntax**:
 
@@ -71,28 +71,28 @@ set startup_position <position>
 
 | Value | Description |
 |-------|-------------|
-| `left-top` | Top-left of screen |
-| `left-bottom` | Bottom-left of screen |
-| `right-top` | Top-right of screen |
-| `right-bottom` | Bottom-right of screen |
-| `center` | Screen center |
+| `left-top` | Top-left corner of screen |
+| `left-bottom` | Bottom-left corner of screen |
+| `right-top` | Top-right corner of screen |
+| `right-bottom` | Bottom-right corner of screen |
+| `center` | Center of screen |
 | `x,y` | Custom coordinates (pixels) |
 
 **Examples**:
 
 ```txt
-# Use predefined position
+# Using predefined positions
 set startup_position center
 set startup_position left-top
 
-# Use custom coordinates
+# Using custom coordinates
 set startup_position 100,100
 set startup_position 1920,0
 ```
 
 **Notes**:
 
-- Coordinates are relative to the top-left corner of the primary screen
+- Coordinates are relative to the top-left corner of the main screen
 - Coordinate unit is pixels
 - Window may be clipped by screen boundaries
 
@@ -127,13 +127,13 @@ set borderless yes
 
 **Notes**:
 
-- Borderless window removes title bar and borders
-- Borderless window typically needs custom drag functionality
+- Borderless windows remove title bar and borders
+- Borderless windows typically need custom drag functionality
 - Suitable for creating floating windows, desktop widgets, etc.
 
 #### 3. window_size
 
-Set window size.
+Set the window size.
 
 **Syntax**:
 
@@ -196,7 +196,7 @@ set borderless true
 set window_size 1920,1080
 ```
 
-### Example 5: Richly Commented Script
+### Example 5: Well-Commented Script
 
 ```txt
 # ===================================
@@ -217,11 +217,11 @@ set window_size 1280,720
 
 ## Execution Order
 
-Commands in the startup script are executed from top to bottom. It's recommended to organize the script in the following order:
+Commands in the startup script are executed from top to bottom. It's recommended to organize scripts in the following order:
 
-1. **Set window size** (`window_size`) - First determine window dimensions
-2. **Set window style** (`borderless`) - Then set window style
-3. **Set window position** (`startup_position`) - Finally position the window
+1. **Set Window Size** (`window_size`) - First determine window dimensions
+2. **Set Window Style** (`borderless`) - Then set window style
+3. **Set Window Position** (`startup_position`) - Finally position the window
 
 **Recommended Order**:
 
@@ -236,8 +236,8 @@ set startup_position center
 If errors occur during script execution:
 
 - Error messages are output to the console
-- Current command will be skipped
-- Script continues to execute subsequent commands
+- Current command is skipped
+- Script continues executing subsequent commands
 
 **Common Errors**:
 
@@ -250,7 +250,7 @@ Error executing line 3: Invalid startup position value: invalid
 
 - Check if command syntax is correct
 - Confirm parameter values are within supported range
-- Check error messages output in console
+- View error messages output to console
 
 ## Version Compatibility
 
@@ -277,18 +277,18 @@ Startup scripts and JavaScript API can both control windows, but serve different
 
 | Feature | Startup Script | JavaScript API |
 |---------|----------------|----------------|
-| Execution Time | When application starts | After application loads |
+| Execution Timing | On application startup | After application loads |
 | Purpose | Initial configuration | Dynamic control |
-| Change Window Position | ✅ | ✅ |
-| Change Window Style | ✅ | ✅ |
-| Change Window Size | ✅ | ✅ |
-| Respond to User Actions | ❌ | ✅ |
+| Modify Window Position | ✅ | ✅ |
+| Modify Window Style | ✅ | ✅ |
+| Modify Window Size | ✅ | ✅ |
+| Respond to User Operations | ❌ | ✅ |
 | Dynamic Adjustment | ❌ | ✅ |
 
-**Usage Recommendation**:
+**Usage Recommendations**:
 
-- **Startup Script**: Used to set initial application state
-- **JavaScript API**: Used to respond to user interactions and dynamic window adjustments
+- **Startup Script**: For setting application initial state
+- **JavaScript API**: For responding to user interaction and dynamic window adjustment
 
 **Mixed Usage Example**:
 
@@ -299,7 +299,7 @@ set borderless true
 ```
 
 ```javascript
-// JavaScript: Respond to user actions
+// JavaScript: Respond to user operations
 document.getElementById('toggle-border').addEventListener('click', async () => {
     await puppet.window.setBorderless(!isBorderless);
 });
@@ -309,7 +309,7 @@ document.getElementById('toggle-border').addEventListener('click', async () => {
 
 ### 1. Use Comments
 
-Add clear comments to the script explaining the purpose of each configuration:
+Add clear comments to scripts explaining each configuration's purpose:
 
 ```txt
 # Set window to borderless mode for more modern interface experience
@@ -325,21 +325,21 @@ If users need to customize configuration, provide reasonable default values in t
 set window_size 1024,768
 ```
 
-### 3. Test Script
+### 3. Test Scripts
 
-Test the script using bare folder mode before release:
+Before release, test scripts using bare folder mode:
 
 ```bash
 puppet.exe --nake-load "C:\MyProject"
 ```
 
-### 4. Document Script
+### 4. Document Scripts
 
-Explain the script's functionality and configuration items in project documentation to help other developers understand and maintain.
+In project documentation, explain script functionality and configuration items for easier understanding and maintenance by other developers.
 
 ### 5. Version Control
 
-Include script file in version control system to record configuration change history.
+Include script files in version control system to record configuration change history.
 
 ## Advanced Usage
 
@@ -364,7 +364,7 @@ puppet.exe --create-pup -i "C:\MyProject" -o "MyApp-prod.pup" -v 1.1 --script "p
 
 ### Conditional Configuration
 
-If you need to select different configurations based on conditions, you can implement this in build scripts:
+If you need to select different configurations based on conditions, you can implement it in build scripts:
 
 ```powershell
 # PowerShell build script
@@ -381,7 +381,7 @@ puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup" -v 1.1 --script "script
 
 ## Troubleshooting
 
-### Problem: Script Not Taking Effect
+### Issue: Script Not Taking Effect
 
 **Possible Causes**:
 
@@ -402,7 +402,7 @@ type script.txt
 puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup" -v 1.1 --script "C:\full\path\to\script.txt"
 ```
 
-### Problem: Window Position Incorrect
+### Issue: Window Position Incorrect
 
 **Possible Causes**:
 
@@ -412,18 +412,20 @@ puppet.exe --create-pup -i "C:\MyProject" -o "MyApp.pup" -v 1.1 --script "C:\ful
 **Solutions**:
 
 ```txt
-# Use predefined position instead of absolute coordinates
+# Use predefined positions instead of absolute coordinates
 set startup_position center
 
 # Or use smaller coordinate values
 set startup_position 50,50
 ```
 
-### Problem: Borderless Window Cannot Be Moved
+### Issue: Borderless Window Cannot Be Moved
 
-**Reason**: Borderless window doesn't support dragging by default
+**Cause**: Borderless windows don't support dragging by default
 
-**Solution**: Implement drag functionality using JavaScript API:
+**Solution**:
+
+Implement drag functionality using JavaScript API:
 
 ```javascript
 let isDragging = false;
@@ -453,10 +455,10 @@ document.addEventListener('mouseup', () => {
 
 ## Related Resources
 
-- [PUP File Format](./pup-format.html) - Learn about PUP file structure
-- [Command Line Parameters](./cli-parameters.html) - --script parameter description
-- [Window Control API](../api/window.html) - JavaScript window control API
-- [Puppet Signing Tool](./puppet-sign.html) - Signing PUP files
+- [PUP File Format](./pup-format.md) - Understand PUP file structure
+- [Command Line Parameters](./cli-parameters.md) - --script parameter description
+- [Window Control API](../api/window.md) - JavaScript window control API
+- [Puppet Signing Tool](./puppet-sign.md) - Sign PUP files
 
 ## Changelog
 
@@ -467,5 +469,5 @@ document.addEventListener('mouseup', () => {
 
 ### V1.1 (2026-03-28)
 
-- First introduced startup script functionality
+- First introduction of startup script functionality
 - Supports startup_position, borderless, window_size commands

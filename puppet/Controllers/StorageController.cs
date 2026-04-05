@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using puppet.PUP;
 using puppet.Core.Security;
+using puppet.Core;
 
 namespace puppet.Controllers
 {
@@ -18,18 +19,17 @@ namespace puppet.Controllers
         private readonly Form _form;
         private readonly string _storagePath;
         private readonly Dictionary<string, SQLiteConnection> _connections;
-        private readonly PupServer? _pupServer;
 
-        public StorageController(Form form, PupServer? pupServer = null)
+        public StorageController(Form form)
         {
             _form = form;
-            _pupServer = pupServer;
             _storagePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "puppet",
                 "storage"
             );
-            _connections = new Dictionary<string, SQLiteConnection>();
+            // 内存优化：预分配容量，减少动态扩容
+            _connections = new Dictionary<string, SQLiteConnection>(capacity: 8);
 
             // 确保存储目录存在
             if (!Directory.Exists(_storagePath))
@@ -37,6 +37,11 @@ namespace puppet.Controllers
                 Directory.CreateDirectory(_storagePath);
             }
         }
+
+        /// <summary>
+        /// 获取服务器实例（从 ServiceManager）
+        /// </summary>
+        private IServer? Server => ServiceManager.Instance.Server;
 
         /// <summary>
         /// 设置键值对
@@ -413,9 +418,9 @@ namespace puppet.Controllers
                 var connection = new SQLiteConnection(connectionString);
                 connection.Open();
                 _connections[database] = connection;
-                
+
                 // 如果 PUP 文件包含签名，则验证数据库签名
-                if (_pupServer != null && _pupServer.HasSignature)
+                if (Server != null && Server.HasSignature)
                 {
                     VerifyDatabaseSignature(database, dbPath);
                 }
@@ -433,7 +438,7 @@ namespace puppet.Controllers
         {
             try
             {
-                if (_pupServer?.Certificate == null)
+                if (Server?.Certificate == null)
                 {
                     Console.WriteLine($"No certificate available for signature verification of database: {database}");
                     return;
@@ -483,7 +488,7 @@ namespace puppet.Controllers
                                 Console.WriteLine($"  Certificate Fingerprint: {certFingerprint}");
 
                                 // 验证证书指纹是否匹配
-                                string expectedFingerprint = CertificateUtils.GetCertificateFingerprint(_pupServer.Certificate);
+                                string expectedFingerprint = CertificateUtils.GetCertificateFingerprint(Server.Certificate);
                                 if (certFingerprint != expectedFingerprint)
                                 {
                                     Console.WriteLine($"WARNING: Certificate fingerprint mismatch in database: {database}");
@@ -494,8 +499,8 @@ namespace puppet.Controllers
 
                                 // 验证签名
                                 var (isValid, message) = AppSignatureValidator.ValidateDatabaseSignature(
-                                    dbPath, 
-                                    _pupServer.Certificate, 
+                                    dbPath,
+                                    Server.Certificate,
                                     signatureData);
 
                                 if (isValid)
@@ -535,20 +540,20 @@ namespace puppet.Controllers
 
             try
             {
-                if (_pupServer == null || !_pupServer.HasSignature)
+                if (Server == null || !Server.HasSignature)
                 {
                     Console.WriteLine("Cannot sign database: No certificate available (V1.2 format required)");
                     return false;
                 }
 
-                if (_pupServer.Certificate == null)
+                if (Server.Certificate == null)
                 {
                     Console.WriteLine("Cannot sign database: Certificate is null");
                     return false;
                 }
 
-                // 获取私钥参数
-                var privateKeyParams = _pupServer.GetPrivateKeyParameters();
+                // 获取私钥参数（需要转换为 PupServer 才能访问此方法）
+                var privateKeyParams = (Server as PupServer)?.GetPrivateKeyParameters();
                 if (privateKeyParams == null)
                 {
                     Console.WriteLine("Cannot sign database: Failed to get private key parameters");
@@ -605,20 +610,20 @@ namespace puppet.Controllers
                             VALUES (@appId, @certFingerprint, @signatureData)";
                         
                         // 提取 AppID
-                        string appId = _pupServer.Certificate.Subject.Split(',')[0].Replace("CN=", "").Trim();
-                        string certFingerprint = CertificateUtils.GetCertificateFingerprint(_pupServer.Certificate);
+                        string appId = Server.Certificate.Subject.Split(',')[0].Replace("CN=", "").Trim();
+                        string certFingerprint = CertificateUtils.GetCertificateFingerprint(Server.Certificate);
 
                         command.Parameters.AddWithValue("@appId", appId);
                         command.Parameters.AddWithValue("@certFingerprint", certFingerprint);
                         command.Parameters.AddWithValue("@signatureData", signature);
-                        
+
                         command.ExecuteNonQuery();
                     }
                 }
 
                 Console.WriteLine($"Database signed successfully: {database}");
-                Console.WriteLine($"  AppID: {_pupServer.Certificate.Subject.Split(',')[0].Replace("CN=", "").Trim()}");
-                Console.WriteLine($"  Certificate Fingerprint: {CertificateUtils.GetCertificateFingerprint(_pupServer.Certificate)}");
+                Console.WriteLine($"  AppID: {Server.Certificate.Subject.Split(',')[0].Replace("CN=", "").Trim()}");
+                Console.WriteLine($"  Certificate Fingerprint: {CertificateUtils.GetCertificateFingerprint(Server.Certificate)}");
                 Console.WriteLine($"  Signature Size: {signature.Length} bytes");
 
                 return true;

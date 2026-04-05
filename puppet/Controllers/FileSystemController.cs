@@ -9,7 +9,7 @@ namespace puppet.Controllers
     [ComVisible(true)]
     public class FileSystemController
     {
-        private Form _mainForm;
+        private Form? _mainForm;
 
         public FileSystemController()
         {
@@ -178,7 +178,7 @@ namespace puppet.Controllers
                     }
                 }
 
-                return null;
+                return null!;
             }
         }
 

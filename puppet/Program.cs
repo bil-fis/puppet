@@ -2,13 +2,14 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using puppet.PUP;
+using puppet.Core;
 
 namespace puppet
 {
     internal static class Program
     {
-        // 全局服务器实例（用于在 Form1 中访问）
-        public static PupServer? Server { get; private set; }
+        // 使用 ServiceManager 管理服务器实例（替代全局静态属性）
+        // 参考 Microsoft Learn 依赖注入指南：https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines
 
         [STAThread]
         static void Main(string[] args)
@@ -450,7 +451,11 @@ namespace puppet
                 Console.WriteLine($"Using port: {port}");
 
                 // 创建服务器（PUP 文件模式）
-                Server = new PupServer(pupFile, port);
+                var server = new PupServer(pupFile, port);
+                
+                // 使用 ServiceManager 注册服务器实例
+                ServiceManager.Instance.Register<IServer>(server);
+                
                 Console.WriteLine($"Starting PUP Server...");
                 Console.WriteLine($"Serving PUP file: {pupFile}");
                 Console.WriteLine($"Server URL: http://localhost:{port}/");
@@ -461,7 +466,7 @@ namespace puppet
                 {
                     try
                     {
-                        await Server.StartAsync();
+                        await server.StartAsync();
                     }
                     catch (Exception ex)
                     {
@@ -508,7 +513,11 @@ namespace puppet
                 Console.WriteLine($"Using port: {port}");
 
                 // 创建服务器（裸文件夹模式）
-                Server = new PupServer(folder, true, port);
+                var server = new PupServer(folder, true, port);
+                
+                // 使用 ServiceManager 注册服务器实例
+                ServiceManager.Instance.Register<IServer>(server);
+                
                 Console.WriteLine($"Starting PUP Server in nake-load mode...");
                 Console.WriteLine($"Serving folder: {folder}");
                 Console.WriteLine($"Server URL: http://localhost:{port}/");
@@ -519,7 +528,7 @@ namespace puppet
                 {
                     try
                     {
-                        await Server.StartAsync();
+                        await server.StartAsync();
                     }
                     catch (Exception ex)
                     {
@@ -563,13 +572,17 @@ namespace puppet
                 Console.WriteLine($"Using port: {port}");
 
                 // 创建并启动服务器（PUP 文件模式）
-                Server = new PupServer(pupFile, port);
+                var server = new PupServer(pupFile, port);
+                
+                // 使用 ServiceManager 注册服务器实例
+                ServiceManager.Instance.Register<IServer>(server);
+                
                 Console.WriteLine($"Starting PUP Server...");
                 Console.WriteLine($"Serving PUP file: {pupFile}");
                 Console.WriteLine($"Server URL: http://localhost:{port}/");
                 
                 // 在后台启动服务器
-                _ = Server.StartAsync();
+                _ = server.StartAsync();
 
                 return port;
             }
@@ -598,13 +611,17 @@ namespace puppet
                 Console.WriteLine($"Using port: {port}");
 
                 // 创建并启动服务器（裸文件夹模式）
-                Server = new PupServer(folder, true, port);
+                var server = new PupServer(folder, true, port);
+                
+                // 使用 ServiceManager 注册服务器实例
+                ServiceManager.Instance.Register<IServer>(server);
+                
                 Console.WriteLine($"Starting PUP Server in nake-load mode...");
                 Console.WriteLine($"Serving folder: {folder}");
                 Console.WriteLine($"Server URL: http://localhost:{port}/");
                 
                 // 在后台启动服务器
-                _ = Server.StartAsync();
+                _ = server.StartAsync();
 
                 return port;
             }

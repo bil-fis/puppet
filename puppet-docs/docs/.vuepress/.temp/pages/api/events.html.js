@@ -1,3 +1,0 @@
-import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/api/events.html.vue"
-const data = JSON.parse("{\"path\":\"/api/events.html\",\"title\":\"事件系统 API | API 文档\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"事件系统 API\",\"permalink\":\"/api/events.html\",\"createTime\":\"2026/03/28 15:12:12\"},\"readingTime\":{\"minutes\":5.95,\"words\":1786},\"git\":{\"createdTime\":1774770165000,\"updatedTime\":1774770165000,\"contributors\":[{\"name\":\"bil-fis\",\"username\":\"\",\"email\":\"lww090627@163.com\",\"commits\":1,\"avatar\":\"https://gravatar.com/avatar/806cd648ad5a58432fd10b88e274afe27f6681f329fbe28bdbad70224a67496b?d=retro\"}]},\"filePathRelative\":\"api/events.md\",\"headers\":[]}")
-export { comp, data }

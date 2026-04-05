@@ -1,26 +1,26 @@
 ---
-title: Architecture Design
+title: Architecture
 permalink: /en/guide/architecture.html
 createTime: 2026/03/28 14:53:30
 ---
 
 # Architecture Design
 
-This document delves into the internal architecture, core components, and their interactions within the Puppet framework. Understanding these contents will help you better use the framework and perform extensions and optimizations when needed.
+This document explores the internal architecture, core components, and their interactions within the Puppet Framework. Understanding these elements will help you better use the framework and extend and optimize it when needed.
 
 ## Overall Architecture
 
-The Puppet framework adopts a layered architecture design, with each layer having clear responsibilities and boundaries.
+The Puppet Framework adopts a layered architecture design, with each layer having clear responsibilities and boundaries.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      User Application Layer                   │
+│                      User Application Layer                  │
 │                  (HTML/CSS/JavaScript)                       │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    JavaScript API Layer                     │
-│              (window.puppet.* namespace)                    │
+│                    JavaScript API Layer                      │
+│              (window.puppet.* namespace)                     │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -37,7 +37,7 @@ The Puppet framework adopts a layered architecture design, with each layer havin
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                     Platform Adaptation Layer                │
+│                     Platform Adapter Layer                   │
 │              (Windows Forms + WebView2)                      │
 └─────────────────────────────────────────────────────────────┘
                               ↓
@@ -47,14 +47,14 @@ The Puppet framework adopts a layered architecture design, with each layer havin
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Core Components Detailed
+## Core Components Detail
 
 ### 1. Application Entry (Program.cs)
 
-`Program.cs` is the entry point of the entire application, responsible for:
+`Program.cs` is the entry point for the entire application, responsible for:
 
 - **Security Initialization**: Generate and initialize communication keys
-- **Command Line Processing**: Parse command-line parameters for three running modes
+- **Command Line Processing**: Parse command line parameters for three running modes
 - **Service Management**: Create and manage PupServer instances
 - **Application Launch**: Start Windows Forms application
 
@@ -69,7 +69,7 @@ puppet.exe --nake-load <folder>   // Load bare folder
 ```
 
 ::: info See Documentation
-For detailed command-line parameter explanations, please refer to [Command Line Parameters](./cli-parameters.html) documentation.
+For detailed command line parameter instructions, refer to [Command Line Parameters](./cli-parameters.md) documentation.
 :::
 
 ### 2. Main Window (Form1.cs)
@@ -78,12 +78,12 @@ For detailed command-line parameter explanations, please refer to [Command Line 
 
 #### Main Responsibilities
 
-- **WebView2 Initialization**: Configure and initialize WebView2 control
-- **JavaScript Injection**: Inject all controllers into JavaScript environment
-- **Message Handling**: Handle messages and requests from Web layer
+- **WebView2 Initialization**: Configure and initialize the WebView2 control
+- **JavaScript Injection**: Inject all controllers into the JavaScript environment
+- **Message Processing**: Handle messages and requests from the web layer
 - **Security Verification**: Verify keys for all incoming requests
 - **Window Management**: Handle window dragging, transparency effects, etc.
-- **Icon Management**: Automatically retrieve and set window icon
+- **Icon Management**: Automatically retrieve and set window icons
 
 #### Key Code Snippets
 
@@ -107,18 +107,18 @@ webView21.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
 
 ### 3. Controller Layer (Controllers)
 
-The controller layer is the core of the Puppet framework, with each controller responsible for a group of related functions.
+The controller layer is the core of the Puppet Framework, with each controller responsible for a group of related functions.
 
 #### Controller Architecture
 
 Each controller follows the same design pattern:
 
 ```
-Controller Base Class (optional)
+Controller Base (optional)
     ↓
-Specific Controller (e.g., WindowController)
+Specific Controller (such as WindowController)
     ↓
-JavaScript Proxy Class (e.g., WindowControllerProxy)
+JavaScript Proxy Class (such as WindowControllerProxy)
     ↓
 Web API Routing
 ```
@@ -138,7 +138,7 @@ Web API Routing
 
 ### 4. PUP Server (PupServer.cs)
 
-`PupServer.cs` is a lightweight HTTP server responsible for providing web content.
+`PupServer.cs` is a lightweight HTTP server responsible for serving web content.
 
 #### Two Working Modes
 
@@ -146,9 +146,9 @@ Web API Routing
 
 ```csharp
 // PUP file structure
-[PUP V1.0 Header 8 bytes] + [AES Encrypted ZIP Password 32 bytes] + [ZIP Data]
+[PUP V1.0 identifier header 8 bytes] + [AES encrypted ZIP password 32 bytes] + [ZIP data]
 // PUP V1.1/V1.2 structure:
-[PUP V1.1/V1.2 Header 8 bytes] + [Script Length 4 bytes] + [Script Content] + [Certificate Length 4 bytes] + [Certificate Data] + [Encrypted Private Key Length 4 bytes] + [Encrypted Private Key Data] + [Encrypted Password 32 bytes] + [ZIP Data]
+[PUP V1.1/V1.2 identifier header 8 bytes] + [script length 4 bytes] + [script content] + [certificate length 4 bytes] + [certificate data] + [encrypted private key length 4 bytes] + [encrypted private key data] + [encrypted password 32 bytes] + [ZIP data]
 ```
 
 - Parse custom PUP file format (supports V1.0, V1.1, V1.2)
@@ -158,8 +158,8 @@ Web API Routing
 
 ##### Bare Folder Mode
 
-- Directly provide files from file system
-- Support hot reload (used during development)
+- Serve files directly from file system
+- Support hot reload (for development)
 - Automatically detect file changes
 
 #### HTTP Routing
@@ -174,7 +174,7 @@ Web API Routing
 
 ### 5. Utility Classes
 
-#### Encryption Utility (AesHelper.cs)
+#### Encryption Tool (AesHelper.cs)
 
 Responsible for PUP file encryption and decryption:
 
@@ -202,16 +202,16 @@ public static void Initialize()
 
 Custom permission confirmation dialog:
 
-- Three operations: Allow, Deny, Permanently Block
+- Three operations: Allow, Deny, Block Permanently
 - Remember user choice
 - Support custom messages
 
 #### Port Selector (PortSelector.cs)
 
-Automatically select available port:
+Automatically select available ports:
 
 ```csharp
-// Start from 7738, increment until available port is found
+// Start from 7738, increment until available port found
 public static int SelectAvailablePort(int startPort = 7738)
 ```
 
@@ -219,14 +219,14 @@ public static int SelectAvailablePort(int startPort = 7738)
 
 Located in `Core/Security/` directory, providing complete signing and verification functionality:
 
-- **AppSignatureValidator.cs** - Database signature verifier
+- **AppSignatureValidator.cs** - Database signature validator
 - **CertificateUtils.cs** - Certificate utility class (certificate import, export, verification)
 - **CryptoUtils.cs** - Encryption utility class (AES-256-GCM, PBKDF2 key derivation)
 - **SecurityException.cs** - Security exception class
 
 **Signing Process**:
 ```
-Database Content → SHA256 Hash → RSA Private Key Signature → Store in puppet_metadata Table
+Database Content → SHA256 Hash → RSA Private Key Signature → Store in puppet_metadata table
 ```
 
 **Verification Process**:
@@ -234,12 +234,12 @@ Database Content → SHA256 Hash → RSA Private Key Signature → Store in pupp
 Database Content → SHA256 Hash → Certificate Public Key Verification → Compare Signature Data
 ```
 
-## Data Flow Detailed
+## Data Flow Detail
 
 ### 1. JavaScript to C# Call
 
 ```
-User Action (e.g., button click)
+User Operation (such as button click)
     ↓
 JavaScript code calls puppet.window.setBorderless(true)
     ↓
@@ -297,7 +297,7 @@ private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageRec
 ### 2. Events from C# to JavaScript
 
 ```
-System Event (e.g., USB insertion)
+System Event (such as USB insertion)
     ↓
 WMI monitor detects event
     ↓
@@ -342,13 +342,13 @@ puppet.events.addEventListener('usb-plug-in', function(e) {
 
 ### 1. Communication Security
 
-All communication between JavaScript and C# is verified with a key:
+All communication between JavaScript and C# is verified with keys:
 
 ```csharp
 // Generate random key
 string secret = SecretKey.GenerateKey();
 
-// JavaScript injection includes key
+// Include key when injecting JavaScript
 await webView21.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
     window.PUPPET_SECRET = '" + secret + @"';
 ");
@@ -383,7 +383,7 @@ private bool IsProtectedPath(string path)
 
 ### 3. Permission Confirmation
 
-Show confirmation dialog for dangerous operations:
+Show confirmation dialog before dangerous operations:
 
 ```csharp
 // Confirm before executing system directory program
@@ -399,25 +399,25 @@ if (IsSystemPath(command))
 
 ### 1. WebView2 Optimization
 
-- **Disable unnecessary features**: Turn off browser features not needed
-- **Cache management**: Configure cache strategy appropriately
-- **Process isolation**: Use single process mode to reduce memory usage
+- **Disable Unnecessary Features**: Turn off unneeded browser features
+- **Cache Management**: Configure cache strategy appropriately
+- **Process Isolation**: Use single-process mode to reduce memory usage
 
 ### 2. Memory Management
 
-- **Release resources promptly**: Use `using` statements to manage resources
-- **Avoid memory leaks**: Handle event subscriptions correctly
-- **Garbage collection optimization**: Reduce unnecessary object creation
+- **Timely Resource Release**: Use `using` statements to manage resources
+- **Avoid Memory Leaks**: Properly handle event subscriptions
+- **Garbage Collection Optimization**: Reduce unnecessary object creation
 
 ### 3. File Operation Optimization
 
 - **Asynchronous I/O**: Use async methods to avoid blocking UI thread
-- **Batch operations**: Combine multiple file operations
-- **Cache strategy**: Cache frequently accessed files
+- **Batch Operations**: Combine multiple file operations
+- **Cache Strategy**: Cache frequently accessed files
 
 ## Extensibility
 
-### 1. Adding New Controllers
+### 1. Add New Controllers
 
 To add new functionality modules, create new controllers:
 
@@ -470,7 +470,7 @@ private void OnMyEvent(object sender, EventArgs e)
 
 ## Debugging and Monitoring
 
-### 1. Logging System
+### 1. Log System
 
 Use `LogController` to output debug information:
 
@@ -487,11 +487,11 @@ Right-click in Puppet application and select "Inspect" to open browser developer
 - Console: View logs and errors
 - Network: Monitor HTTP requests
 - Elements: Inspect and debug DOM
-- Sources: Debug JavaScript code
+- Source: Debug JavaScript code
 
 ### 3. Performance Analysis
 
-Use Performance panel in developer tools:
+Use developer tools performance panel:
 
 - Record and analyze performance
 - Identify performance bottlenecks
@@ -501,8 +501,8 @@ Use Performance panel in developer tools:
 
 ### 1. Controller Design
 
-- **Single Responsibility**: Each controller only handles a group of related functions
-- **Async First**: Use async methods to avoid blocking
+- **Single Responsibility**: Each controller is responsible for a group of related functions
+- **Asynchronous First**: Use async methods to avoid blocking
 - **Error Handling**: Comprehensive exception handling and error return
 
 ### 2. API Design
@@ -513,9 +513,9 @@ Use Performance panel in developer tools:
 
 ### 3. Security Considerations
 
-- **Input Validation**: Validate all user inputs
+- **Input Validation**: Validate all user input
 - **Path Normalization**: Prevent path traversal attacks
-- **Permission Checks**: Dangerous operations require permission confirmation
+- **Permission Check**: Sensitive operations require permission confirmation
 
 ## Related Resources
 
@@ -527,6 +527,6 @@ Use Performance panel in developer tools:
 
 After understanding the architecture, it is recommended to:
 
-1. View [API Documentation](../api/) to learn specific usage
-2. Read [Security Mechanisms](./security.html) to understand security details
-3. Reference [Best Practices](./best-practices.html) to improve development quality
+1. View [API Documentation](../api/) for specific usage
+2. Read [Security Mechanisms](./security.md) for security details
+3. Reference [Best Practices](./best-practices.md) to improve development quality

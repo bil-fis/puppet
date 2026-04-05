@@ -249,7 +249,6 @@ dotnet build puppet.sln --configuration Release
 ## 相关资源
 
 - [GitHub Actions 工作流](.github/workflows/release.yml)
-- [GitHub Actions 说明](.github/README.md)
 - [更新日志](puppet-docs/docs/changelog/README.md)
 - [API 文档](puppet-docs/docs/api/)
 
@@ -257,6 +256,5 @@ dotnet build puppet.sln --configuration Release
 
 如果在发布过程中遇到问题：
 
-1. 查看 [GitHub Actions 说明](.github/README.md)
-2. 检查 GitHub Actions 日志
-3. 提交 Issue 到 GitHub 仓库
+1. 检查 GitHub Actions 日志
+2. 提交 Issue 到 GitHub 仓库

@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevented access to databases with invalid signatures
 
 ### Dependencies
-- Updated to .NET 9.0
+- Updated to .NET 10.0
 - Added System.Security.Cryptography API usage
 
 ---
@@ -201,7 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Project structure guide
 
 ### Technical Stack
-- .NET 9.0
+- .NET 10.0
 - Windows Forms
 - WebView2
 - COM Interop
@@ -211,7 +211,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Platform
 - Windows 10 or higher
-- .NET 9.0 Runtime
+- .NET 10.0 Runtime
 - WebView2 Runtime
 
 ---
@@ -249,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading from 1.1.0 to 1.2.0
 
-1. **Update Dependencies**: Ensure .NET 9.0 is installed
+1. **Update Dependencies**: Ensure .NET 10.0 is installed
 2. **Review Breaking Changes**: No breaking changes in this release
 3. **Update PUP Files**: Optional - can use existing V1.1 files or create new V1.2 files
 4. **Learn New Features**: Review digital signature documentation
@@ -257,7 +257,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading from 1.0.0 to 1.1.0
 
-1. **Update Dependencies**: Ensure .NET 9.0 is installed
+1. **Update Dependencies**: Ensure .NET 10.0 is installed
 2. **Review Breaking Changes**: No breaking changes in this release
 3. **Use Startup Scripts**: Optional - can use existing V1.0 files or add startup scripts
 4. **Update Application Code**: No code changes required
@@ -290,7 +290,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 ## Links
 
-- [GitHub Repository](https://github.com/your-username/puppet)
+- [GitHub Repository](https://github.com/bil-fis/puppet)
 - [Documentation](https://puppet.ifiss.eu.org)
-- [Issue Tracker](https://github.com/your-username/puppet/issues)
-- [Security Policy](https://github.com/your-username/puppet/security)
+- [Issue Tracker](https://github.com/bil-fis/puppet/issues)
+- [Security Policy](https://github.com/bil-fis/puppet/security)

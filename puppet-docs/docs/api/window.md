@@ -537,7 +537,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         
         // 关闭应用
         async function closeApp() {
-            await puppet.Application.close();
+            await puppet.application.close();
         }
     </script>
 </body>

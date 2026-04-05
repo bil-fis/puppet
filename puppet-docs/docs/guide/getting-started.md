@@ -13,7 +13,7 @@ createTime: 2026/03/28 14:51:54
 在开始之前，请确保您的系统满足以下要求：
 
 - **操作系统**：Windows 10 或更高版本
-- **.NET 运行时**：.NET 9.0 或更高版本
+- **.NET 运行时**：.NET 10.0 或更高版本
 - **WebView2 运行时**：通常已随 Edge 浏览器安装，如未安装可从 [Microsoft 官网](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) 下载
 
 ::: tip 提示
@@ -260,7 +260,7 @@ puppet.exe --create-pup -i "C:\MyProject" -o "C:\MyProject.pup" -v 1.2 --certifi
 A: 使用 Application API 的 `execute` 方法创建快捷方式：
 
 ```javascript
-await puppet.Application.execute(
+await puppet.application.execute(
     'cmd /c mkshortcut /target:"C:\\MyApp\\puppet.exe" /shortcut:"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"'
 );
 ```

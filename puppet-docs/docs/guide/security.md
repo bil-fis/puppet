@@ -598,14 +598,14 @@ const file = await puppet.fs.readFileAsText('config.json');
 
 // 避免直接执行系统命令
 // 不推荐：
-// await puppet.Application.execute('cmd /c del C:\\Windows\\file.txt');
+// await puppet.application.execute('cmd /c del C:\\Windows\\file.txt');
 ```
 
 #### 限制访问范围
 
 ```javascript
 // 限制在应用目录内操作
-const appPath = await puppet.Application.getAssemblyDirectory();
+const appPath = await puppet.application.getAssemblyDirectory();
 const configPath = appPath + '\\config.json';
 const config = await puppet.fs.readFileAsText(configPath);
 ```
@@ -629,7 +629,7 @@ await puppet.fs.writeTextToFile('encrypted.dat', encryptedData);
 
 ```javascript
 // 使用 puppet.json 存储配置（相对安全）
-await puppet.Application.setConfig('apiKey', encryptedKey);
+await puppet.application.setConfig('apiKey', encryptedKey);
 
 // 不要在代码中硬编码敏感信息
 // 不推荐：

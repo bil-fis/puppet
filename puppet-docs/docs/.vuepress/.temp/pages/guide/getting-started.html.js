@@ -1,3 +1,0 @@
-import comp from "E:/puppet/puppet-docs/docs/.vuepress/.temp/pages/guide/getting-started.html.vue"
-const data = JSON.parse("{\"path\":\"/guide/getting-started.html\",\"title\":\"快速开始 | 指南\",\"lang\":\"zh-CN\",\"frontmatter\":{\"title\":\"快速开始\",\"permalink\":\"/guide/getting-started.html\",\"createTime\":\"2026/03/28 14:51:54\"},\"readingTime\":{\"minutes\":4.34,\"words\":1301},\"git\":{\"createdTime\":1774770165000,\"updatedTime\":1774784550000,\"contributors\":[{\"name\":\"bil-fis\",\"username\":\"\",\"email\":\"lww090627@163.com\",\"commits\":2,\"avatar\":\"https://gravatar.com/avatar/806cd648ad5a58432fd10b88e274afe27f6681f329fbe28bdbad70224a67496b?d=retro\"}]},\"filePathRelative\":\"guide/getting-started.md\",\"headers\":[]}")
-export { comp, data }

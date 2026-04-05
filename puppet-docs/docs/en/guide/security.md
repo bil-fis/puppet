@@ -1,12 +1,12 @@
 ---
-title: Security Mechanisms
+title: Security
 permalink: /en/guide/security.html
 createTime: 2026/03/28 14:59:03
 ---
 
 # Security Mechanisms
 
-The Puppet framework includes multiple layers of security mechanisms to protect system and user data security. This chapter details Puppet's security features, potential risks, and security best practices.
+The Puppet Framework has built-in multi-layer security mechanisms to protect system and user data security. This chapter details Puppet's security features, potential risks, and security best practices.
 
 ## Security Architecture
 
@@ -14,17 +14,17 @@ Puppet adopts a defense-in-depth security strategy, providing protection at mult
 
 ```
 ┌─────────────────────────────────────────┐
-│         Application Layer Security       │
+│         Application Layer Security               │
 │  ┌───────────────────────────────────┐  │
-│  │  Permission Confirmation Dialog   │  │
+│  │  Permission Confirmation Dialog    │  │
 │  └───────────────────────────────────┘  │
 ├─────────────────────────────────────────┤
-│         Communication Layer Security     │
+│         Communication Layer Security       │
 │  ┌───────────────────────────────────┐  │
 │  │  Key Verification                 │  │
 │  └───────────────────────────────────┘  │
 ├─────────────────────────────────────────┤
-│         File System Security             │
+│         File System Security               │
 │  ┌───────────────────────────────────┐  │
 │  │  Path Protection                  │  │
 │  └───────────────────────────────────┘  │
@@ -42,7 +42,7 @@ Puppet adopts a defense-in-depth security strategy, providing protection at mult
 
 #### Key Verification Mechanism
 
-All communication between JavaScript and C# is verified with a key to prevent unauthorized access.
+All communication between JavaScript and C# is verified with keys to prevent unauthorized access.
 
 ```csharp
 // Generate random key
@@ -57,12 +57,12 @@ await webView21.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
 ");
 ```
 
-**How It Works**:
+**Working Principle**:
 
-1. Generate random key when application starts
+1. Generate random key on application startup
 2. Inject key into JavaScript environment
 3. All requests must include correct key
-4. C# layer verifies key before processing requests
+4. C# layer verifies key before processing request
 
 **Verification Code**:
 
@@ -84,7 +84,7 @@ private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageRec
 }
 ```
 
-::: tip Security Tip
+::: tip Security Note
 The key is regenerated each time the application starts, ensuring isolation between different sessions.
 :::
 
@@ -92,7 +92,7 @@ The key is regenerated each time the application starts, ensuring isolation betw
 
 #### Path Protection
 
-Automatically blocks access to Windows system sensitive directories, preventing malicious operations.
+Automatically blocks access to Windows system sensitive directories to prevent malicious operations.
 
 ```csharp
 private static readonly string[] ProtectedPaths = {
@@ -140,7 +140,7 @@ public async Task<string> ReadFile(string path)
 
 #### Path Normalization
 
-Prevents path traversal attacks, ensuring path safety.
+Prevents path traversal attacks to ensure path security.
 
 ```csharp
 private string NormalizePath(string path)
@@ -166,14 +166,14 @@ private string NormalizePath(string path)
 ```javascript
 // Attempt path traversal attack
 puppet.fs.readFileAsText("../../Windows/System32/config.txt");
-// Will be intercepted, exception thrown
+// Will be intercepted, throws exception
 ```
 
 ### 3. Permission Confirmation
 
 #### Dangerous Operation Confirmation
 
-Shows user confirmation dialog for operations that may affect system security.
+For operations that may affect system security, show user confirmation dialog.
 
 ```csharp
 public async Task ExecuteCommand(string command)
@@ -210,7 +210,7 @@ public async Task ExecuteCommand(string command)
 
 - **Allow**: Allow this operation
 - **Deny**: Deny this operation
-- **Permanently Block**: Permanently block this type of operation (remember choice)
+- **Block Permanently**: Permanently block this type of operation (remember choice)
 
 ### 4. PUP Encryption
 
@@ -234,14 +234,14 @@ string zipPassword = AesHelper.Decrypt(encryptedPassword, "ILOVEPUPPET");
 - Padding: PKCS7
 
 ::: warning Security Limitation
-The encrypted ZIP key uses a fixed key `"ILOVEPUPPET"` for encryption, which is a lightweight protection method. If stronger security is needed, it's recommended to use file system encryption (such as BitLocker).
+The encrypted ZIP key is encrypted using the fixed key `"ILOVEPUPPET"`, which is a lightweight protection method. If you need stronger security, consider using file system encryption (such as BitLocker).
 :::
 
 ### 5. Data Signature Verification
 
 #### Signature Mechanism
 
-Puppet Storage API provides a data signature verification mechanism based on self-signed certificates, preventing database tampering. This mechanism references Android APK signature design, providing enterprise-level data integrity protection.
+Puppet Storage API provides a self-signed certificate-based data signature verification mechanism to prevent database tampering. This mechanism references Android APK signature design, providing enterprise-level data integrity protection.
 
 **Signature Architecture**:
 
@@ -249,23 +249,23 @@ Puppet Storage API provides a data signature verification mechanism based on sel
 ┌─────────────────────────────────────────────┐
 │  Application Layer                         │
 │  ┌─────────────────────────────────────┐  │
-│  │  RSA 2048/4096 bit Key Pair        │  │
-│  │  Self-signed X.509 Certificate     │  │
-│  │  SHA256withRSA Signature           │  │
+│  │  RSA 2048/4096-bit Key Pairs       │  │
+│  │  Self-signed X.509 Certificate      │  │
+│  │  SHA256withRSA Signature            │  │
 │  └─────────────────────────────────────┘  │
 ├─────────────────────────────────────────────┤
 │  Verification Layer                       │
 │  ┌─────────────────────────────────────┐  │
 │  │  Certificate Validity Verification  │  │
-│  │  Self-signed Status Check          │  │
-│  │  Signature Integrity Verification  │  │
+│  │  Self-signed Status Check           │  │
+│  │  Signature Integrity Verification   │  │
 │  │  Certificate Fingerprint Comparison │  │
 │  └─────────────────────────────────────┘  │
 ├─────────────────────────────────────────────┤
 │  Data Layer                               │
 │  ┌─────────────────────────────────────┐  │
 │  │  Database Metadata Table            │  │
-│  │  AppID                              │  │
+│  │  Application ID (AppID)             │  │
 │  │  Certificate Fingerprint            │  │
 │  │  Signature Data                     │  │
 │  └─────────────────────────────────────┘  │
@@ -277,31 +277,31 @@ Puppet Storage API provides a data signature verification mechanism based on sel
 **1. Data Integrity Protection**
 
 - Uses SHA256withRSA algorithm to sign database content
-- Any modification to the database will cause signature verification to fail
+- Any modifications to the database will cause signature verification failure
 - Provides tamper-proof guarantee
 
 **2. Identity Verification**
 
-- Verifies database creator via application ID (CN) from certificate
-- Ensures certificate uniqueness via certificate fingerprint
+- Verifies database creator through certificate application ID (CN)
+- Ensures certificate uniqueness through certificate fingerprint
 - Prevents impersonation
 
 **3. Key Protection**
 
-- Private key in PUP file is stored with AES-256-GCM encryption
+- Private keys in PUP files are encrypted and stored using AES-256-GCM
 - Key derivation uses PBKDF2 (100,000 iterations)
 - Prevents private key leakage
 
 **4. Algorithm Strength**
 
-- RSA Key: 2048 or 4096 bits
+- RSA Keys: 2048 or 4096 bits
 - Signature Algorithm: SHA256withRSA
 - Encryption Algorithm: AES-256-GCM
 - Key Derivation: PBKDF2 + SHA256
 
 #### Signature Process
 
-**1. Generate Signing Key Pair**
+**1. Generate Signing Key Pairs**
 
 ```bash
 # Interactive generation
@@ -322,11 +322,11 @@ puppet.exe --create-pup -i myapp -o myapp.pup \
 
 **3. Automatic Database Signing**
 
-When using PUP file containing certificate:
+When using PUP files containing certificates:
 
-- **Create new database**: Automatically sign with private key
-- **Open existing database**: Automatically verify signature
-- **Verification failed**: Log warning but allow access (backward compatibility)
+- **Create New Database**: Automatically sign using private key
+- **Open Existing Database**: Automatically verify signature
+- **Verification Failure**: Log warning, but allow access (backward compatibility)
 
 #### Verification Process
 
@@ -337,44 +337,44 @@ When using PUP file containing certificate:
 2. Calculate SHA256 hash of database content
 3. Read signature from database metadata
 4. Extract certificate from PUP file
-5. Use certificate public key to verify signature
+5. Verify signature using certificate public key
 6. Check certificate validity and self-signed status
-7. Verification passed → Allow access
-8. Verification failed → Log warning
+7. Verification passes → Allow access
+8. Verification fails → Log warning
 ```
 
 **Verification Failure Handling**:
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Verification Failure Scenarios           │
+│  Verification Failure Scenarios            │
 ├─────────────────────────────────────────────┤
 │  1. Database tampered                      │
 │     → Warning: "Database signature verification failed" │
-│     → Still allow access (backward compatibility) │
+│     → Still allow access (backward compatibility)       │
 ├─────────────────────────────────────────────┤
-│  2. Certificate mismatch                   │
-│     → Warning: "Certificate fingerprint mismatch" │
-│     → Still allow access (backward compatibility) │
+│  2. Certificate mismatch                  │
+│     → Warning: "Certificate fingerprint mismatch"       │
+│     → Still allow access (backward compatibility)       │
 ├─────────────────────────────────────────────┤
 │  3. Certificate expired                    │
-│     → Warning: "Certificate expired"      │
-│     → Still allow access (backward compatibility) │
+│     → Warning: "Certificate expired"       │
+│     → Still allow access (backward compatibility)       │
 └─────────────────────────────────────────────┘
 ```
 
-#### Security Considerations
+#### Security Notes
 
 **1. Private Key Protection**
 
 ```csharp
-// Private key is encrypted in PUP file
+// Private key is encrypted and stored in PUP file
 byte[] encryptedPrivateKey = CryptoUtils.EncryptWithPassword(
     privateKeyBytes,
     password
 );
 
-// Decrypt when needed
+// Decryption requires correct password
 var privateKey = AppSignatureGenerator.DecryptPrivateKey(
     encryptedPrivateKey,
     password
@@ -383,8 +383,8 @@ var privateKey = AppSignatureGenerator.DecryptPrivateKey(
 
 **2. Certificate Validity**
 
-- Set long validity period (e.g., 25 years)
-- Regularly check certificate expiration
+- Recommended to set long validity period (such as 25 years)
+- Regularly check certificate expiration time
 - Generate new certificate and re-sign before expiration
 
 **3. Key Backup**
@@ -395,18 +395,18 @@ copy app.crt app.crt.backup
 copy app.key app.key.backup
 
 # Store in secure location
-# Do not upload to public repository
+# Do not upload to public repositories
 ```
 
-**4. Signature Irreversibility**
+**4. Signing is Irreversible**
 
 - Once signed, cannot modify signature without breaking verification
-- Modifying database content causes signature verification failure
+- Modifying database content will cause signature verification failure
 - Need to re-sign to modify
 
 #### Security Best Practices
 
-**1. Always Use Signature**
+**1. Always Use Signing**
 
 ```bash
 # Always include certificate and private key when creating PUP files
@@ -415,10 +415,10 @@ puppet.exe --create-pup -i myapp -o myapp.pup \
   --private-key app.key
 ```
 
-**2. Regularly Verify Signature**
+**2. Regularly Verify Signatures**
 
 ```bash
-# Regularly verify database signature
+# Regularly verify database signatures
 puppet.exe --verify-database default.db --certificate app.crt
 ```
 
@@ -432,7 +432,7 @@ const failures = signatureLogs.filter(log =>
 );
 
 if (failures.length > 0) {
-  console.warn('Signature verification failures detected:', failures);
+  console.warn('Signature verification failures found:', failures);
 }
 ```
 
@@ -450,8 +450,62 @@ icacls app.key /grant:r "%USERNAME%:F"
 **5. Use Strong Keys**
 
 ```bash
-# Use 4096-bit key (higher security)
+# Use 4096-bit keys (higher security)
 puppet.exe --generate-signing-key --key-size 4096
+```
+
+#### Security Threat Analysis
+
+**1. Man-in-the-Middle Attack**
+
+- **Risk**: Attacker intercepts PUP file and replaces certificate
+- **Protection**: Certificate fingerprint verification ensures certificate hasn't been replaced
+
+**2. Replay Attack**
+
+- **Risk**: Attacker uses old signed database to replace new database
+- **Protection**: Signature includes timestamp, can detect replay
+
+**3. Key Leakage**
+
+- **Risk**: Private key is leaked, attacker can forge signatures
+- **Protection**: Private key encrypted storage, regular key rotation
+
+**4. Certificate Forgery**
+
+- **Risk**: Attacker creates fake certificate and signs malicious database
+- **Protection**: Check certificate fingerprint and self-signed status
+
+#### Security Audit
+
+**Signature Checklist**:
+
+- [ ] All PUP files contain certificate and private key
+- [ ] Private key file permissions set correctly
+- [ ] Regularly verify database signatures
+- [ ] Monitor signature verification failure events
+- [ ] Certificate validity period set reasonably
+- [ ] Keys backed up in secure location
+- [ ] Use sufficient key strength (2048+ bits)
+- [ ] Private key protected with strong password
+
+**Log Monitoring**:
+
+```javascript
+// Monitor signature-related events
+async function monitorSignatureEvents() {
+  const logs = await puppet.log.getLogs();
+  
+  const signatureEvents = logs.filter(log =>
+    log.message.includes('signature') ||
+    log.message.includes('certificate') ||
+    log.message.includes('fingerprint')
+  );
+  
+  for (const event of signatureEvents) {
+    console.log(`[${event.time}] ${event.level}: ${event.message}`);
+  }
+}
 ```
 
 ## Security Best Practices
@@ -520,7 +574,7 @@ try {
 } catch (error) {
     // Don't expose sensitive information
     console.error('File read failed');
-    throw new Error('Unable to read file');
+    throw new Error('Cannot read file');
 }
 ```
 
@@ -528,15 +582,15 @@ try {
 
 ```javascript
 // Log security events
-puppet.log.warn('Attempted to access protected path: ' + path);
+puppet.log.warn('Attempt to access protected path: ' + path);
 puppet.log.error('Permission denied');
 ```
 
-### 3. Minimum Privilege
+### 3. Minimum Permissions
 
 #### Principle of Least Privilege
 
-Only grant the application the minimum necessary permissions:
+Grant applications only the minimum permissions needed:
 
 ```javascript
 // Only request necessary file access permissions
@@ -544,14 +598,14 @@ const file = await puppet.fs.readFileAsText('config.json');
 
 // Avoid direct system command execution
 // Not recommended:
-// await puppet.Application.execute('cmd /c del C:\\Windows\\file.txt');
+// await puppet.application.execute('cmd /c del C:\\Windows\\file.txt');
 ```
 
 #### Limit Access Scope
 
 ```javascript
 // Limit operations to application directory
-const appPath = await puppet.Application.getAssemblyDirectory();
+const appPath = await puppet.application.getAssemblyDirectory();
 const configPath = appPath + '\\config.json';
 const config = await puppet.fs.readFileAsText(configPath);
 ```
@@ -563,7 +617,7 @@ const config = await puppet.fs.readFileAsText(configPath);
 ```javascript
 // Encrypt sensitive data
 function encryptData(data, key) {
-    // Use Web Crypto API to encrypt
+    // Use Web Crypto API for encryption
     // ...
 }
 
@@ -574,8 +628,8 @@ await puppet.fs.writeTextToFile('encrypted.dat', encryptedData);
 #### Secure Storage
 
 ```javascript
-// Use puppet.json to store configuration (relatively secure)
-await puppet.Application.setConfig('apiKey', encryptedKey);
+// Use puppet.json for configuration storage (relatively secure)
+await puppet.application.setConfig('apiKey', encryptedKey);
 
 // Don't hardcode sensitive information in code
 // Not recommended:
@@ -597,7 +651,7 @@ await puppet.Application.setConfig('apiKey', encryptedKey);
 
 #### 2. Command Injection
 
-**Risk**: Execute malicious code through commands
+**Risk**: Execute malicious code through command execution
 
 **Protection**:
 - Permission confirmation dialog
@@ -619,7 +673,7 @@ await puppet.Application.setConfig('apiKey', encryptedKey);
 
 **Protection**:
 - Data encryption
-- Secure logging
+- Security logging
 - Error handling
 
 ### Security Checklist
@@ -633,14 +687,14 @@ Before releasing your application, check the following items:
 - [ ] Implement appropriate error handling
 - [ ] Log security-related events
 - [ ] Limit application access scope
-- [ ] Regularly update dependency libraries
-- [ ] Perform security testing
+- [ ] Regularly update dependencies
+- [ ] Conduct security testing
 
 ## Security Tools
 
 ### File Scanning
 
-Scan PUP files with Windows Defender:
+Use Windows Defender to scan PUP files:
 
 ```bash
 # Scan single file
@@ -670,11 +724,11 @@ const hasCommand = code.includes('Application.execute');
 Monitor application logs to detect abnormal behavior:
 
 ```javascript
-// Log all file access
-puppet.log.info('Accessing file: ' + path);
+// Log all file accesses
+puppet.log.info('Access file: ' + path);
 
-// Log all command execution
-puppet.log.warn('Executing command: ' + command);
+// Log all command executions
+puppet.log.warn('Execute command: ' + command);
 
 // Log all errors
 puppet.log.error('Operation failed: ' + error.message);
@@ -696,9 +750,9 @@ puppet.log.error('Operation failed: ' + error.message);
 
 ## Next Steps
 
-After learning about security mechanisms, it is recommended to:
+After understanding security mechanisms, it is recommended to:
 
-1. Review your application code for security vulnerabilities
+1. Audit your application code for security vulnerabilities
 2. Implement items from the security checklist
-3. Reference [Best Practices](./best-practices.html) to improve application security
-4. Regularly perform security testing and audits
+3. Reference [Best Practices](./best-practices.md) to improve application security
+4. Regularly conduct security testing and audits

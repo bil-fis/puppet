@@ -74,9 +74,9 @@ namespace puppet.Controllers
                 {
                     PrimaryScreen = new
                     {
-                        Width = Screen.PrimaryScreen.Bounds.Width,
-                        Height = Screen.PrimaryScreen.Bounds.Height,
-                        BitsPerPixel = Screen.PrimaryScreen.BitsPerPixel
+                        Width = Screen.PrimaryScreen?.Bounds.Width ?? 0,
+                        Height = Screen.PrimaryScreen?.Bounds.Height ?? 0,
+                        BitsPerPixel = Screen.PrimaryScreen?.BitsPerPixel ?? 0
                     }
                 },
                 GPU = GetGPUInfo()
@@ -190,11 +190,11 @@ namespace puppet.Controllers
                     return Convert.ToBase64String(imageBytes);
                 }
 
-                return null;
+                return null!;
             }
             catch
             {
-                return null;
+                return null!;
             }
         }
 

@@ -6,7 +6,7 @@ createTime: 2026/03/28 14:54:32
 
 # Project Structure
 
-This chapter introduces the standard directory structure of a Puppet project and the purpose of each file. Understanding the project structure helps you better organize and manage Puppet applications.
+This chapter introduces the standard directory structure of Puppet projects and the purpose of each file. Understanding the project structure will help you better organize and manage Puppet applications.
 
 ## Standard Project Structure
 
@@ -15,26 +15,26 @@ A typical Puppet project has the following structure:
 ```
 MyPuppetProject/
 ├── index.html              # Main page (entry file)
-├── css/                    # Styles directory
+├── css/                    # Style file directory
 │   └── style.css          # Main stylesheet
-├── js/                     # JavaScript files directory
+├── js/                     # JavaScript file directory
 │   └── app.js             # Main application script
-├── assets/                 # Assets directory
+├── assets/                 # Resource file directory
 │   ├── images/            # Image resources
 │   ├── fonts/             # Font files
 │   └── icons/             # Icon files
-├── lib/                    # Third-party libraries directory
+├── lib/                    # Third-party library directory
 │   └── vendor.js          # Third-party library files
 └── puppet.json             # Application configuration file (optional)
 ```
 
-## File Descriptions
+## File Description
 
 ### Required Files
 
 #### index.html
 
-The main entry file of the application, typically containing:
+The main entry file for the application, typically containing:
 
 ```html
 <!DOCTYPE html>
@@ -42,7 +42,7 @@ The main entry file of the application, typically containing:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Puppet App</title>
+    <title>My Puppet Application</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -50,7 +50,7 @@ The main entry file of the application, typically containing:
     <div id="app">
         <h1>Welcome</h1>
     </div>
-
+    
     <!-- Include JavaScript -->
     <script src="js/app.js"></script>
 </body>
@@ -83,8 +83,8 @@ css/
 **Naming Recommendations**:
 
 - Use lowercase letters and hyphens (kebab-case)
-- Name the main stylesheet `style.css`
-- Classify component styles by function
+- Name main stylesheet as `style.css`
+- Organize component styles by function
 
 #### js/
 
@@ -100,7 +100,7 @@ js/
 │   ├── Button.js         # Button component
 │   └── Dialog.js         # Dialog component
 └── services/              # Service layer
-    └── api.js            # API wrappers
+    └── api.js            # API wrapper
 ```
 
 **Naming Recommendations**:
@@ -144,8 +144,8 @@ lib/
 
 **Recommendations**:
 
-- Use CDN to include common libraries to reduce project size
-- Or use npm install and bundle
+- Use CDN to load common libraries to reduce project size
+- Or use npm installation and bundling
 - Keep library version information
 
 ### Optional Files
@@ -169,10 +169,10 @@ Usage:
 
 ```javascript
 // Read configuration
-const config = await puppet.Application.getConfig('appName');
+const config = await puppet.application.getConfig('appName');
 
 // Write configuration
-await puppet.Application.setConfig('theme', 'light');
+await puppet.application.setConfig('theme', 'light');
 ```
 
 #### favicon.ico
@@ -188,17 +188,17 @@ Application icon, Puppet will automatically use the website's favicon as the win
 
 ## Framework Project Structure
 
-The project structure of the Puppet Framework itself:
+Puppet Framework's own project structure:
 
 ```
 puppet/
-├── Program.cs                 # Application entry point
+├── Program.cs                 # Application entry
 ├── Form1.cs                   # Main window
 ├── Form1.Designer.cs          # Window designer generated
 ├── Form1.resx                 # Resource file
 ├── PupServer.cs               # PUP server
 ├── PupCreator.cs              # PUP creator
-├── AesHelper.cs               # Encryption utility (moved to Core/)
+├── AesHelper.cs               # Encryption tool (moved to Core/)
 ├── SecretKey.cs               # Key management (moved to Core/)
 ├── IniReader.cs               # INI reader (moved to Core/)
 ├── PortSelector.cs            # Port selector (moved to Core/)
@@ -208,7 +208,7 @@ puppet/
 ├── StorageController.cs        # Persistent storage controller
 ├── puppet.ini                 # Framework configuration
 ├── puppet.csproj              # Project file
-├── Controllers/               # Controllers directory
+├── Controllers/               # Controller directory
 │   ├── ApplicationController.cs
 │   ├── FileSystemController.cs
 │   ├── WindowController.cs
@@ -240,24 +240,24 @@ puppet/
 
 **Directory Organization Description**:
 
-- **Controllers/** - Controller classes that handle API requests
+- **Controllers/** - Controller classes, handle API requests
 - **Core/** - Core utility classes, including encryption, configuration, security, etc.
 - **PUP/** - PUP file format processing, supports V1.0, V1.1, V1.2 formats
-- **UI/** - User interface components, such as permission dialogs
+- **UI/** - User interface components, such as permission dialog
 
 ## Configuration Files
 
 ### puppet.ini
 
-Framework configuration file, typically located in the same directory as Puppet.exe:
+Framework configuration file, usually located in the same directory as Puppet.exe:
 
 ```ini
 [file]
-; Path to the PUP file to load
+; PUP file path to load
 file=app.pup
 
 [server]
-; Server port (defaults to auto-select)
+; Server port (default auto-select)
 port=7738
 
 [security]
@@ -265,15 +265,15 @@ port=7738
 strict=true
 ```
 
-**Usage**:
+**Purpose**:
 
-- Specify the default PUP file to load
+- Specify default PUP file to load
 - Configure server port
 - Set security options
 
 ### puppet.csproj
 
-.NET project file defining project configuration:
+.NET project file, defines project configuration:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -295,7 +295,7 @@ strict=true
 ### HTML Files
 
 - Use lowercase letters and hyphens (kebab-case)
-- Name the main page `index.html`
+- Name main page as `index.html`
 - Name other pages by function
 
 ```
@@ -308,7 +308,7 @@ user-profile.html    # User profile page
 ### CSS Files
 
 - Use lowercase letters and hyphens (kebab-case)
-- Name the main stylesheet `style.css`
+- Name main stylesheet as `style.css`
 - Name component styles by component
 
 ```
@@ -321,7 +321,7 @@ sidebar.css          # Sidebar styles
 ### JavaScript Files
 
 - Use lowercase letters and hyphens (kebab-case)
-- Name the main script `app.js`
+- Name main script as `app.js`
 - Name component scripts by component
 
 ```
@@ -348,7 +348,7 @@ roboto-regular.ttf   # Font file
 
 ### Organize by Function
 
-Suitable for large projects, each functional module is independent:
+Suitable for large projects, each functional module independent:
 
 ```
 project/
@@ -370,7 +370,7 @@ project/
 
 ### Organize by Type
 
-Suitable for small to medium projects, files are classified by type:
+Suitable for small to medium projects, files categorized by type:
 
 ```
 project/
@@ -389,7 +389,7 @@ project/
 
 ### Hybrid Organization
 
-Combine the advantages of both approaches:
+Combine advantages of both approaches:
 
 ```
 project/
@@ -440,8 +440,8 @@ Thumbs.db
 
 - Commit source code (HTML, CSS, JS)
 - Commit configuration files (JSON, INI)
-- Do not commit build output (.pup files)
-- Do not commit dependencies (node_modules)
+- Don't commit compiled output (.pup files)
+- Don't commit dependencies (node_modules)
 
 ## Packaging and Distribution
 
@@ -470,7 +470,7 @@ MyApp/
 
 - Keep structure clear and consistent
 - Use meaningful folder names
-- Avoid too deep directory levels
+- Avoid overly deep directory hierarchies
 
 ### 2. File Naming
 
@@ -480,15 +480,15 @@ MyApp/
 
 ### 3. Code Organization
 
-- Keep related code together
+- Put related code together
 - Use comments to explain complex logic
-- Keep file sizes reasonable (recommended < 500 lines)
+- Keep file size reasonable (recommended < 500 lines)
 
 ### 4. Resource Management
 
 - Compress images and media files
 - Use CDN to load third-party libraries
-- Cache commonly used resources
+- Cache frequently used resources
 
 ### 5. Configuration Management
 
@@ -498,13 +498,13 @@ MyApp/
 
 ## Related Resources
 
-- [PUP File Format](./pup-format.md) - Learn about PUP packaging format
-- [Command Line Parameters](./cli-parameters.md) - Command line tool usage
+- [PUP File Format](./pup-format.md) - Understand PUP packaging format
+- [Command Line Parameters](./cli-parameters.md) - Command line tool usage instructions
 - [Best Practices](./best-practices.md) - Development recommendations and tips
 
 ## Next Steps
 
-After understanding the project structure, we recommend:
+After understanding project structure, it is recommended to:
 
 1. Create your first project
 2. Learn [API Documentation](../api/) to start development
